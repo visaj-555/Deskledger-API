@@ -1,55 +1,40 @@
-const express = require("express");
+const express = require('express');
 const app = express();
-const dotenv = require("dotenv");
+const dotenv = require('dotenv');
 dotenv.config();
-const host = process.env.HOST;
+const mongoose = require('mongoose');
+const fs = require('fs');
+const routes = require('./routes/route');
+const bodyParser = require('body-parser');
+
+const PORT = process.env.PORT || 3000;
+const host = process.env.HOST || 'localhost';
 const url = process.env.CONNECTION;
-const PORT = process.env.PORT;
-const mongoose = require("mongoose");
-const fs = require("fs");
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const routes = require("./routes/route");
-const bodyParser = require('body-parser');
 app.use(bodyParser.json());
-app.use('/api/v1', routes)
-// const cron = require("node-cron");
 
-// create public directory if don't exist
-const directory = "./Public";
+const directory = './Public';
 if (!fs.existsSync(directory)) {
-  fs.mkdirSync(directory, { recursive: true });
+    fs.mkdirSync(directory, { recursive: true });
 }
-app.use("/Public", express.static("Public"));
-app.use("/", routes);
+app.use('/Public', express.static('Public'));
+app.use('/api/v1', routes);
 
-// cron job for sending notification.
+const databaseConnection = async () => {
+    try {
+        await mongoose.connect(url);
+        console.log('Connected to database');
+    } catch (error) {
+        console.error('Error while connecting to database:', error);
+    }
+};
+
+databaseConnection();
+
 
 
 app.listen(PORT, () => {
-  console.log("App listening at :", PORT);
+    console.log(`App listening at http://${host}:${PORT}`);
 });
-
-//=================== DATABASE CONNECTION ===================//
-const databaseconnection = async () => {
-  try {
-    await mongoose
-      .connect(url, {
-        serverSelectionTimeoutMS: 10000,
-      })
-      .then((result) => {
-        if (result) {
-          console.log("connected to database");
-        } else {
-          console.log("couldn't connect to database");
-        }
-      })
-      .catch((error) => {
-        console.log("error while database connection:", error);
-      });
-  } catch (error) {
-    return console.log("error while connecting to databse::", error);
-  }
-};
-
-databaseconnection();
