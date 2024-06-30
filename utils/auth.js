@@ -1,12 +1,12 @@
 const jwt = require('jsonwebtoken');
 
 const ensureAuthenticated = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
+    const authHeader = req.headers['authorization']; // extract the authorization header
     if (!authHeader) {
         return res.status(403).json({ message: "Token is required" });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(' ')[1]; //splits the authoriZation header into spaces and take the 2nd part
     if (!token) {
         return res.status(403).json({ message: "Token is required" });
     }

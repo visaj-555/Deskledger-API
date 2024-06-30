@@ -1,3 +1,5 @@
+//Importing all the modules
+
 const express = require('express');
 const app = express();
 const dotenv = require('dotenv');
@@ -11,16 +13,12 @@ const PORT = process.env.PORT || 3000;
 const host = process.env.HOST || 'localhost';
 const url = process.env.CONNECTION;
 
+//Middleware to Parse JSON
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
 
-const directory = './Public';
-if (!fs.existsSync(directory)) {
-    fs.mkdirSync(directory, { recursive: true });
-}
-app.use('/Public', express.static('Public'));
-app.use('/api/v1', routes);
+app.use('/api', routes);
 
 const databaseConnection = async () => {
     try {

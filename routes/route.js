@@ -1,7 +1,7 @@
 const express = require('express');
-const { loginUser, registerUser, getUsers } = require('../controllers/usercontroller');
-const { userRegisterValidate, userLoginValidate } = require('../utils/userValidation');
-const ensureAuthenticated = require('../utils/auth');
+const { loginUser, registerUser, getUsers } = require('../controllers/usercontroller'); // controller functions
+const { userRegisterValidate, userLoginValidate } = require('../utils/userValidation'); // Middleware functions
+const ensureAuthenticated = require('../utils/auth'); // middleware functions for authentication
 
 const router = express.Router();
 
