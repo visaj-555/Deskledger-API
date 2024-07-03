@@ -1,38 +1,37 @@
 //Importing all the modules
 
-const express = require('express');
+const express = require('express'); // using express framework
 const app = express();
-const dotenv = require('dotenv');
+const dotenv = require('dotenv'); // to load enviroment variables
 dotenv.config();
-const mongoose = require('mongoose');
-const fs = require('fs');
-const routes = require('./routes/route');
-const bodyParser = require('body-parser');
+const mongoose = require('mongoose'); // using mongoose framework for nodejs and mongodb connection
+const routes = require('./routes/route'); // specifying our route directory
+const bodyParser = require('body-parser'); // for parsing all the json responses
 
-const PORT = process.env.PORT || 3000;
-const host = process.env.HOST || 'localhost';
-const url = process.env.CONNECTION;
+const PORT = process.env.PORT || 3000; // using port no 3000 
+const host = process.env.HOST || 'localhost'; // using localhost
+const url = process.env.CONNECTION; // fetching connection url link stored in .env file
 
 //Middleware to Parse JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
 
-app.use('/api', routes);
+app.use('/api', routes); // defining our routes
 
-const databaseConnection = async () => {
+const databaseConnection = async () => { // connecting to the database
     try {
-        await mongoose.connect(url);
+        await mongoose.connect(url); // using mongoose, fetching url from .env
         console.log('Connected to database');
-    } catch (error) {
+    } catch (error) { // throwing error if not connected
         console.error('Error while connecting to database:', error);
     }
 };
 
-databaseConnection();
+databaseConnection(); // calling the function
 
 
 
 app.listen(PORT, () => {
-    console.log(`App listening at http://${host}:${PORT}`);
+    console.log(`App listening at http://${host}:${PORT}`); // logging our port number to know its working
 });

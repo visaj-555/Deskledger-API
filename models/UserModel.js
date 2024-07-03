@@ -11,7 +11,12 @@ const UserSchema = new Schema({
         required: true
     },
     phoneNo: {
-        type: Number,
+        type: String, 
+        required: true
+    },
+    role: {
+        type: String,
+        enum: ['admin', 'user'], // User can select only one value 
         required: true
     },
     email: {
@@ -22,16 +27,8 @@ const UserSchema = new Schema({
     password: {
         type: String,
         required: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
     }
-});
+}, { timestamps: true }); // time stamp to get the correct value 
 
 const UserModel = mongoose.model('User', UserSchema);
 module.exports = UserModel;
