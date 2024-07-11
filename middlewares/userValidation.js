@@ -32,15 +32,6 @@ const userRegisterValidate = (req, res, next) => {
                 'string.pattern.base': 'Phone number should contain only digits',
                 'any.required': 'Phone number is required'
             }),
-        role: Joi.string()
-            .valid('user', 'admin')
-            .required()
-            .messages({ //  Rules for the role 
-                'string.base': 'Role should be a type of string',
-                'string.empty': 'Role cannot be empty',
-                'any.only': 'Invalid role',
-                'any.required': 'Role is required'
-            }),
         email: Joi.string()
             .email()
             .required()

@@ -14,19 +14,12 @@ const UserSchema = new Schema({
         type: String, 
         required: true
     },
-    role: {
-        type: String,
-        enum: ['admin', 'user'], // User can select only one value 
-        required: true
-    },
     email: {
         type: String,
-        required: true,
         unique: true
     },
     password: {
         type: String,
-        required: true
     }
 }, { timestamps: true }); // time stamp to get the correct value 
 

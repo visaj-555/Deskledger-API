@@ -7,6 +7,7 @@ dotenv.config();
 const mongoose = require('mongoose'); // using mongoose framework for nodejs and mongodb connection
 const routes = require('./routes/route'); // specifying our route directory
 const bodyParser = require('body-parser'); // for parsing all the json responses
+const path = require('path');
 
 const PORT = process.env.PORT || 3000; // using port no 3000 
 const host = process.env.HOST || 'localhost'; // using localhost
@@ -17,7 +18,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
 
-app.use('/api', routes); // defining our routes
+app.use('/', routes); // defining our routes
+
 
 const databaseConnection = async () => { // connecting to the database
     try {
