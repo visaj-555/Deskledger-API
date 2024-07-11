@@ -2,9 +2,10 @@ const Joi = require('joi');
 
 const userRegisterValidate = (req, res, next) => {
     const schema = Joi.object({
+        userId : Joi.string().optional(),
         firstName: Joi.string()
             .min(3).max(100)
-            .required()
+            .optional()
             .messages({ //  Rules for the first name
                 'string.base': 'First name should be a type of string',
                 'string.empty': 'First name cannot be empty',
@@ -14,7 +15,7 @@ const userRegisterValidate = (req, res, next) => {
             }),
         lastName: Joi.string()
             .min(3).max(100)
-            .required()
+            .optional()
             .messages({ // Rules for the last name
                 'string.base': 'Last name should be a type of string',
                 'string.empty': 'Last name cannot be empty',
@@ -25,16 +26,17 @@ const userRegisterValidate = (req, res, next) => {
         phoneNo: Joi.string()
             .length(10)
             .pattern(/^[0-9]+$/)
-            .required()
+            .optional()
             .messages({ //  Rules for the phone number
                 'string.empty': 'Phone number cannot be empty',
                 'string.length': 'Phone number should be exactly 10 digits',
                 'string.pattern.base': 'Phone number should contain only digits',
                 'any.required': 'Phone number is required'
             }),
+ 
         email: Joi.string()
             .email()
-            .required()
+            .optional()
             .messages({ // Rules for the email
                 'string.base': 'Email should be a type of string',
                 'string.empty': 'Email cannot be empty',
@@ -47,7 +49,7 @@ const userRegisterValidate = (req, res, next) => {
             .pattern(/[A-Z]/)
             .pattern(/[0-9]/)
             .pattern(/[\W_]/)
-            .required()
+            .optional()
             .messages({ // Rules for password
                 'string.base': 'Password should be a type of string',
                 'string.empty': 'Password cannot be empty',
@@ -93,7 +95,7 @@ const userLoginValidate = (req, res, next) => {
         return res.status(400).json({ statusCode: 400, message: "Validation error", errors });
     }
 
-    next(); // to pass control to next middleware
+    next(); 
 }
 
 module.exports = {

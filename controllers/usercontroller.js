@@ -6,6 +6,8 @@ const registerUser = async (req, res) => {
     try {
         const { firstName, lastName, phoneNo, email, password } = req.body;
         console.log("Request body:", req.body);
+        console.log(firstName);
+        console.log(lastName);
 
         const userExists = await UserModel.findOne({ email });
         if (userExists) {
@@ -23,6 +25,8 @@ const registerUser = async (req, res) => {
             password: hashedPassword,
         });
 
+
+        console.log(newUser);
         const savedUser = await newUser.save();
 
         const token = jwt.sign({ id: savedUser._id }, process.env.SECRET, {
@@ -62,8 +66,7 @@ const getUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
     try {
-        const userId = req.body.id;
-        const { firstName, lastName, phoneNo, email } = req.body;
+        const {userId, firstName, lastName, phoneNo, email } = req.body;
 
         const updatedUser = await UserModel.findByIdAndUpdate(
             userId,

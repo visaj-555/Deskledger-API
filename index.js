@@ -9,7 +9,7 @@ const routes = require('./routes/route'); // specifying our route directory
 const bodyParser = require('body-parser'); // for parsing all the json responses
 const path = require('path');
 
-const PORT = process.env.PORT || 3000; // using port no 3000 
+const PORT = process.env.PORT || 3500; // using port no 3500
 const host = process.env.HOST || 'localhost'; // using localhost
 const url = process.env.CONNECTION; // fetching connection url link stored in .env file
 
@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
 
-app.use('/', routes); // defining our routes
+app.use('/api', routes); // defining our routes
 
 
 const databaseConnection = async () => { // connecting to the database
