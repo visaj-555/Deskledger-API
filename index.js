@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
 
-app.use('/api', routes); // defining our routes
+app.use('/', routes); // defining our routes
 
 
 const databaseConnection = async () => { // connecting to the database
