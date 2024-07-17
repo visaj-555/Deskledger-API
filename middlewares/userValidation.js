@@ -28,7 +28,6 @@ const userRegisterValidate = (req, res, next) => {
             .pattern(/^[0-9]+$/)
             .optional()
             .messages({ //  Rules for the phone number
-                'string.empty': 'Phone number cannot be empty',
                 'string.length': 'Phone number should be exactly 10 digits',
                 'string.pattern.base': 'Phone number should contain only digits',
                 'any.required': 'Phone number is required'

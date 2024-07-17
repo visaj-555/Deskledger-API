@@ -9,7 +9,7 @@ const UserSchema = new Schema({
         type: String,
     },
     phoneNo: {
-        type: String, 
+        type: Number, 
     },
     email: {
         type: String,

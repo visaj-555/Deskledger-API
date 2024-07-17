@@ -26,7 +26,7 @@ const {
     userLoginValidate
 } = require('../middlewares/userValidation');
 
-router.post('/user/login', userLoginValidate, loginUser);
+router.get('/user/login', userLoginValidate, loginUser);
 router.post('/user/register', userRegisterValidate, registerUser);
 router.get('/users', getUsers);
 router.get('/users/:id', getUser);
@@ -35,7 +35,7 @@ router.delete('/users/delete', deleteUser);
 
 
 router.post('/fd/register', validateFixedDeposit, fixedDepositRegister);
-router.delete('/fd/delete', fixedDepositDelete);
+router.delete('/fd/delete/:id', fixedDepositDelete);
 router.get('/fds', getFdDetails);
 router.get('/fd/update', updateFixedDeposit);
 
