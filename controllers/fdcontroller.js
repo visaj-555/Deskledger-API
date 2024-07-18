@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const {formatDate} =  require('../utils/utils');
  
 
-
+// Register FixedDeposit
  const fixedDepositRegister = async (req, res) => {
     try {
         const { firstName, lastName, fdNo, fdType, bankName, branchName, interestRate, startDate, maturityDate, totalInvestedAmount } = req.body;
@@ -110,7 +110,6 @@ const {formatDate} =  require('../utils/utils');
             }
         );
 
-        // Format dates using formatDate utility function
         updatedFd.startDate = formatDate(updatedFd.startDate);
         updatedFd.maturityDate = formatDate(updatedFd.maturityDate);
 
@@ -123,7 +122,8 @@ const {formatDate} =  require('../utils/utils');
     }
 };
 
-// Update Fixed Deposit
+
+// Update a Fixed Deposit
 const updateFixedDeposit = async (req, res) => {
     const { id } = req.params;
     const { fdNo, firstName, lastName, fdType, bankName, branchName, interestRate, startDate, maturityDate, totalInvestedAmount } = req.body;
@@ -233,7 +233,6 @@ const updateFixedDeposit = async (req, res) => {
             }
         );
 
-        // Format dates using formatDate utility function
         updatedFd.startDate = formatDate(updatedFd.startDate);
         updatedFd.maturityDate = formatDate(updatedFd.maturityDate);
         console.log("Updated data : " + updatedFd);
@@ -246,6 +245,9 @@ const updateFixedDeposit = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
+// Delete a Fixed Deposit
 
 const fixedDepositDelete = async (req, res) => {
     try {
@@ -261,6 +263,8 @@ const fixedDepositDelete = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: "Error deleting Fixed Deposit", error });
     }
 };
+
+// Get all Fixed Deposit Details  
 
 const getFdDetails = async (req, res) => {
     try {
@@ -282,7 +286,7 @@ const getFdDetails = async (req, res) => {
                                     1000 * 60 * 60 * 24 * 365
                                 ]
                             },
-                            0 // Round to the nearest whole number
+                            0 
                         ]
                     },
                     tenureCompletedYears: {
@@ -293,7 +297,7 @@ const getFdDetails = async (req, res) => {
                                     1000 * 60 * 60 * 24 * 365
                                 ]
                             },
-                            0 // Round to the nearest whole number
+                            0 
                         ]
                     }
                 }
@@ -319,7 +323,7 @@ const getFdDetails = async (req, res) => {
                                     }
                                 }
                             },
-                            0 // Round to the nearest whole number
+                            0 
                         ]
                     },
                     totalReturnedAmount: {
@@ -330,7 +334,7 @@ const getFdDetails = async (req, res) => {
                                     { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureInYears"] }
                                 ]
                             },
-                            0 // Round to the nearest whole number
+                            0 
                         ]
                     }
                 }
@@ -362,7 +366,6 @@ const getFdDetails = async (req, res) => {
             }
         ]);
 
-        // Format dates using formatDate utility function
         details.forEach(fd => {
             fd.startDate = formatDate(fd.startDate);
             fd.maturityDate = formatDate(fd.maturityDate);
@@ -372,19 +375,18 @@ const getFdDetails = async (req, res) => {
         res.status(200).json({statusCode: 200, message: "Fixed Deposits Fetched Successfully", data : details });
 
     } catch (err) {
-        console.log("Error while fetching Fixed Deposit " + err); // Log the error details
+        console.log("Error while fetching Fixed Deposit " + err); 
         res.status(500).json({ statusCode: 500, message: "Error fetching Fixed Deposit", error });
     }
 };
 
 
-
+// Get the Fixed Deposit by Id
 
 const getFdById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Check if the id is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Invalid Fixed Deposit ID' });
         }
@@ -402,7 +404,7 @@ const getFdById = async (req, res) => {
                                     1000 * 60 * 60 * 24 * 365
                                 ]
                             },
-                            0 // Round to the nearest whole number
+                            0 
                         ]
                     },
                     tenureCompletedYears: {
@@ -413,7 +415,7 @@ const getFdById = async (req, res) => {
                                     1000 * 60 * 60 * 24 * 365
                                 ]
                             },
-                            0 // Round to the nearest whole number
+                            0 
                         ]
                     }
                 }
@@ -439,7 +441,7 @@ const getFdById = async (req, res) => {
                                     }
                                 }
                             },
-                            0 // Round to the nearest whole number
+                            0 
                         ]
                     },
                     totalReturnedAmount: {
@@ -461,14 +463,14 @@ const getFdById = async (req, res) => {
             return res.status(404).json({ message: 'Fixed deposit not found' });
         }
 
-        // Format dates using formatDate utility function
+    
         fixedDeposit.startDate = formatDate(fixedDeposit.startDate);
         fixedDeposit.maturityDate = formatDate(fixedDeposit.maturityDate);
 
         res.status(200).json({statusCode: 200, message: "Fixed Deposit By Id Fetched Successfully", data : fixedDeposit });
         console.log("FD Details by Id : " + fixedDeposit);
     } catch (err) {
-        console.log("Error while fetching details by id  " + err); // Log the error details
+        console.log("Error while fetching details by id  " + err); 
         res.status(500).json({statusCode: 500, message: 'Internal server error', error: err.message });
     }
 };

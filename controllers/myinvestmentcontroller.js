@@ -1,5 +1,7 @@
 const FixedDeposit = require('../models/FixedDeposit');
 
+
+// API to show all the Sectors Investment in Pie Chart (%)
 const getOverallInvestmentBySector = async (req, res) => {
     try {
         const overallInvestment = await FixedDeposit.aggregate([
@@ -26,6 +28,8 @@ const getOverallInvestmentBySector = async (req, res) => {
     }
 };
 
+
+// Controller to show Top Gainers table with highest profit of all the sectors
 const getTopGainers = async (req, res) => {
     try {
         const topGainers = await FixedDeposit.aggregate([
@@ -51,11 +55,12 @@ const getTopGainers = async (req, res) => {
     }
 };
 
+// API to show Investments by a particular sector.
 const getInvestmentsBySector = async (req, res) => {
     const { sector } = req.params;
 
     try {
-        let investments;
+        let investments
 
         switch (sector.toLowerCase()) {
             case 'bank':
