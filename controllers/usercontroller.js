@@ -1,3 +1,6 @@
+// usercontroller.js
+
+
 const UserModel = require('../models/UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -43,7 +46,8 @@ const registerUser = async (req, res) => {
 const getUsers = async (req, res) => {
     try {
         const users = await UserModel.find({}, { password: 0 });
-        res.status(200).json({ statusCode: 200, data: users });
+
+        res.status(200).json({ statusCode: 200,message : "Users data fetched successfully",  data: users });
     } catch (error) {
         res.status(500).json({ statusCode: 500, message: "Error fetching users", error });
     }
@@ -58,7 +62,8 @@ const getUser = async (req, res) => {
             return res.status(404).json({ statusCode: 404, message: "User not found" });
         }
 
-        res.status(200).json({ statusCode: 200, data: user });
+        res.status(200).json({ statusCode: 200, message: "User data fetched by Id", data: user });
+
     } catch (error) {
         res.status(500).json({ statusCode: 500, message: "Error fetching user", error });
     }
@@ -85,6 +90,7 @@ const updateUser = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({
+            message : "Error updating user",
             error: error.message
         });
     }
@@ -106,6 +112,7 @@ const deleteUser = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({
+            message: 'User cant be deleted',
             error: error.message
         });
     }

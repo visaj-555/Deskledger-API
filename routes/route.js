@@ -10,11 +10,20 @@ const {
     loginUser
 } = require('../controllers/usercontroller');
 
+const {  
+    getTopGainers ,  
+    getOverallInvestmentBySector , 
+    getInvestmentsBySector,
+    getInvestmentById, 
+    getHighestGrowthInSector
+} =  require('../controllers/myinvestmentcontroller');
+
 const {
     fixedDepositRegister,
     fixedDepositDelete, 
     getFdDetails,
-    updateFixedDeposit
+    updateFixedDeposit,
+    getFdById
 } = require('../controllers/fdcontroller');
 
 const {
@@ -26,6 +35,9 @@ const {
     userLoginValidate
 } = require('../middlewares/userValidation');
 
+
+const { getFdAnalysis } = require('../controllers/fdanalysiscontroller');
+
 router.get('/user/login', userLoginValidate, loginUser);
 router.post('/user/register', userRegisterValidate, registerUser);
 router.get('/users', getUsers);
@@ -33,11 +45,18 @@ router.get('/users/:id', getUser);
 router.put('/user/update', userRegisterValidate, updateUser);
 router.delete('/users/delete', deleteUser);
 
-
 router.post('/fd/register', validateFixedDeposit, fixedDepositRegister);
 router.delete('/fd/delete/:id', fixedDepositDelete);
-router.get('/fds', getFdDetails);
-router.get('/fd/update', updateFixedDeposit);
+router.get('/fds',  getFdDetails);
+router.put('/fd/update/:id', validateFixedDeposit, updateFixedDeposit);
+router.get('/fd/:id', getFdById);
 
+router.get('/fd-analysis', getFdAnalysis);
+
+router.get('/top-gainers', getTopGainers);
+router.get('/overall-investment-by-sector', getOverallInvestmentBySector);
+router.get('/investments-by-sector/:sector', getInvestmentsBySector);
+router.get('/investment/:id',  getInvestmentById);
+router.get('/investment/highest-growth',  getHighestGrowthInSector);
 
 module.exports = router;

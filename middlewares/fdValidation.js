@@ -4,6 +4,7 @@ const validateFixedDeposit = (req, res, next) => {
     const isUpdating = req.method === 'PUT';
 
     const schema = Joi.object({
+        srNo: Joi.number().optional(),
         fdNo: Joi.number()
             .required()
             .integer()

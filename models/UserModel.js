@@ -1,3 +1,5 @@
+// UserModel.js 
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -17,7 +19,8 @@ const UserSchema = new Schema({
     },
     password: {
         type: String,
-    }
+    },
+    
 }, { timestamps: true }); // time stamp to get the correct value 
 
 const UserModel = mongoose.model('User', UserSchema);
