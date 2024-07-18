@@ -1,7 +1,8 @@
+// myinvestmentcontroller.js
+
 const FixedDeposit = require('../models/FixedDeposit');
 
 
-// API to show all the Sectors Investment in Pie Chart (%)
 const getOverallInvestmentBySector = async (req, res) => {
     try {
         const overallInvestment = await FixedDeposit.aggregate([
@@ -10,26 +11,21 @@ const getOverallInvestmentBySector = async (req, res) => {
                     _id: '$sector',
                     totalProfitAmount: { $sum: '$currentProfitAmount' }
                 }
-            },
+            },                                                             // Pie chart 
             {
                 $project: {
                     sector: '$_id',
-                    totalProfitAmount: 1,
-                    _id: 0
+                    totalProfitAmount: 1
                 }
             }
         ]);
-
-        res.status(200).json({ statusCode: 200, message: "Overall Investment in All the Sectors", data: overallInvestment });
+        res.status(200).json({ statusCode: 200, message: "Overall Investment in All the Sectors (%)", data: overallInvestment });
 
     } catch (error) {
-        console.error("Error while fetching overall Investment sector:", error);
         res.status(500).json({ statusCode: 500, message: "Error while fetching overall Investment sector", error: error });
     }
 };
 
-
-// Controller to show Top Gainers table with highest profit of all the sectors
 const getTopGainers = async (req, res) => {
     try {
         const topGainers = await FixedDeposit.aggregate([
@@ -37,82 +33,97 @@ const getTopGainers = async (req, res) => {
                 $project: {
                     srNo: 1,
                     investmentType: 'FD',
-                    sector: 'Banking',
+                    sector: 'Banking',                  // Top Gainer table on the Ui Page
                     totalInvestedAmount: 1,
                     currentReturnAmount: 1,
                     profit: { $subtract: ['$currentReturnAmount', '$totalInvestedAmount'] }
                 }
             },
-            { $sort: { profit: -1 } },
+            { $sort: { profit: -1 } },  
             { $limit: 10 }
         ]);
-
         res.status(200).json({ statusCode: 201, message: "Top Gainers of all the Sectors", data: topGainers });
 
     } catch (error) {
-        console.error("Error while fetching Top Gainers:", error);
-        res.status(500).json({ statusCode: 500, message: "Error while fetching Top Gainers", error });
+        res.status(500).json({ statusCode : 500, message: "Error while fetching Top Gainers" , error });
     }
 };
 
-// API to show Investments by a particular sector.
 const getInvestmentsBySector = async (req, res) => {
     const { sector } = req.params;
 
-    try {
-        let investments
+    let investments;
+    switch (sector) {
+        case 'banking':
+            investments = await FixedDeposit.find({});  // Investment Table according to selected Sector 
+            break;
 
-        switch (sector.toLowerCase()) {
-            case 'bank':
-                investments = await FixedDeposit.aggregate([
-                    { $match: { sector: "Bank" } },
-                    {
-                        $project: {
-                            srNo: 1,
-                            fdType: 1,
-                            bankName: 1,
-                            totalInvestedAmount: 1,
-                            currentReturnAmount: 1,
-                            interestRate: 1,
-                            tenureInYears: 1
-                        }
-                    },
-                    { $sort: { currentReturnAmount: -1 } },
-                    { $limit: 1 }
-                ]);
-                break;
-            case 'financial institution':
-                investments = await FixedDeposit.aggregate([
-                    { $match: { sector: "Financial Institution" } },
-                    {
-                        $project: {
-                            srNo: 1,
-                            fdType: 1,
-                            bankName: 1,
-                            totalInvestedAmount: 1,
-                            currentReturnAmount: 1,
-                            interestRate: 1,
-                            tenureInYears: 1
-                        }
-                    },
-                    { $sort: { currentReturnAmount: -1 } },
-                    { $limit: 1 }
-                ]);
-                break;
             default:
-                return res.status(400).json({ statusCode: 400, message: "Invalid Sector Type" });
-        }
+            return res.status(400).json({ message: 'Invalid sector' });
+    }
+    res.status(200).json({ statusCode: 200, message: "Investment data of All the Sectors", data: investments });
 
-        res.status(200).json({ statusCode: 200, message: `Investments in ${sector} Sector`, data: investments });
+};
+
+const getInvestmentById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const investment = await FixedDeposit.findById(id);
+
+        if (!investment) {
+            return res.status(404).json({ message: 'Investment not found' });
+            
+        }                                           // Investment Table according to selected Sector by Id
+
+        res.status(200).json({ statusCode: 200, message: "Investment of All the Sectors by Id", data: investment });
 
     } catch (error) {
-        console.error("Error while fetching Investments by sector:", error);
-        res.status(500).json({ statusCode: 500, message: "Error while fetching Investments by sector", error });
+        console.log("Fetching Investment by Id " + error);
+        res.status(500).json({ statusCode: 500, message: "Error while fetching Investment by Id", error: error });
+    }
+};
+
+
+const getHighestGrowthInSector = async (req, res) => {
+    const { sector } = req.query;
+
+    if (!sector) {
+        return res.status(400).json({ message: 'Sector is required' });
+    }
+
+    let highestGrowth;
+    try {
+        switch (sector.toLowerCase()) {
+            case 'banking':
+                highestGrowth = await FixedDeposit.findOne({})
+                    .sort({ currentReturnAmount: -1 })
+                    .select('totalInvestedAmount currentReturnAmount bankName fdType interestRate tenureInYears')
+                    .lean();
+                break;
+            // Add other sectors here as needed
+            default:
+                return res.status(400).json({ message: 'Invalid sector' });
+        }
+
+        if (!highestGrowth) {
+            return res.status(404).json({ message: 'No data found for the selected sector' });
+        }
+
+        res.status(200).json({ message: 'Get highest growth in sector' });
+
+        res.status(200).json(highestGrowth);
+
+    } catch (error) {
+        console.error('Error in getHighestGrowthInSector:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
 module.exports = {
-    getOverallInvestmentBySector,
-    getTopGainers,
-    getInvestmentsBySector
+    getTopGainers ,  
+    getOverallInvestmentBySector , 
+    getInvestmentsBySector,
+    getInvestmentById, 
+    getHighestGrowthInSector
 };
+

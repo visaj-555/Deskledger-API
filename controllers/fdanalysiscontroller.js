@@ -105,7 +105,7 @@ const getFdAnalysis = async (req, res) => {
     } catch (error) {
         // Handle errors
         console.error("Error calculating FD analytics:", error);
-        res.status(500).json({ statusCode: 500, message: "Error calculating FD analytics", error });
+        res.status(500).json({ statusCode: 500, message: "Error calculating FD analytics", error: error.message });
     }
 };
 
