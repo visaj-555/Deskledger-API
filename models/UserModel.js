@@ -5,21 +5,31 @@ const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
     firstName: {
-        type: String
+        type: String, 
+        trim : true
     },
     lastName: {
         type: String,
+        trim : true
     },
     phoneNo: {
         type: Number, 
+        unique : true, 
+        trim : true
     },
     email: {
         type: String,
-        unique: true
+        unique: true,
+        trim : true
     },
     password: {
         type: String,
+        trim : true
     },
+    token : {
+        type: String,
+        default: null
+    }
     
 }, { timestamps: true }); // time stamp to get the correct value 
 

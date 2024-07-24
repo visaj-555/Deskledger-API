@@ -22,21 +22,21 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        const token = jwt.sign({ id: email }, process.env.SECRET, {
+            expiresIn: '1h'
+        });
+
         const newUser = new UserModel({
             firstName,
             lastName,
             phoneNo,
             email,
             password: hashedPassword,
+            token 
         });
-
 
         console.log(newUser);
         const savedUser = await newUser.save();
-
-        const token = jwt.sign({ id: savedUser._id }, process.env.SECRET, {
-            expiresIn: '1h'
-        });
 
         res.status(201).json({ statusCode: 201, message: "User registered successfully", data: { ...savedUser.toObject(), token } });
     } catch (error) {
@@ -44,6 +44,7 @@ const registerUser = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: "Error registering user", error });
     }
 };
+
 
 // Read all the the Users Information
 const getUsers = async (req, res) => {
@@ -163,6 +164,7 @@ const loginUser = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: "Error logging in", error });
     }
 };
+
 
 
 module.exports = {

@@ -36,28 +36,29 @@ const {
 } = require('../middlewares/userValidation');
 
 const { getFdAnalysis } = require('../controllers/fdanalysiscontroller');
-
+const {ensureAuthenticated} = require('../middlewares/authentication');
 // User routes
 router.get('/user/login', userLoginValidate, loginUser);
 router.post('/user/register', userRegisterValidate, registerUser);
 router.get('/users', getUsers);
 router.get('/users/:id', getUser);
-router.put('/user/update', userRegisterValidate, updateUser);
+router.put('/user/update',  userRegisterValidate, updateUser);
 router.delete('/users/delete', deleteUser);
+router.post('/authentication', ensureAuthenticated);
 
 // Fixed Deposit routes
-router.post('/fd/register', validateFixedDeposit, fixedDepositRegister);
-router.delete('/fd/delete/:id', fixedDepositDelete);
-router.get('/fds', getFdDetails);
-router.put('/fd/update/:id', validateFixedDeposit, updateFixedDeposit);
-router.get('/fd/:id', getFdById);
-router.get('/fd-analysis', getFdAnalysis);
+router.post('/fd/register', ensureAuthenticated, validateFixedDeposit, fixedDepositRegister);
+router.delete('/fd/delete/:id', ensureAuthenticated, fixedDepositDelete);
+router.get('/fds', ensureAuthenticated, getFdDetails);
+router.put('/fd/update/:id', ensureAuthenticated, validateFixedDeposit, updateFixedDeposit);
+router.get('/fd/:id', ensureAuthenticated, getFdById);
+router.get('/fd-analysis', ensureAuthenticated, getFdAnalysis);
 
 // Investment routes
-router.get('/top-gainers', getTopGainers);
-router.get('/overall-investment-by-sector', getOverallInvestmentBySector);
-router.get('/investments-by-sector/:sector', getInvestmentsBySector);
-router.get('/investment/:id', getInvestmentById);
-router.get('/investment/highest-growth', getHighestGrowthInSector);
+router.get('/top-gainers', ensureAuthenticated, getTopGainers);
+router.get('/overall-investment-by-sector', ensureAuthenticated, getOverallInvestmentBySector);
+router.get('/investments-by-sector/:sector', ensureAuthenticated, getInvestmentsBySector);
+router.get('/investments/:id', ensureAuthenticated, getInvestmentById);
+router.get('/investments/highest-growth/:sector', ensureAuthenticated, getHighestGrowthInSector);
 
 module.exports = router;

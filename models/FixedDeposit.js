@@ -4,14 +4,19 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const FixedDepositSchema = new Schema({
+    fdId : {
+        type : String,
+    },
     srNo : {
         type : Number
     },
     firstName: {
         type: String,
+        trim : true
     },
     lastName: {
         type: String,
+        trim : true
     },
     fdNo: {
         type: Number,
@@ -56,6 +61,9 @@ const FixedDepositSchema = new Schema({
     currentProfitAmount: {
         type: Number,
     },
+    tenure : {
+        type: String,
+    }
 });
 
 const FixedDepositModel = mongoose.model('FixedDeposit', FixedDepositSchema);

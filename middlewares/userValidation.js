@@ -4,17 +4,17 @@ const userRegisterValidate = (req, res, next) => {
     const schema = Joi.object({
         userId : Joi.string().optional(),
         firstName: Joi.string()
-            .min(3).max(100)
+            .min(2).max(50)
             .optional()
             .messages({ //  Rules for the first name
                 'string.base': 'First name should be a type of string',
                 'string.empty': 'First name cannot be empty',
                 'string.min': 'First name should be at least 3 characters',
-                'string.max': 'First name should be at most 100 characters',
+                'string.max': 'First name should be at most 50 characters',
                 'any.required': 'First name is required'
             }),
         lastName: Joi.string()
-            .min(3).max(100)
+            .min(3).max(50)
             .optional()
             .messages({ // Rules for the last name
                 'string.base': 'Last name should be a type of string',
@@ -91,7 +91,7 @@ const userLoginValidate = (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false }); // to abort the running process
     if (error) {
         const errors = error.details.map(detail => detail.message);
-        return res.status(400).json({ statusCode: 400, message: "Validation error", errors });
+        return res.status(400).json({ statusCode: 400, message: "Email is not registered", errors });
     }
 
     next(); 

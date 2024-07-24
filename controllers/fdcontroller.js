@@ -6,7 +6,7 @@ const {formatDate} =  require('../utils/utils');
  
 
 // Register FixedDeposit
- const fixedDepositRegister = async (req, res) => {
+const fixedDepositRegister = async (req, res) => {
     try {
         const { firstName, lastName, fdNo, fdType, bankName, branchName, interestRate, startDate, maturityDate, totalInvestedAmount } = req.body;
 
@@ -93,6 +93,12 @@ const {formatDate} =  require('../utils/utils');
                             },
                             0
                         ]
+                    },
+                    totalYears: {
+                        $concat: [
+                            { $toString: "$tenureInYears" },
+                            { $cond: { if: { $eq: ["$tenureInYears", 1] }, then: " year", else: " years" } }
+                        ]
                     }
                 }
             }
@@ -105,7 +111,8 @@ const {formatDate} =  require('../utils/utils');
                     tenureInYears: updatedFd.tenureInYears,
                     tenureCompletedYears: updatedFd.tenureCompletedYears,
                     currentReturnAmount: updatedFd.currentReturnAmount,
-                    totalReturnedAmount: updatedFd.totalReturnedAmount
+                    totalReturnedAmount: updatedFd.totalReturnedAmount,
+                    totalYears: updatedFd.totalYears
                 }
             }
         );
@@ -121,6 +128,7 @@ const {formatDate} =  require('../utils/utils');
         res.status(500).json({ statusCode: 500, message: "Error registering Fixed Deposit", error });
     }
 };
+
 
 
 // Update a Fixed Deposit
@@ -195,7 +203,6 @@ const updateFixedDeposit = async (req, res) => {
                                         ]
                                     },
                                     else: {
-                                      
                                         $multiply: [
                                             "$totalInvestedAmount",
                                             { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureCompletedYears"] }
@@ -216,6 +223,12 @@ const updateFixedDeposit = async (req, res) => {
                             },
                             0
                         ]
+                    },
+                    totalYears: {
+                        $concat: [
+                            { $toString: "$tenureInYears" },
+                            { $cond: { if: { $eq: ["$tenureInYears", 1] }, then: " year", else: " years" } }
+                        ]
                     }
                 }
             }
@@ -228,7 +241,8 @@ const updateFixedDeposit = async (req, res) => {
                     tenureInYears: updatedFd.tenureInYears,
                     tenureCompletedYears: updatedFd.tenureCompletedYears,
                     currentReturnAmount: updatedFd.currentReturnAmount,
-                    totalReturnedAmount: updatedFd.totalReturnedAmount
+                    totalReturnedAmount: updatedFd.totalReturnedAmount,
+                    totalYears: updatedFd.totalYears
                 }
             }
         );
@@ -238,14 +252,11 @@ const updateFixedDeposit = async (req, res) => {
         console.log("Updated data : " + updatedFd);
 
         res.status(201).json({ statusCode: 201, message: "Fixed Deposit updated successfully", data: updatedFd });
-
-
     } catch (err) {
-        console.log("Error while updating data")
+        console.log("Error while updating data");
         res.status(500).json({ error: 'Internal server error' });
     }
 };
-
 
 // Delete a Fixed Deposit
 
@@ -264,8 +275,8 @@ const fixedDepositDelete = async (req, res) => {
     }
 };
 
-// Get all Fixed Deposit Details  
 
+// Get all Fixed Deposit Details  
 const getFdDetails = async (req, res) => {
     try {
         const details = await FixedDepositModel.aggregate([
@@ -280,142 +291,24 @@ const getFdDetails = async (req, res) => {
                 $addFields: {
                     tenureInYears: {
                         $round: [
-                            { 
+                            {
                                 $divide: [
                                     { $subtract: ["$maturityDate", "$startDate"] },
                                     1000 * 60 * 60 * 24 * 365
                                 ]
                             },
-                            0 
+                            0
                         ]
                     },
                     tenureCompletedYears: {
                         $round: [
-                            { 
-                                $divide: [
-                                    { $subtract: ["$currentDate", "$startDate"] },
-                                    1000 * 60 * 60 * 24 * 365
-                                ]
-                            },
-                            0 
-                        ]
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    currentReturnAmount: {
-                        $round: [
                             {
-                                $cond: {
-                                    if: { $gte: ["$currentDate", "$maturityDate"] },
-                                    then: {
-                                        $multiply: [
-                                            "$totalInvestedAmount",
-                                            { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureInYears"] }
-                                        ]
-                                    },
-                                    else: {
-                                        $multiply: [
-                                            "$totalInvestedAmount",
-                                            { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureCompletedYears"] }
-                                        ]
-                                    }
-                                }
-                            },
-                            0 
-                        ]
-                    },
-                    totalReturnedAmount: {
-                        $round: [
-                            {
-                                $multiply: [
-                                    "$totalInvestedAmount",
-                                    { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureInYears"] }
-                                ]
-                            },
-                            0 
-                        ]
-                    }
-                }
-            },
-            {
-                $setWindowFields: {
-                    sortBy: { _id: 1 },
-                    output: {
-                        srNo: { $documentNumber: {} }
-                    }
-                }
-            },
-            {
-                $project: {
-                    firstName: 1,
-                    lastName: 1,
-                    fdNo: 1,
-                    fdType: 1,
-                    bankName: 1,
-                    branchName: 1,
-                    interestRate: 1,
-                    startDate: 1,
-                    maturityDate: 1,
-                    totalInvestedAmount: 1,
-                    currentReturnAmount: 1,
-                    totalReturnedAmount: 1,
-                    srNo: 1
-                }
-            }
-        ]);
-
-        details.forEach(fd => {
-            fd.startDate = formatDate(fd.startDate);
-            fd.maturityDate = formatDate(fd.maturityDate);
-        });
-
-        console.log("All FD details : " + details)
-        res.status(200).json({statusCode: 200, message: "Fixed Deposits Fetched Successfully", data : details });
-
-    } catch (err) {
-        console.log("Error while fetching Fixed Deposit " + err); 
-        res.status(500).json({ statusCode: 500, message: "Error fetching Fixed Deposit", error });
-    }
-};
-
-
-// Get the Fixed Deposit by Id
-
-const getFdById = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: 'Invalid Fixed Deposit ID' });
-        }
-
-        const [fixedDeposit] = await FixedDepositModel.aggregate([
-            { $match: { _id: new mongoose.Types.ObjectId(id) } },
-            {
-                $addFields: {
-                    currentDate: new Date(),
-                    tenureInYears: {
-                        $round: [
-                            { 
-                                $divide: [
-                                    { $subtract: ["$maturityDate", "$startDate"] },
-                                    1000 * 60 * 60 * 24 * 365
-                                ]
-                            },
-                            0 
-                        ]
-                    },
-                    tenureCompletedYears: {
-                        $round: [
-                            { 
                                 $divide: [
                                     { $subtract: [new Date(), "$startDate"] },
                                     1000 * 60 * 60 * 24 * 365
                                 ]
                             },
-                            0 
+                            0
                         ]
                     }
                 }
@@ -441,7 +334,7 @@ const getFdById = async (req, res) => {
                                     }
                                 }
                             },
-                            0 
+                            0
                         ]
                     },
                     totalReturnedAmount: {
@@ -452,31 +345,161 @@ const getFdById = async (req, res) => {
                                     { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureInYears"] }
                                 ]
                             },
-                            0 
+                            0
+                        ]
+                    },
+                    totalYears: {
+                        $concat: [
+                            { $toString: "$tenureInYears" },
+                            { $cond: { if: { $eq: ["$tenureInYears", 1] }, then: " year", else: " years" } }
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    docs: { $push: "$$ROOT" }
+                }
+            },
+            {
+                $set: {
+                    docs: {
+                        $zip: {
+                            inputs: ["$docs", { $range: [1, { $add: [1, { $size: "$docs" }] }] }],
+                            useLongestLength: true
+                        }
+                    }
+                }
+            },
+            { $unwind: "$docs" },
+            {
+                $replaceRoot: {
+                    newRoot: {
+                        $mergeObjects: ["$$ROOT", { srNo: { $arrayElemAt: ["$docs", 1] } }, { $arrayElemAt: ["$docs", 0] }]
+                    }
+                }
+            },
+            { $project: { docs: 0} }
+        ]);
+
+        details.forEach(fd => {
+            fd.startDate = formatDate(fd.startDate);
+            fd.maturityDate = formatDate(fd.maturityDate);
+        });
+
+        console.log(details);
+
+        res.status(201).json({ statusCode: 201, message: "Fixed Deposits fetched successfully", data: details });
+    } catch (error) {
+        console.error('Error fetching fixed deposits:', error);
+        res.status(500).json({ statusCode: 500, message: 'Error fetching fixed deposits', error });
+    }
+};
+
+
+
+// Get the Fixed Deposit by Id
+
+const getFdById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const details = await FixedDepositModel.aggregate([
+            { $match: { _id: new mongoose.Types.ObjectId(id) } },
+            {
+                $addFields: {
+                    currentDate: new Date(),
+                    startDate: { $toDate: "$startDate" },
+                    maturityDate: { $toDate: "$maturityDate" }
+                }
+            },
+            {
+                $addFields: {
+                    tenureInYears: {
+                        $round: [
+                            {
+                                $divide: [
+                                    { $subtract: ["$maturityDate", "$startDate"] },
+                                    1000 * 60 * 60 * 24 * 365
+                                ]
+                            },
+                            0
+                        ]
+                    },
+                    tenureCompletedYears: {
+                        $round: [
+                            {
+                                $divide: [
+                                    { $subtract: [new Date(), "$startDate"] },
+                                    1000 * 60 * 60 * 24 * 365
+                                ]
+                            },
+                            0
+                        ]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    currentReturnAmount: {
+                        $round: [
+                            {
+                                $cond: {
+                                    if: { $gte: [new Date(), "$maturityDate"] },
+                                    then: {
+                                        $multiply: [
+                                            "$totalInvestedAmount",
+                                            { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureInYears"] }
+                                        ]
+                                    },
+                                    else: {
+                                        $multiply: [
+                                            "$totalInvestedAmount",
+                                            { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureCompletedYears"] }
+                                        ]
+                                    }
+                                }
+                            },
+                            0
+                        ]
+                    },
+                    totalReturnedAmount: {
+                        $round: [
+                            {
+                                $multiply: [
+                                    "$totalInvestedAmount",
+                                    { $pow: [{ $add: [1, { $divide: ["$interestRate", 100] }] }, "$tenureInYears"] }
+                                ]
+                            },
+                            0
+                        ]
+                    },
+                    totalYears: {
+                        $concat: [
+                            { $toString: "$tenureInYears" },
+                            { $cond: { if: { $eq: ["$tenureInYears", 1] }, then: " year", else: " years" } }
                         ]
                     }
                 }
             }
         ]);
 
-        if (!fixedDeposit) {
+        if (!details.length) {
             return res.status(404).json({ message: 'Fixed deposit not found' });
         }
 
-    
+        const fixedDeposit = details[0];
         fixedDeposit.startDate = formatDate(fixedDeposit.startDate);
         fixedDeposit.maturityDate = formatDate(fixedDeposit.maturityDate);
 
-        res.status(200).json({statusCode: 200, message: "Fixed Deposit By Id Fetched Successfully", data : fixedDeposit });
-        console.log("FD Details by Id : " + fixedDeposit);
-    } catch (err) {
-        console.log("Error while fetching details by id  " + err); 
-        res.status(500).json({statusCode: 500, message: 'Internal server error', error: err.message });
+        console.log(fixedDeposit);
+
+        res.status(201).json({ statusCode: 201, message: "Fixed Deposit fetched successfully", data: fixedDeposit });
+    } catch (error) {
+        console.error('Error fetching fixed deposit:', error);
+        res.status(500).json({ statusCode: 500, message: 'Error fetching fixed deposit', error });
     }
 };
-
-
-
 
 
 module.exports = {
