@@ -4,8 +4,10 @@ const FdAnalysisModel = require('../models/FdAnalysis');
 
 const getFdAnalysis = async (req, res) => {
     try {
-        // Aggregate pipeline to calculate analysis data for Fixed Deposits
+        const { id: userId } = req.params; 
+
         const fdAnalysis = await FixedDepositModel.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } }, 
             {
                 $addFields: {
                     currentDate: new Date(),
@@ -75,35 +77,30 @@ const getFdAnalysis = async (req, res) => {
             }
         ]);
 
-        // Handle case where no FDs are found
         if (!fdAnalysis || fdAnalysis.length === 0) {
             return res.status(404).json({ message: 'No Fixed Deposits found' });
         }
 
-        // Prepare analysis data for response
         const analysisData = {
             totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
             currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
-            totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds)
+            totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
+            userId: new mongoose.Types.ObjectId(userId) // Associate analysis with the user
         };
 
-        // Update or insert analysis data into FdAnalysisModel
-        const filter = {};
+        const filter = { userId: new mongoose.Types.ObjectId(userId) };
         const update = { $set: analysisData };
         const options = { upsert: true, new: true };
         const updatedFdAnalysis = await FdAnalysisModel.findOneAndUpdate(filter, update, options);
 
-        // Log updated FD Analysis
         console.log("Updated FD Analysis:", updatedFdAnalysis);
 
-        // Respond with analysis data
         res.status(200).json({
             statusCode: 200,
             message: "Analysis Report of all the fixed deposits",
-            ...analysisData
+            data: analysisData
         });
     } catch (error) {
-        // Handle errors
         console.error("Error calculating FD analytics:", error);
         res.status(500).json({ statusCode: 500, message: "Error calculating FD analytics", error: error.message });
     }

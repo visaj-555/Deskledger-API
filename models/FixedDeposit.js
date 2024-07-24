@@ -63,6 +63,10 @@ const FixedDepositSchema = new Schema({
     },
     tenure : {
         type: String,
+    }, 
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'UserModel',
     }
 });
 

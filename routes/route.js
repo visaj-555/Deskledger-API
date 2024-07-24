@@ -11,8 +11,8 @@ const {
 } = require('../controllers/usercontroller');
 
 const {  
-    getTopGainers ,  
-    getOverallInvestmentBySector , 
+    getTopGainers,  
+    getOverallInvestmentBySector, 
     getInvestmentsBySector,
     getInvestmentById, 
     getHighestGrowthInSector
@@ -36,15 +36,15 @@ const {
 } = require('../middlewares/userValidation');
 
 const { getFdAnalysis } = require('../controllers/fdanalysiscontroller');
-const {ensureAuthenticated} = require('../middlewares/authentication');
+const { ensureAuthenticated } = require('../middlewares/authentication');
+
 // User routes
-router.get('/user/login', userLoginValidate, loginUser);
+router.post('/user/login', userLoginValidate, loginUser); // Login does not need to be authenticated
 router.post('/user/register', userRegisterValidate, registerUser);
-router.get('/users', getUsers);
-router.get('/users/:id', getUser);
-router.put('/user/update',  userRegisterValidate, updateUser);
-router.delete('/users/delete', deleteUser);
-router.post('/authentication', ensureAuthenticated);
+router.get('/users', ensureAuthenticated, getUsers); // Ensure all users-related routes are protected
+router.get('/users/:id', ensureAuthenticated, getUser);
+router.put('/user/update', ensureAuthenticated, userRegisterValidate, updateUser);
+router.delete('/users/delete', ensureAuthenticated, deleteUser);
 
 // Fixed Deposit routes
 router.post('/fd/register', ensureAuthenticated, validateFixedDeposit, fixedDepositRegister);
@@ -52,7 +52,7 @@ router.delete('/fd/delete/:id', ensureAuthenticated, fixedDepositDelete);
 router.get('/fds', ensureAuthenticated, getFdDetails);
 router.put('/fd/update/:id', ensureAuthenticated, validateFixedDeposit, updateFixedDeposit);
 router.get('/fd/:id', ensureAuthenticated, getFdById);
-router.get('/fd-analysis', ensureAuthenticated, getFdAnalysis);
+router.get('/fd-analysis/:id', ensureAuthenticated, getFdAnalysis);
 
 // Investment routes
 router.get('/top-gainers', ensureAuthenticated, getTopGainers);

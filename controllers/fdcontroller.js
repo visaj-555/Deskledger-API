@@ -8,7 +8,7 @@ const {formatDate} =  require('../utils/utils');
 // Register FixedDeposit
 const fixedDepositRegister = async (req, res) => {
     try {
-        const { firstName, lastName, fdNo, fdType, bankName, branchName, interestRate, startDate, maturityDate, totalInvestedAmount } = req.body;
+        const { firstName, lastName, fdNo, fdType, bankName, branchName, interestRate, startDate, maturityDate, totalInvestedAmount, userId} = req.body;
 
         const fdExists = await FixedDepositModel.findOne({ fdNo });
         if (fdExists) {
@@ -25,7 +25,8 @@ const fixedDepositRegister = async (req, res) => {
             interestRate,
             startDate,
             maturityDate,
-            totalInvestedAmount
+            totalInvestedAmount, 
+            userId
         });
 
         await newFixedDeposit.save();
@@ -134,11 +135,11 @@ const fixedDepositRegister = async (req, res) => {
 // Update a Fixed Deposit
 const updateFixedDeposit = async (req, res) => {
     const { id } = req.params;
-    const { fdNo, firstName, lastName, fdType, bankName, branchName, interestRate, startDate, maturityDate, totalInvestedAmount } = req.body;
+    const {fdNo, firstName, lastName, fdType, bankName, branchName, interestRate, startDate, maturityDate, totalInvestedAmount } = req.body;
 
     try {
         const updatedFdDocument = await FixedDepositModel.findByIdAndUpdate(
-            id,
+            id, 
             {
                 fdNo,
                 firstName,

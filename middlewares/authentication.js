@@ -10,7 +10,7 @@ const ensureAuthenticated = (req, res, next) => {
     if (!token) {
         return res.status(403).json({ message: "Token is required" });
     }
-1
+
     try {
         const decoded = jwt.verify(token, process.env.SECRET);
         req.user = decoded;

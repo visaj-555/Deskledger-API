@@ -5,8 +5,8 @@ const validateFixedDeposit = (req, res, next) => {
 
     const schema = Joi.object({
         srNo: Joi.number().optional(),
-        fdId : Joi.number().optional()
-        .when('$isUpdating', { is: true, then: Joi.required(), otherwise: Joi.optional() }),
+        fdId : Joi.string()
+        .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.optional() }),
         fdNo: Joi.number()
             .integer()
             .positive()
@@ -74,6 +74,11 @@ const validateFixedDeposit = (req, res, next) => {
                 'number.base': 'Total invested amount must be a number',
                 'number.positive': 'Total invested amount must be a positive number',
                 'any.required': 'Total invested amount is required'
+            }),
+        userId: Joi.string()
+            .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
+            .messages({
+                'any.required': 'User ID is required'
             })
     });
 
