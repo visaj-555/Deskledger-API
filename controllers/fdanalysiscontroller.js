@@ -1,26 +1,27 @@
 const mongoose = require('mongoose');
-const FixedDepositModel = require('../models/FixedDeposit');
-const FdAnalysisModel = require('../models/FdAnalysis');
+const FixedDepositModel = require('../models/fixedDeposit');
+const FdAnalysisModel = require('../models/fdAnalysis');
 
+// Calculate and update FD analysis for a specific user
 const getFdAnalysis = async (req, res) => {
     try {
-        const { id: userId } = req.params; 
+        const userId = req.user.id; // Use the authenticated user's ID
 
         const fdAnalysis = await FixedDepositModel.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } }, 
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } }, // Match FDs for the user
             {
                 $addFields: {
-                    currentDate: new Date(),
+                    currentDate: new Date(), // Add current date
                     tenureInYears: {
                         $divide: [
                             { $subtract: ["$maturityDate", "$startDate"] },
-                            1000 * 60 * 60 * 24 * 365
+                            1000 * 60 * 60 * 24 * 365 // Calculate tenure in years
                         ]
                     },
                     tenureCompletedYears: {
                         $divide: [
                             { $subtract: [new Date(), "$startDate"] },
-                            1000 * 60 * 60 * 24 * 365
+                            1000 * 60 * 60 * 24 * 365 // Calculate completed tenure in years
                         ]
                     }
                 }
@@ -64,14 +65,14 @@ const getFdAnalysis = async (req, res) => {
             {
                 $group: {
                     _id: null,
-                    totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" },
-                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } }
+                    totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" }, // Sum of invested amounts
+                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } } // Sum of current return amounts
                 }
             },
             {
                 $addFields: {
                     totalProfitGainedOfFds: {
-                        $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"]
+                        $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"] // Calculate total profit
                     }
                 }
             }
@@ -85,9 +86,10 @@ const getFdAnalysis = async (req, res) => {
             totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
             currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
             totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
-            userId: new mongoose.Types.ObjectId(userId) // Associate analysis with the user
+            userId: new mongoose.Types.ObjectId(userId) // Associate with user
         };
 
+        // Update or create FD analysis document for the user
         const filter = { userId: new mongoose.Types.ObjectId(userId) };
         const update = { $set: analysisData };
         const options = { upsert: true, new: true };

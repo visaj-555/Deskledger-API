@@ -1,37 +1,41 @@
-// UserModel.js 
+//UserModel.js
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
 
-const UserSchema = new Schema({
+const UserSchema = new Schema(
+  {
+    userId: {
+      type: String,
+      trim: true,
+    },
     firstName: {
-        type: String, 
-        trim : true
+      type: String,
+      trim: true,
     },
     lastName: {
-        type: String,
-        trim : true
+      type: String,
+      trim: true,
     },
     phoneNo: {
-        type: Number, 
-        unique : true, 
-        trim : true
+      type: Number,
+      unique: true
     },
     email: {
-        type: String,
-        unique: true,
-        trim : true
+      type: String,
+      unique: true,
     },
     password: {
-        type: String,
-        trim : true
-    },
-    token : {
-        type: String,
-        default: null
+      type: String,
     }
-    
-}, { timestamps: true }); // time stamp to get the correct value 
+  },
+  { timestamps: true }
+); 
 
-const UserModel = mongoose.model('User', UserSchema);
+UserSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+const UserModel = mongoose.model("User", UserSchema);
 module.exports = UserModel;

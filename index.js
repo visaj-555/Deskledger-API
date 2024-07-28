@@ -1,12 +1,14 @@
 // Importing all the modules
 const express = require('express');
-const app = express();
 const dotenv = require('dotenv');
-dotenv.config();
 const mongoose = require('mongoose');
-const routes = require('./routes/route');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const routes = require('./routes/route'); // Adjust the path as necessary
 
+dotenv.config();
+
+const app = express();
 const PORT = process.env.PORT || 3500;
 const host = process.env.HOST || 'localhost';
 const url = process.env.CONNECTION;
@@ -14,10 +16,12 @@ const url = process.env.CONNECTION;
 // Middleware to Parse JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // CORS setup
 app.use(cors({
   origin: 'http://localhost:3000', // Adjust this to match your frontend app URL
+  credentials: true, // Allow credentials (cookies, etc.)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));

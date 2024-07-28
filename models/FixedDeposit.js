@@ -1,22 +1,20 @@
-// FixedDeposit.js 
-
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const FixedDepositSchema = new Schema({
-    fdId : {
-        type : String,
+    fdId: {
+        type: String,
     },
-    srNo : {
-        type : Number
+    srNo: {
+        type: Number
     },
     firstName: {
         type: String,
-        trim : true
+        trim: true
     },
     lastName: {
         type: String,
-        trim : true
+        trim: true
     },
     fdNo: {
         type: Number,
@@ -55,18 +53,19 @@ const FixedDepositSchema = new Schema({
     totalReturnedAmount: {
         type: Number,
     },
-    currentProfitPercentage: {
-        type: Number,
-    },
     currentProfitAmount: {
         type: Number,
     },
-    tenure : {
+    totalYears: {
         type: String,
-    }, 
+    },
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'UserModel',
+    }, 
+    sector: {
+        type: String,
+        default: 'Banking' // Default value if all FixedDeposits are in the Banking sector
     }
 });
 
