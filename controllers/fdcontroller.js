@@ -3,7 +3,7 @@
 const FixedDepositModel = require('../models/fixedDeposit');
 const mongoose = require('mongoose');
 const moment = require('moment'); 
-
+const FdAnalysisModel = require('../models/fdAnalysis');
 
 
 // Register a Fixed Deposit
@@ -375,8 +375,7 @@ const updateFixedDeposit = async (req, res) => {
 // Delete a Fixed Deposit
 const fixedDepositDelete = async (req, res) => {
     try {
-        // const { fdId } = req.body;
-        const {id} = req.params
+        const { id } = req.params;
 
         // Validate fdId
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -389,12 +388,16 @@ const fixedDepositDelete = async (req, res) => {
             return res.status(404).json({ statusCode: 404, message: "Fixed Deposit not found or you do not have permission to delete it" });
         }
 
-        res.status(200).json({ statusCode: 200, message: "Fixed Deposit deleted successfully" });
+        // Delete the associated FD Analysis data
+        await FdAnalysisModel.deleteOne({ userId: req.user.id });
+
+        res.status(200).json({ statusCode: 200, message: "Fd Deleted Successfully" });
     } catch (error) {
-        console.log("Error while deleting Fixed Deposit:", error);
-        res.status(500).json({ statusCode: 500, message: "Error deleting Fixed Deposit", error });
+        console.error("Error while deleting Fixed Deposit:", error.message || error);
+        res.status(500).json({ statusCode: 500, message: "Error deleting Fixed Deposit", error: error.message || error });
     }
 };
+
 
 // Get all Fixed Deposit Details  
 const getFdDetails = async (req, res) => {
@@ -405,7 +408,7 @@ const getFdDetails = async (req, res) => {
         const fdDetails = await FixedDepositModel.find({ userId }).sort({ createdAt: 1 });
 
         if (!fdDetails.length) {
-            return res.status(404).json({ statusCode: 404, message: 'No Fixed Deposits found for this user' });
+            return res.status(200).json({ statusCode: 200, message: 'No Fixed Deposits found for this user',data:fdDetails });
         }
 
         // Debugging: Check the raw data before formatting
@@ -441,10 +444,6 @@ const getFdDetails = async (req, res) => {
     }
 };
 
-
-
-
-
 // Get the Fixed Deposit by Id
 const getFdById = async (req, res) => {
     try {
@@ -474,9 +473,6 @@ const getFdById = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: 'Internal server error' });
     }
 };
-
-
-
 const formatDate = (date) => {
     const d = new Date(date);
     let month = '' + (d.getMonth() + 1);

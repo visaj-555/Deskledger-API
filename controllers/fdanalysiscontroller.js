@@ -79,7 +79,7 @@ const getFdAnalysis = async (req, res) => {
         ]);
 
         if (!fdAnalysis || fdAnalysis.length === 0) {
-            return res.status(404).json({ message: 'No Fixed Deposits found' });
+            return res.status(200).json({statusCode : 200, message: 'No Fixed Deposits found' });
         }
 
         const analysisData = {
