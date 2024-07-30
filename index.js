@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3500;
-const host = process.env.HOST || 'localhost';
+const host = process.env.HOST || '192.168.29.168';
 const url = process.env.CONNECTION;
 
 // Middleware to Parse JSON

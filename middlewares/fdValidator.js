@@ -76,7 +76,7 @@ const validateFixedDeposit = (req, res, next) => {
                 'any.required': 'Total invested amount is required'
             }),
         userId: Joi.string()
-            .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
+            .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.optional() })
             .messages({
                 'any.required': 'User ID is required'
             })

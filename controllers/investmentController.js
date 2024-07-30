@@ -26,13 +26,17 @@ const getOverallInvestmentBySector = async (req, res) => {
     }
 };
 
+
+
 const getTopGainers = async (req, res) => {
     try {
         // Ensure userId is converted to ObjectId
-        const userId = new ObjectId(req.body.userId);
+        // const userId = new ObjectId(req.body.userId);
+        const userId = req.user.id; // Use req.user.id as set by the middleware
 
         const topGainers = await FixedDeposit.aggregate([
-            { $match: { userId } }, // Filter by authenticated user
+            { $match: { userId: new mongoose.Types.ObjectId(userId) 
+            } }, // Filter by authenticated user
             {
                 $addFields: {
                     profit: { $subtract: ['$currentReturnAmount', '$totalInvestedAmount'] }
@@ -73,7 +77,7 @@ const getTopGainers = async (req, res) => {
 };
 
 const getInvestmentsBySector = async (req, res) => {
-    const { sector } = req.body; // Get sector from request body
+    const { sector } = req.params; // Get sector from request body
     const userId = req.user.id; // Use req.user.id as set by the middleware
 
     if (!sector) {
