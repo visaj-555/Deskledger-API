@@ -1,5 +1,6 @@
 const Joi = require('joi');
 
+
 const userRegisterValidate = (req, res, next) => {
     const schema = Joi.object({
         id: Joi.string().optional(),
@@ -37,6 +38,16 @@ const userRegisterValidate = (req, res, next) => {
         email: Joi.string()
             .email()
             .optional()
+            .custom((value, helpers) => {
+                const emailDomain = value.split('@')[1];
+                if (/gmail\.com$/i.test(emailDomain) && /gml/.test(value)) {
+                    return helpers.message('Invalid email format: possible misspelling');
+                }
+                if (value !== value.toLowerCase()) {
+                    return helpers.message('Email should be in lowercase');
+                }
+                return value;
+            })
             .messages({
                 'string.base': 'Email should be a type of string',
                 'string.empty': 'Email cannot be empty',
@@ -65,7 +76,9 @@ const userRegisterValidate = (req, res, next) => {
         return res.status(400).json({ statusCode: 400, message: "Validation error", errors });
     }
     next();
-}
+};
+
+
 
 const userLoginValidate = (req, res, next) => {
     const schema = Joi.object({

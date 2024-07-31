@@ -386,7 +386,6 @@ const updateFixedDeposit = async (req, res) => {
     }
 };
 
-
 // Delete a Fixed Deposit
 const fixedDepositDelete = async (req, res) => {
     try {
@@ -412,7 +411,6 @@ const fixedDepositDelete = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: "Error deleting Fixed Deposit", error: error.message || error });
     }
 };
-
 
 // Get all Fixed Deposit Details  
 const getFdDetails = async (req, res) => {
@@ -456,7 +454,6 @@ const getFdDetails = async (req, res) => {
     }
 };
 
-
 // Get the Fixed Deposit by Id
 const getFdById = async (req, res) => {
     try {
@@ -486,6 +483,7 @@ const getFdById = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: 'Internal server error' });
     }
 };
+
 const formatDate = (date) => {
     const d = new Date(date);
     let month = '' + (d.getMonth() + 1);
