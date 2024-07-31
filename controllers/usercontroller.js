@@ -114,14 +114,23 @@ const getUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id, firstName, lastName, phoneNo, email } = req.body;
+    let updateData = { firstName, lastName, phoneNo, email };
+
+    // Check if a file is uploaded
+    if (req.file) {
+      updateData.profileImage = req.file.path; // Save the file path in the user document
+    }
+
     const updatedUser = await UserModel.findByIdAndUpdate(
       id,
-      { firstName, lastName, phoneNo, email },
+      updateData,
       { new: true }
     );
+
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
     }
+
     res.status(200).json({
       statusCode: 200,
       message: 'User updated successfully!',
@@ -134,6 +143,7 @@ const updateUser = async (req, res) => {
     });
   }
 };
+
 
 // Delete a user
 const deleteUser = async (req, res) => {

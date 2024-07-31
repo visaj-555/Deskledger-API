@@ -15,7 +15,8 @@ router.post('/user/login', userLoginValidate, loginUser);
 router.post('/user/register', userRegisterValidate, registerUser);
 router.get('/users', getUsers);
 router.get('/users/:id', ensureAuthenticated, getUser);
-router.put('/user/update', ensureAuthenticated, userRegisterValidate, updateUser);
+// router.put('/user/update/:id',  ensureAuthenticated, userRegisterValidate,  upload.single('profileImage'), updateUser);
+
 router.delete('/users/delete', ensureAuthenticated, deleteUser);
 router.get('/users/getExternalData', fetchExternalData);
 

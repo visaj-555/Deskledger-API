@@ -227,7 +227,6 @@ const updateFixedDeposit = async (req, res) => {
 
         console.log('Update Fixed Deposit Request:', { fdObjectId, userId, updateData });
 
-
         // Update the Fixed Deposit
         const updatedFdDocument = await FixedDepositModel.findOneAndUpdate(
             { _id: fdObjectId, userId: req.user.id },
@@ -237,12 +236,12 @@ const updateFixedDeposit = async (req, res) => {
 
         console.log('Updated Fixed Deposit Document:', updatedFdDocument);
 
-
         if (!updatedFdDocument) {
             return res.status(404).json({ statusCode: 404, message: 'Fixed deposit not found or you do not have permission to update it' });
         }
 
-        const updatedFd = await FixedDepositModel.aggregate([
+        // Perform aggregation to calculate fields
+        const updatedFdAggregation = await FixedDepositModel.aggregate([
             { $match: { _id: fdObjectId, userId: new mongoose.Types.ObjectId(req.user.id) } },
             {
                 $addFields: {
@@ -354,23 +353,39 @@ const updateFixedDeposit = async (req, res) => {
             }
         ]);
 
-        console.log('Updated Fixed Deposit Aggregation Result:', updatedFd);
+        console.log('Updated Fixed Deposit Aggregation Result:', updatedFdAggregation);
 
-
-        if (!updatedFd.length) {
+        if (!updatedFdAggregation.length) {
             return res.status(404).json({ statusCode: 404, message: 'Fixed deposit not found or you do not have permission to view it' });
         }
 
-        // Format dates
-        updatedFd[0].startDate = formatDate(updatedFd[0].startDate);
-        updatedFd[0].maturityDate = formatDate(updatedFd[0].maturityDate);
+        const aggregatedData = updatedFdAggregation[0];
 
-        res.status(200).json({ statusCode: 200, message: "Fixed Deposit updated successfully", data: updatedFd[0] });
+        // Update the Fixed Deposit with aggregated values
+        const finalUpdatedFd = await FixedDepositModel.findOneAndUpdate(
+            { _id: fdObjectId, userId: req.user.id },
+            {
+                currentProfitAmount: aggregatedData.currentProfitAmount,
+                currentReturnAmount: aggregatedData.currentReturnAmount,
+                totalReturnedAmount: aggregatedData.totalReturnedAmount,
+                totalYears: aggregatedData.totalYears
+            },
+            { new: true }
+        );
+
+        console.log('Final Updated Fixed Deposit:', finalUpdatedFd);
+
+        // Format dates
+        finalUpdatedFd.startDate = formatDate(finalUpdatedFd.startDate);
+        finalUpdatedFd.maturityDate = formatDate(finalUpdatedFd.maturityDate);
+
+        res.status(200).json({ statusCode: 200, message: "Fixed Deposit updated successfully", data: finalUpdatedFd });
     } catch (err) {
         console.error("Error while updating data:", err);
         res.status(500).json({ statusCode: 500, message: 'Internal server error' });
     }
 };
+
 
 // Delete a Fixed Deposit
 const fixedDepositDelete = async (req, res) => {
@@ -405,10 +420,10 @@ const getFdDetails = async (req, res) => {
         const userId = req.user.id;
 
         // Fetch all FDs for the authenticated user, sorted by createdAt date
-        const fdDetails = await FixedDepositModel.find({ userId }).sort({ createdAt: 1 });
+        const fdDetails = await FixedDepositModel.find({ userId }).sort({ createdAt: 1 }).lean();
 
         if (!fdDetails.length) {
-            return res.status(200).json({ statusCode: 200, message: 'No Fixed Deposits found for this user',data:fdDetails });
+            return res.status(200).json({ statusCode: 200, message: 'No Fixed Deposits found for this user', data: fdDetails });
         }
 
         // Debugging: Check the raw data before formatting
@@ -419,19 +434,16 @@ const getFdDetails = async (req, res) => {
             const srNo = index + 1; // Ensure srNo starts from 1
             console.log(`Index: ${index}, Assigned srNo: ${srNo}, FD ID: ${fd._id}`);
 
-            // Convert fd to a plain object
-            const fdObj = fd.toObject();
-
             // Add srNo to the plain object
-            fdObj.srNo = srNo;
+            fd.srNo = srNo;
 
             // Format dates
-            fdObj.createdAt = moment(fdObj.createdAt).format('YYYY-MM-DD');
-            fdObj.updatedAt = moment(fdObj.updatedAt).format('YYYY-MM-DD');
-            fdObj.maturityDate = moment(fdObj.maturityDate).format('YYYY-MM-DD');
-            fdObj.startDate = moment(fdObj.startDate).format('YYYY-MM-DD');
+            fd.createdAt = moment(fd.createdAt).format('YYYY-MM-DD');
+            fd.updatedAt = moment(fd.updatedAt).format('YYYY-MM-DD');
+            fd.maturityDate = moment(fd.maturityDate).format('YYYY-MM-DD');
+            fd.startDate = moment(fd.startDate).format('YYYY-MM-DD');
 
-            return fdObj;
+            return fd;
         });
 
         // Debugging: Check the formatted data before sending the response
@@ -443,6 +455,7 @@ const getFdDetails = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: 'Internal server error' });
     }
 };
+
 
 // Get the Fixed Deposit by Id
 const getFdById = async (req, res) => {

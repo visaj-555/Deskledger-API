@@ -28,6 +28,10 @@ const UserSchema = new Schema(
     },
     password: {
       type: String,
+    }, 
+    image:{
+      type: String,
+      default: 'default_user.jpg'
     }
   },
   { timestamps: true }
