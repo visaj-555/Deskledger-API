@@ -5,6 +5,7 @@ const axios = require('axios'); // Import axios
 const TokenModel = require('../models/tokenModel')
 const fs = require('fs');
 const path = require('path');
+
 // Registering User
 const registerUser = async (req, res) => {
   try {
@@ -32,6 +33,7 @@ const registerUser = async (req, res) => {
   }
 };
 
+//Login user 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   
@@ -112,53 +114,46 @@ const getUser = async (req, res) => {
 // Update user
 const updateUser = async (req, res) => {
   try {
-    console.log(req.body);
-    console.log(req.file);
+      const { id } = req.params;
+      const { firstName, lastName, phoneNo, email } = req.body;
 
-    const { id } = req.params;
-    const { firstName, lastName, phoneNo, email } = req.body;
+      if (req.user.id !== id) {
+          return res.status(403).json({ statusCode: 403, message: "Forbidden. You can only update your own profile." });
+      }
 
-    // Prepare update data
-    let updateData = { firstName, lastName, phoneNo, email };
+      console.log("Request Body: ", req.body);
+      console.log("Request File: ", req.file);
 
-    if (req.file) {
-      // Get the original file extension
-      const fileExtension = path.extname(req.file.originalname);
+      let updateData = { firstName, lastName, phoneNo, email };
 
-      // Create new file name using the firstName and .jpg extension
-      const newFileName = `${firstName}.jpg`;
+      if (req.file) {
+          const fileExtension = path.extname(req.file.originalname);
+          const newFileName = `${firstName}.jpg`;
+          const oldFilePath = req.file.path;
+          const newFilePath = path.join(path.dirname(oldFilePath), newFileName);
+          fs.renameSync(oldFilePath, newFilePath);
+          updateData.image = newFileName;
+      }
 
-      // Path to the uploaded file
-      const oldFilePath = req.file.path;
+      const updatedUser = await UserModel.findByIdAndUpdate(id, updateData, { new: true });
 
-      // New file path
-      const newFilePath = path.join(path.dirname(oldFilePath), newFileName);
+      if (!updatedUser) {
+          return res.status(404).json({ error: 'User not found' });
+      }
 
-      // Rename the file
-      fs.renameSync(oldFilePath, newFilePath);
-
-      // Update the image field with the new file name
-      updateData.image = newFileName;
-    }
-
-    const updatedUser = await UserModel.findByIdAndUpdate(id, updateData, { new: true });
-
-    if (!updatedUser) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.status(200).json({
-      statusCode: 200,
-      message: 'User updated successfully!',
-      data: updatedUser
-    });
+      res.status(200).json({
+          statusCode: 200,
+          message: 'User updated successfully!',
+          data: updatedUser
+      });
   } catch (error) {
-    res.status(500).json({
-      message: "Error updating user",
-      error: error.message
-    });
+      res.status(500).json({
+          message: "Error updating user",
+          error: error.message
+      });
   }
 };
+
 
 // Delete a user
 const deleteUser = async (req, res) => {
@@ -180,6 +175,41 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Change Password
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    const userId = req.user.id;
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ statusCode: 404, message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ statusCode: 400, message: "Invalid old password" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ statusCode: 400, message: "Passwords do not match" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    await TokenModel.deleteMany({ userId: userId });
+
+    res.status(200).json({ statusCode: 200, message: "Password changed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ statusCode: 500, message: "Your password cannot be changed" });
+  }
+};
+
 module.exports = {
   registerUser,
   updateUser,
@@ -187,5 +217,6 @@ module.exports = {
   getUser,
   deleteUser,
   loginUser,
-  fetchExternalData 
+  fetchExternalData, 
+  changePassword 
 };
