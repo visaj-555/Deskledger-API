@@ -9,13 +9,29 @@ const { userRegisterValidate, userLoginValidate } = require('../middlewares/user
 const { getFdAnalysis } = require('../controllers/fdAnalysisController');
 const { ensureAuthenticated } = require('../middlewares/authValidator');
 const { validateFixedDeposit } = require('../middlewares/fdValidator');
+const{upload} = require('../middlewares/upload');
 
 // User routes
 router.post('/user/login', userLoginValidate, loginUser);
 router.post('/user/register', userRegisterValidate, registerUser);
 router.get('/users', getUsers);
 router.get('/users/:id', ensureAuthenticated, getUser);
-// router.put('/user/update/:id',  ensureAuthenticated, userRegisterValidate,  upload.single('profileImage'), updateUser);
+router.put('/user/update/:id', 
+    ensureAuthenticated, 
+    userRegisterValidate, 
+    upload.single('profileImage'), // Ensure this matches the form-data field name
+    (req, res, next) => {
+      if (req.fileValidationError) {
+        return res.status(400).send({ error: req.fileValidationError });
+      }
+      next();
+    }, 
+    updateUser
+);
+
+
+  
+  
 
 router.delete('/users/delete', ensureAuthenticated, deleteUser);
 router.get('/users/getExternalData', fetchExternalData);

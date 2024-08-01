@@ -3,7 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios'); // Import axios
 const TokenModel = require('../models/tokenModel')
-
+const fs = require('fs');
+const path = require('path');
 // Registering User
 const registerUser = async (req, res) => {
   try {
@@ -30,8 +31,6 @@ const registerUser = async (req, res) => {
     res.status(500).json({ message: "Error registering user", error });
   }
 };
-
-
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -113,19 +112,36 @@ const getUser = async (req, res) => {
 // Update user
 const updateUser = async (req, res) => {
   try {
-    const { id, firstName, lastName, phoneNo, email } = req.body;
+    console.log(req.body);
+    console.log(req.file);
+
+    const { id } = req.params;
+    const { firstName, lastName, phoneNo, email } = req.body;
+
+    // Prepare update data
     let updateData = { firstName, lastName, phoneNo, email };
 
-    // Check if a file is uploaded
     if (req.file) {
-      updateData.profileImage = req.file.path; // Save the file path in the user document
+      // Get the original file extension
+      const fileExtension = path.extname(req.file.originalname);
+
+      // Create new file name using the firstName and .jpg extension
+      const newFileName = `${firstName}.jpg`;
+
+      // Path to the uploaded file
+      const oldFilePath = req.file.path;
+
+      // New file path
+      const newFilePath = path.join(path.dirname(oldFilePath), newFileName);
+
+      // Rename the file
+      fs.renameSync(oldFilePath, newFilePath);
+
+      // Update the image field with the new file name
+      updateData.image = newFileName;
     }
 
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    const updatedUser = await UserModel.findByIdAndUpdate(id, updateData, { new: true });
 
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
@@ -143,7 +159,6 @@ const updateUser = async (req, res) => {
     });
   }
 };
-
 
 // Delete a user
 const deleteUser = async (req, res) => {
@@ -172,5 +187,5 @@ module.exports = {
   getUser,
   deleteUser,
   loginUser,
-  fetchExternalData // Export fetchExternalData if needed
+  fetchExternalData 
 };

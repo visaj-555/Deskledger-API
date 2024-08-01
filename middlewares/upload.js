@@ -1,12 +1,14 @@
 const multer = require('multer');
 const path = require('path');
 
+
 // Configure multer storage options
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/profile_images');
   },
   filename: function (req, file, cb) {
+    // Use a placeholder for filename; we will replace it later
     cb(null, `${Date.now()}_${file.originalname}`);
   }
 });
@@ -22,7 +24,10 @@ const upload = multer({
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb(new Error('Only .jpeg, .jpg, and .png files are allowed!'));
+      req.fileValidationError = 'Only .jpeg, .jpg, and .png files are allowed!';
+      return cb(null, false, new Error('Only .jpeg, .jpg, and .png files are allowed!'));
     }
   }
 });
+
+module.exports = { upload };
