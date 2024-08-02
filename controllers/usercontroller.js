@@ -128,11 +128,11 @@ const updateUser = async (req, res) => {
 
       if (req.file) {
           const fileExtension = path.extname(req.file.originalname);
-          const newFileName = `${firstName}.jpg`;
+          const newFileName = `${Date.now()}_${req.file.originalname}`;
           const oldFilePath = req.file.path;
           const newFilePath = path.join(path.dirname(oldFilePath), newFileName);
           fs.renameSync(oldFilePath, newFilePath);
-          updateData.image = newFileName;
+          updateData.profileImage = newFileName;
       }
 
       const updatedUser = await UserModel.findByIdAndUpdate(id, updateData, { new: true });
@@ -153,7 +153,6 @@ const updateUser = async (req, res) => {
       });
   }
 };
-
 
 // Delete a user
 const deleteUser = async (req, res) => {

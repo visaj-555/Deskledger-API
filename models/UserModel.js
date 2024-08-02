@@ -29,7 +29,7 @@ const UserSchema = new Schema(
     password: {
       type: String,
     }, 
-    image:{
+    profileImage:{
       type: String,
       default: 'default_user.jpg'
     }

@@ -45,18 +45,7 @@ router.post("/user/register", userRegisterValidate, registerUser);
 router.get("/users", getUsers);
 router.get("/user-profile/:id", ensureAuthenticated, getUser);
 router.get("/users/:id", ensureAuthenticated, getUser);
-router.put("/user-profile/update/:id", 
-  ensureAuthenticated, 
-  userRegisterValidate,
-  upload.single("profileImage"), 
-  (req, res, next) => {
-      if (req.fileValidationError) {
-          return res.status(400).send({ error: req.fileValidationError });
-      }
-      next();
-  },
-  updateUser
-);
+router.put("/user-profile/update/:id", ensureAuthenticated, upload.single('profileImage'), updateUser);
 router.delete("/users/delete", ensureAuthenticated, deleteUser);
 router.get("/users/getExternalData", fetchExternalData);
 router.post("/user/changepassword",  ensureAuthenticated, changePassword);
