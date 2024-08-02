@@ -1,5 +1,8 @@
+const express = require('express');
 const multer = require('multer');
 const path = require('path');
+
+const app = express();
 
 // Configure multer storage options
 const storage = multer.diskStorage({
@@ -25,7 +28,18 @@ const upload = multer({
             req.fileValidationError = 'Only .jpeg, .jpg, and .png files are allowed!';
             return cb(null, false, new Error('Only .jpeg, .jpg, and .png files are allowed!'));
         }
-    }
+    },
+    limits: { fileSize: 1 * 1024 * 1024 } // Limit file size to 1 MB
 });
 
-module.exports = { upload };
+// Error handling middleware for file size limit
+function multerErrorHandling(err, req, res, next) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        req.fileSizeLimitError = true;
+        return res.status(400).json({ message: 'File size should be less than 1 MB.' });
+    }
+    next(err);
+}
+
+// Export middleware and upload instance
+module.exports = { upload, multerErrorHandling };

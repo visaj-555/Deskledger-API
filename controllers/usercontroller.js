@@ -1,7 +1,7 @@
 const UserModel = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const axios = require('axios'); // Import axios
+const axios = require('axios'); 
 const TokenModel = require('../models/tokenModel')
 const fs = require('fs');
 const path = require('path');
@@ -114,45 +114,58 @@ const getUser = async (req, res) => {
 // Update user
 const updateUser = async (req, res) => {
   try {
-      const { id } = req.params;
+      // Check for validation errors
+      if (req.fileValidationError) {
+          return res.status(400).json({ message: req.fileValidationError });
+      }
+
+      // Check if file is provided
+      if (!req.file) {
+          return res.status(400).json({ message: 'Please upload a valid image file.' });
+      }
+
+      // Check for file size limit errors
+      if (req.fileSizeLimitError) {
+          return res.status(400).json({ message: 'File size should be less than 1 MB.' });
+      }
+
+      // Process the file and other request data
       const { firstName, lastName, phoneNo, email } = req.body;
+      const profileImage = req.file.path; // Path of uploaded image
 
-      if (req.user.id !== id) {
-          return res.status(403).json({ statusCode: 403, message: "Forbidden. You can only update your own profile." });
+      // Find the user by ID and update the profile
+      const user = await UserModel.findById(req.params.id);
+      if (!user) {
+          return res.status(404).json({ message: 'User not found.' });
       }
 
-      console.log("Request Body: ", req.body);
-      console.log("Request File: ", req.file);
+      // Update user details
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      user.phoneNo = phoneNo || user.phoneNo;
+      user.email = email || user.email;
+      user.profileImage = profileImage; // Update profile image path
 
-      let updateData = { firstName, lastName, phoneNo, email };
+      // Save the updated user
+      await user.save();
 
-      if (req.file) {
-          const fileExtension = path.extname(req.file.originalname);
-          const newFileName = `${Date.now()}_${req.file.originalname}`;
-          const oldFilePath = req.file.path;
-          const newFilePath = path.join(path.dirname(oldFilePath), newFileName);
-          fs.renameSync(oldFilePath, newFilePath);
-          updateData.profileImage = newFileName;
-      }
-
-      const updatedUser = await UserModel.findByIdAndUpdate(id, updateData, { new: true });
-
-      if (!updatedUser) {
-          return res.status(404).json({ error: 'User not found' });
-      }
-
+      // Respond with success message
       res.status(200).json({
-          statusCode: 200,
-          message: 'User updated successfully!',
-          data: updatedUser
+          message: 'Profile updated successfully',
+          user: {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              phoneNo: user.phoneNo,
+              email: user.email,
+              profileImage: user.profileImage,
+          }
       });
   } catch (error) {
-      res.status(500).json({
-          message: "Error updating user",
-          error: error.message
-      });
+      console.error(error);
+      res.status(500).json({ message: 'An error occurred while updating the profile.' });
   }
 };
+
 
 // Delete a user
 const deleteUser = async (req, res) => {

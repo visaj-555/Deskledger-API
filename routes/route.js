@@ -37,7 +37,7 @@ const {
 const { getFdAnalysis } = require("../controllers/fdAnalysisController");
 const { ensureAuthenticated } = require("../middlewares/authValidator");
 const { validateFixedDeposit } = require("../middlewares/fdValidator");
-const { upload } = require("../middlewares/upload");
+const { upload, multerErrorHandling  } = require("../middlewares/upload");
 
 // User routes
 router.post("/user/login", userLoginValidate, loginUser);
@@ -45,7 +45,8 @@ router.post("/user/register", userRegisterValidate, registerUser);
 router.get("/users", getUsers);
 router.get("/user-profile/:id", ensureAuthenticated, getUser);
 router.get("/users/:id", ensureAuthenticated, getUser);
-router.put("/user-profile/update/:id", ensureAuthenticated, upload.single('profileImage'), updateUser);
+router.put("/user-profile/update/:id", ensureAuthenticated, upload.single('profileImage'), multerErrorHandling, updateUser);
+
 router.delete("/users/delete", ensureAuthenticated, deleteUser);
 router.get("/users/getExternalData", fetchExternalData);
 router.post("/user/changepassword",  ensureAuthenticated, changePassword);
