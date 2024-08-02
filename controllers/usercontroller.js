@@ -72,21 +72,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// Fetch data from an external API using Axios
-const fetchExternalData = async (token) => {
-  try {
-    const response = await axios.get('https://api.example.com/data', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching external data:', error);
-    throw error;
-  }
-};
-
 // Read all the Users Information
 const getUsers = async (req, res) => {
   try {
@@ -114,39 +99,32 @@ const getUser = async (req, res) => {
 // Update user
 const updateUser = async (req, res) => {
   try {
-      // Check for validation errors
       if (req.fileValidationError) {
           return res.status(400).json({ message: req.fileValidationError });
       }
 
-      // Check if file is provided
       if (!req.file) {
           return res.status(400).json({ message: 'Please upload a valid image file.' });
       }
 
-      // Check for file size limit errors
       if (req.fileSizeLimitError) {
           return res.status(400).json({ message: 'File size should be less than 1 MB.' });
       }
 
-      // Process the file and other request data
       const { firstName, lastName, phoneNo, email } = req.body;
       const profileImage = req.file.path; // Path of uploaded image
 
-      // Find the user by ID and update the profile
       const user = await UserModel.findById(req.params.id);
       if (!user) {
           return res.status(404).json({ message: 'User not found.' });
       }
 
-      // Update user details
       user.firstName = firstName || user.firstName;
       user.lastName = lastName || user.lastName;
       user.phoneNo = phoneNo || user.phoneNo;
       user.email = email || user.email;
-      user.profileImage = profileImage; // Update profile image path
+      user.profileImage = profileImage; 
 
-      // Save the updated user
       await user.save();
 
       // Respond with success message
@@ -165,8 +143,6 @@ const updateUser = async (req, res) => {
       res.status(500).json({ message: 'An error occurred while updating the profile.' });
   }
 };
-
-
 // Delete a user
 const deleteUser = async (req, res) => {
   try {
@@ -229,6 +205,5 @@ module.exports = {
   getUser,
   deleteUser,
   loginUser,
-  fetchExternalData, 
   changePassword 
 };

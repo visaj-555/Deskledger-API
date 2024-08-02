@@ -26,23 +26,20 @@ const getOverallInvestmentBySector = async (req, res) => {
     }
 };
 
-
-
 const getTopGainers = async (req, res) => {
     try {
-        // Ensure userId is converted to ObjectId
-        // const userId = new ObjectId(req.body.userId);
-        const userId = req.user.id; // Use req.user.id as set by the middleware
+       
+        const userId = req.user.id; 
 
         const topGainers = await FixedDeposit.aggregate([
             { $match: { userId: new mongoose.Types.ObjectId(userId) 
-            } }, // Filter by authenticated user
+            } }, 
             {
                 $addFields: {
                     profit: { $subtract: ['$currentReturnAmount', '$totalInvestedAmount'] }
                 }
             },
-            { $sort: { currentReturnAmount: -1 } }, // Sort by highest current amount
+            { $sort: { currentReturnAmount: -1 } }, 
             { $limit: 10 },
             {
                 $project: {
@@ -55,7 +52,6 @@ const getTopGainers = async (req, res) => {
             }
         ]);
 
-        // Add srNo to each document
         topGainers.forEach((item, index) => {
             item.srNo = index + 1;
         });
@@ -77,8 +73,8 @@ const getTopGainers = async (req, res) => {
 };
 
 const getInvestmentsBySector = async (req, res) => {
-    const { sector } = req.params; // Get sector from request body
-    const userId = req.user.id; // Use req.user.id as set by the middleware
+    const { sector } = req.params; 
+    const userId = req.user.id; 
 
     if (!sector) {
         return res.status(400).json({ message: 'Sector field is required in the body' });
@@ -90,13 +86,12 @@ const getInvestmentsBySector = async (req, res) => {
 
         switch (sector.toLowerCase()) {
             case 'banking':
-                // Fetch all FixedDeposits for the authenticated user
                 investments = await FixedDeposit.find({ userId });
                 console.log("Investments fetched:", investments);
 
                 investments = investments.map((item, index) => ({
                     srNo: index + 1,
-                    sector: 'Banking', // Hardcoding sector as 'Banking'
+                    sector: 'Banking', 
                     ...item._doc
                 }));
                 break;
@@ -111,14 +106,10 @@ const getInvestmentsBySector = async (req, res) => {
     }
 };
 
-
-
-
-
 const getInvestmentById = async (req, res) => {
     try {
-        const { id } = req.body; // Retrieve the investment ID from the request body
-        const investment = await FixedDeposit.findOne({ _id: id, userId: req.user.id }); // Find the investment by ID and userId
+        const { id } = req.body; 
+        const investment = await FixedDeposit.findOne({ _id: id, userId: req.user.id }); 
 
         if (!investment) {
             return res.status(404).json({ message: 'Investment not found' });
@@ -129,7 +120,6 @@ const getInvestmentById = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: "Error while fetching Investment by Id", error: error.message });
     }
 };
-
 
 const getHighestGrowthInSector = async (req, res) => {
     const { sector } = req.body;
@@ -144,7 +134,7 @@ const getHighestGrowthInSector = async (req, res) => {
             case 'banking':
                 highestGrowth = await FixedDeposit.findOne({
                     sector: 'Banking',
-                    userId: req.user.id // Filter by authenticated user
+                    userId: req.user.id 
                 })
                 .sort({ currentReturnAmount: -1 })
                 .select('totalInvestedAmount currentReturnAmount bankName fdType interestRate tenureInYears')

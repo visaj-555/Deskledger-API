@@ -9,7 +9,6 @@ const {
   getUser,
   updateUser,
   deleteUser,
-  fetchExternalData,
   changePassword
 } = require("../controllers/userController");
 
@@ -48,7 +47,6 @@ router.get("/users/:id", ensureAuthenticated, getUser);
 router.put("/user-profile/update/:id", ensureAuthenticated, upload.single('profileImage'), multerErrorHandling, updateUser);
 
 router.delete("/users/delete", ensureAuthenticated, deleteUser);
-router.get("/users/getExternalData", fetchExternalData);
 router.post("/user/changepassword",  ensureAuthenticated, changePassword);
 
 // Fixed Deposit routes
