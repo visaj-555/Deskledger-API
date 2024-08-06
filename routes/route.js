@@ -9,7 +9,9 @@ const {
   getUser,
   updateUser,
   deleteUser,
-  changePassword
+  changePassword, 
+  forgotPassword,
+  resetPassword
 } = require("../controllers/userController");
 
 const {
@@ -38,6 +40,8 @@ const { ensureAuthenticated } = require("../middlewares/authValidator");
 const { validateFixedDeposit } = require("../middlewares/fdValidator");
 const { upload, multerErrorHandling  } = require("../middlewares/upload");
 
+
+
 // User routes
 router.post("/user/login", userLoginValidate, loginUser);
 router.post("/user/register", userRegisterValidate, registerUser);
@@ -63,5 +67,9 @@ router.get("/overall-investment-by-sector", ensureAuthenticated, getOverallInves
 router.get("/investments-by-sector/:sector",ensureAuthenticated, getInvestmentsBySector);
 router.get("/investments", ensureAuthenticated, getInvestmentById);
 router.get("/investments/highest-growth", ensureAuthenticated, getHighestGrowthInSector);
+
+router.post('/forgot-password', ensureAuthenticated, forgotPassword);
+
+router.post('/reset-password/:token',  ensureAuthenticated, resetPassword); 
 
 module.exports = router;

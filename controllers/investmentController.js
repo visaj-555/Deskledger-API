@@ -1,7 +1,5 @@
 const FixedDeposit = require('../models/fixedDeposit');
 const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
-
 
 const getOverallInvestmentBySector = async (req, res) => {
     try {

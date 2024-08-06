@@ -5,12 +5,13 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const routes = require('./routes/route'); 
 
+// Load environment variables from .env file
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3500;
-const host = process.env.HOST || '192.168.29.168';
-const url = process.env.CONNECTION;
+const HOST = process.env.HOST || '192.168.29.168';
+const DB_CONNECTION = process.env.CONNECTION;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -30,10 +31,7 @@ app.use('/', routes);
 
 const databaseConnection = async () => {
   try {
-    await mongoose.connect(url, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(DB_CONNECTION);
     console.log('Connected to database');
   } catch (error) {
     console.error('Error while connecting to database:', error);
@@ -43,6 +41,6 @@ const databaseConnection = async () => {
 
 databaseConnection();
 
-app.listen(PORT, () => {
-  console.log(`App listening at http://${host}:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`App listening at http://${HOST}:${PORT}`);
 });

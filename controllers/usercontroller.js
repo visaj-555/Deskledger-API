@@ -1,16 +1,19 @@
 const UserModel = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const axios = require('axios'); 
 const TokenModel = require('../models/tokenModel')
-const fs = require('fs');
-const path = require('path');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+const PasswordResetTokenModel = require('../models/passwordResetTokenModel');
+
 
 // Registering User
 const registerUser = async (req, res) => {
   try {
     const { firstName, lastName, phoneNo, email, password } = req.body;
+
     const userExists = await UserModel.findOne({ email });
+
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -26,6 +29,8 @@ const registerUser = async (req, res) => {
       password: hashedPassword,
     });
 
+    console.log("New User: " + newUser); 
+
     const savedUser = await newUser.save();
     res.status(201).json({ message: "User registered successfully", data: { ...savedUser.toObject(), password: undefined } });
   } catch (error) {
@@ -36,39 +41,39 @@ const registerUser = async (req, res) => {
 //Login user 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
-  
-  try {
-      const user = await UserModel.findOne({ email });
-      if (!user) {
-          return res.status(400).json({ statusCode: 400, message: 'User not found' });
-      }
-      
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch) {
-          return res.status(400).json({ statusCode: 400, message: 'Invalid password' });
-      }
-      
-      const token = jwt.sign({ id: user._id }, process.env.SECRET, { expiresIn: '1d' });
 
-      // Save the token in the database
-      const tokenDoc = new TokenModel({ token });
-      await tokenDoc.save();
-      
-      res.status(200).json({
-          statusCode: 200,
-          message: 'Login Successful',
-          data: {
-              token,
-              _id: user._id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              phoneNo: user.phoneNo,
-              email: user.email
-          }
-      });
+  try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ statusCode: 400, message: 'User not found' });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ statusCode: 400, message: 'Invalid password' });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.SECRET, { expiresIn: '1d' });
+
+    // Save the token in the database with the userId
+    const tokenDoc = new TokenModel({ token, userId: user._id });
+    await tokenDoc.save();
+
+    res.status(200).json({
+      statusCode: 200,
+      message: 'Login Successful',
+      data: {
+        token,
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNo: user.phoneNo,
+        email: user.email
+      }
+    });
   } catch (error) {
-      console.error('Error logging in user:', error);
-      res.status(500).json({ statusCode: 500, message: 'Internal server error' });
+    console.error('Error logging in user:', error);
+    res.status(500).json({ statusCode: 500, message: 'Internal server error' });
   }
 };
 
@@ -198,6 +203,103 @@ const changePassword = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  const transporter = nodemailer.createTransport({
+    
+    host: 'smtp.gmail.com',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  try {
+    console.log("transporter-----", transporter  )
+  
+    const { email } = req.body; // email input for forgot password
+    console.log("Email : " +  email);
+
+    const user = await UserModel.findOne({ email }); // find if the user exists
+    console.log("User : " + user);
+
+    if (!user) {
+      return res.status(400).json({ statusCode :  400, message: 'No user found' });
+    }
+
+    // Generate a password reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    const passwordResetToken = new PasswordResetTokenModel({
+      token: resetToken,
+      userId: user._id
+    });
+
+    // saving into the database
+    await passwordResetToken.save();
+
+    // Send email with reset link
+    const resetLink = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+    const mailOptions = {
+      to: email,
+      from: process.env.EMAIL_USER,
+      subject: 'Password Reset Request',
+      html: `<p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({statusCode : 200,  message: 'Password reset link sent to your email.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({statusCode : 500, message: 'Error sending password reset email.' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+
+
+  try {
+
+    const { token } = req.params; // input token from the params
+    const { newPassword } = req.body; // new password to be stored
+    const userId = req.user.id;
+
+    // find the token 
+    const resetToken = await PasswordResetTokenModel.findOne({ token });
+
+    if (!resetToken) {
+      return res.status(400).json({statusCode : 400,  message: 'Invalid or expired token.' });
+    }
+
+    if (resetToken.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ statusCode : 403, message: 'Unauthorized. Token does not match user.' });
+    }
+
+    // Find the user associated with the token
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(400).json({ statusCode : 400,  message: 'User not found.' });
+    }
+
+    // encrypting the new password 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    
+    // Update the user's password with the hashed password
+    user.password = hashedPassword;
+    await user.save();
+
+    // Delete the reset token
+    await PasswordResetTokenModel.findByIdAndDelete(resetToken._id);
+
+    res.status(200).json({statusCode :  200, message: 'Password reset successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({statusCode :  500,  message: 'Error resetting password.' });
+  }
+};
+
+
 module.exports = {
   registerUser,
   updateUser,
@@ -205,5 +307,7 @@ module.exports = {
   getUser,
   deleteUser,
   loginUser,
-  changePassword 
+  changePassword , 
+  forgotPassword, 
+  resetPassword 
 };
