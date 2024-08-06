@@ -71,3 +71,5 @@ const FixedDepositSchema = new Schema({
 
 const FixedDepositModel = mongoose.model('FixedDeposit', FixedDepositSchema);
 module.exports = FixedDepositModel;
+
+

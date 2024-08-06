@@ -1,11 +1,11 @@
-const UserModel = require('../models/userModel');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const TokenModel = require('../models/tokenModel')
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
-const PasswordResetTokenModel = require('../models/passwordResetTokenModel');
-
+const UserModel = require("../models/userModel");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const TokenModel = require("../models/tokenModel");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
+const PasswordResetTokenModel = require("../models/passwordResetTokenModel");
+const { statusCode, message } = require('../utils/api.response');
 
 // Registering User
 const registerUser = async (req, res) => {
@@ -15,7 +15,7 @@ const registerUser = async (req, res) => {
     const userExists = await UserModel.findOne({ email });
 
     if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.userAlreadyExists });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -29,51 +29,53 @@ const registerUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    console.log("New User: " + newUser); 
-
     const savedUser = await newUser.save();
-    res.status(201).json({ message: "User registered successfully", data: { ...savedUser.toObject(), password: undefined } });
+    res.status(statusCode.CREATED).json({
+      message: message.userCreated,
+      data: { ...savedUser.toObject(), password: undefined },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error registering user", error });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorRegisteringUser, error });
   }
 };
 
-//Login user 
+// Login User
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({ statusCode: 400, message: 'User not found' });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.userNotFound });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ statusCode: 400, message: 'Invalid password' });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.passwordIncorrect });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: user._id }, process.env.SECRET, {
+      expiresIn: "1d",
+    });
 
     // Save the token in the database with the userId
     const tokenDoc = new TokenModel({ token, userId: user._id });
     await tokenDoc.save();
 
-    res.status(200).json({
-      statusCode: 200,
-      message: 'Login Successful',
+    res.status(statusCode.OK).json({
+      message: message.userLoggedIn,
       data: {
         token,
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         phoneNo: user.phoneNo,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   } catch (error) {
-    console.error('Error logging in user:', error);
-    res.status(500).json({ statusCode: 500, message: 'Internal server error' });
+    console.error("Error logging in user:", error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorLogin });
   }
 };
 
@@ -81,90 +83,91 @@ const loginUser = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const users = await UserModel.find({}, { password: 0 });
-    res.status(200).json({ statusCode: 200, message: "Users data fetched successfully", data: users });
+    res.status(statusCode.OK).json({
+      message: message.usersView,
+      data: users,
+    });
   } catch (error) {
-    res.status(500).json({ statusCode: 500, message: "Error fetching users", error });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingUsers, error });
   }
 };
 
-// Read all the User Information by Id
+// Read User Information by Id
 const getUser = async (req, res) => {
   try {
     const id = req.params.id;
     const user = await UserModel.findById(id, { password: 0 });
     if (!user) {
-      return res.status(404).json({ statusCode: 404, message: "User not found" });
+      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
     }
-    res.status(200).json({ statusCode: 200, message: "User data fetched by Id", data: user });
+    res.status(statusCode.OK).json({
+      message: message.userView,
+      data: user,
+    });
   } catch (error) {
-    res.status(500).json({ statusCode: 500, message: "Error fetching user", error });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingUser, error });
   }
 };
 
-// Update user
+// Update User
 const updateUser = async (req, res) => {
   try {
-      if (req.fileValidationError) {
-          return res.status(400).json({ message: req.fileValidationError });
-      }
+    if (req.fileValidationError) {
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.imageValidation });
+    }
 
-      if (!req.file) {
-          return res.status(400).json({ message: 'Please upload a valid image file.' });
-      }
+    if (!req.file) {
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.imageValidation });
+    }
 
-      if (req.fileSizeLimitError) {
-          return res.status(400).json({ message: 'File size should be less than 1 MB.' });
-      }
+    if (req.fileSizeLimitError) {
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.fileTooLarge });
+    }
 
-      const { firstName, lastName, phoneNo, email } = req.body;
-      const profileImage = req.file.path; // Path of uploaded image
+    const { firstName, lastName, phoneNo, email } = req.body;
+    const profileImage = req.file.path; // Path of uploaded image
 
-      const user = await UserModel.findById(req.params.id);
-      if (!user) {
-          return res.status(404).json({ message: 'User not found.' });
-      }
+    const user = await UserModel.findById(req.params.id);
+    if (!user) {
+      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
+    }
 
-      user.firstName = firstName || user.firstName;
-      user.lastName = lastName || user.lastName;
-      user.phoneNo = phoneNo || user.phoneNo;
-      user.email = email || user.email;
-      user.profileImage = profileImage; 
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.phoneNo = phoneNo || user.phoneNo;
+    user.email = email || user.email;
+    user.profileImage = profileImage;
 
-      await user.save();
+    await user.save();
 
-      // Respond with success message
-      res.status(200).json({
-          message: 'Profile updated successfully',
-          user: {
-              firstName: user.firstName,
-              lastName: user.lastName,
-              phoneNo: user.phoneNo,
-              email: user.email,
-              profileImage: user.profileImage,
-          }
-      });
+    // Respond with success message
+    res.status(statusCode.OK).json({
+      message: message.userProfileUpdated,
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNo: user.phoneNo,
+        email: user.email,
+        profileImage: user.profileImage,
+      },
+    });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'An error occurred while updating the profile.' });
+    console.error(error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.updateUserError });
   }
 };
-// Delete a user
+
+// Delete User
 const deleteUser = async (req, res) => {
   try {
     const id = req.query.id;
     const deletedUser = await UserModel.findByIdAndDelete(id);
     if (!deletedUser) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
     }
-    res.status(200).json({
-      statusCode: 200,
-      message: 'User deleted successfully!'
-    });
+    res.status(statusCode.OK).json({ message: message.userDeleted });
   } catch (error) {
-    res.status(500).json({
-      message: 'User can\'t be deleted',
-      error: error.message
-    });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.deleteUserError, error: error.message });
   }
 };
 
@@ -176,16 +179,16 @@ const changePassword = async (req, res) => {
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      return res.status(404).json({ statusCode: 404, message: "User not found" });
+      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
-      return res.status(400).json({ statusCode: 400, message: "Invalid old password" });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.incorrectOldPassword });
     }
 
     if (newPassword !== confirmPassword) {
-      return res.status(400).json({ statusCode: 400, message: "Passwords do not match" });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.passwordNotMatch });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -196,118 +199,106 @@ const changePassword = async (req, res) => {
 
     await TokenModel.deleteMany({ userId: userId });
 
-    res.status(200).json({ statusCode: 200, message: "Password changed successfully" });
+    res.status(statusCode.OK).json({ message: message.passwordChanged });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ statusCode: 500, message: "Your password cannot be changed" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.passwordChangeError });
   }
 };
 
+// Forgot Password
 const forgotPassword = async (req, res) => {
   const transporter = nodemailer.createTransport({
-    
-    host: 'smtp.gmail.com',
+    host: "smtp.gmail.com",
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
+      pass: process.env.EMAIL_PASS,
+    },
   });
 
   try {
-    console.log("transporter-----", transporter  )
-  
-    const { email } = req.body; // email input for forgot password
-    console.log("Email : " +  email);
+    const { email } = req.body;
 
-    const user = await UserModel.findOne({ email }); // find if the user exists
-    console.log("User : " + user);
+    const user = await UserModel.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ statusCode :  400, message: 'No user found' });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.userNotFound });
     }
 
     // Generate a password reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetToken = crypto.randomBytes(32).toString("hex");
 
     const passwordResetToken = new PasswordResetTokenModel({
       token: resetToken,
-      userId: user._id
+      userId: user._id,
     });
 
-    // saving into the database
+    // Save the token to the database
     await passwordResetToken.save();
 
     // Send email with reset link
-    const resetLink = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+    const resetLink = `${req.protocol}://${req.get("host")}/reset-password/${resetToken}`;
     const mailOptions = {
       to: email,
       from: process.env.EMAIL_USER,
-      subject: 'Password Reset Request',
-      html: `<p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`
+      subject: "Password Reset Request",
+      html: `<p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`,
     };
 
     await transporter.sendMail(mailOptions);
 
-    res.status(200).json({statusCode : 200,  message: 'Password reset link sent to your email.' });
+    res.status(statusCode.OK).json({ message: message.resetPasswordsend });
   } catch (error) {
     console.error(error);
-    res.status(500).json({statusCode : 500, message: 'Error sending password reset email.' });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorSendingPasswordResetEmail });
   }
 };
 
 const resetPassword = async (req, res) => {
-
-
   try {
-
-    const { token } = req.params; // input token from the params
-    const { newPassword } = req.body; // new password to be stored
+    const { token } = req.params;
+    const { newPassword } = req.body;
     const userId = req.user.id;
 
-    // find the token 
     const resetToken = await PasswordResetTokenModel.findOne({ token });
 
     if (!resetToken) {
-      return res.status(400).json({statusCode : 400,  message: 'Invalid or expired token.' });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.expiredToken });
     }
 
     if (resetToken.userId.toString() !== userId.toString()) {
-      return res.status(403).json({ statusCode : 403, message: 'Unauthorized. Token does not match user.' });
+      return res.status(statusCode.FORBIDDEN).json({ message: message.tokenNotMatch });
     }
 
-    // Find the user associated with the token
     const user = await UserModel.findById(userId);
     if (!user) {
-      return res.status(400).json({ statusCode : 400,  message: 'User not found.' });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.userNotFound });
     }
 
-    // encrypting the new password 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
-    
-    // Update the user's password with the hashed password
+
     user.password = hashedPassword;
     await user.save();
 
-    // Delete the reset token
-    await PasswordResetTokenModel.findByIdAndDelete(resetToken._id);
+    // Delete the reset token from the database
+    await resetToken.delete();
 
-    res.status(200).json({statusCode :  200, message: 'Password reset successfully.' });
+    res.status(statusCode.OK).json({ message: message.resetPasswordSuccess });
   } catch (error) {
     console.error(error);
-    res.status(500).json({statusCode :  500,  message: 'Error resetting password.' });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.resetPasswordError });
   }
 };
 
-
 module.exports = {
   registerUser,
-  updateUser,
+  loginUser,
   getUsers,
   getUser,
+  updateUser,
   deleteUser,
-  loginUser,
-  changePassword , 
-  forgotPassword, 
-  resetPassword 
+  changePassword,
+  forgotPassword,
+  resetPassword,
 };

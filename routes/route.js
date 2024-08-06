@@ -26,19 +26,18 @@ const {
   fixedDepositRegister,
   fixedDepositDelete,
   getFdDetails,
-  updateFixedDeposit,
-  getFdById,
+  updateFixedDeposit
 } = require("../controllers/fdcontroller");
 
 const {
   userRegisterValidate,
   userLoginValidate,
-} = require("../middlewares/userValidator");
+} = require("../Validation/userValidator");
 
 const { getFdAnalysis } = require("../controllers/fdAnalysisController");
-const { ensureAuthenticated } = require("../middlewares/authValidator");
-const { validateFixedDeposit } = require("../middlewares/fdValidator");
-const { upload, multerErrorHandling  } = require("../middlewares/upload");
+const { ensureAuthenticated } = require("../Validation/authValidator");
+const { validateFixedDeposit } = require("../Validation/fdValidator");
+const { upload, multerErrorHandling  } = require("../Validation/upload");
 
 
 
@@ -55,10 +54,12 @@ router.post("/user/changepassword",  ensureAuthenticated, changePassword);
 
 // Fixed Deposit routes
 router.post("/fd/register", ensureAuthenticated, validateFixedDeposit, fixedDepositRegister);
+router.post("/fd/create", ensureAuthenticated, validateFixedDeposit, fixedDepositRegister);
+
 router.delete("/fd/delete/:id", ensureAuthenticated, fixedDepositDelete);
 router.get("/fds", ensureAuthenticated, getFdDetails);
 router.put( "/fd/update/:id", ensureAuthenticated,validateFixedDeposit, updateFixedDeposit);
-router.get("/fd/:id", ensureAuthenticated, getFdById);
+router.get("/fd/:id", ensureAuthenticated, getFdDetails);
 router.get("/fd-analysis", ensureAuthenticated, getFdAnalysis);
 
 // Investment routes

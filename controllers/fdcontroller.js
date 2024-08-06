@@ -1,11 +1,26 @@
 //fdcontroller.js
 
+
 const FixedDepositModel = require("../models/fixedDeposit");
 const mongoose = require("mongoose");
 const moment = require("moment");
 const FdAnalysisModel = require("../models/fdAnalysis");
+const { statusCode, message } = require('../utils/api.response');
+const { registerFdAggregation, updateFdAggregation } = require("../helpers/aggregationHelper");
 
-// Register a Fixed Deposit
+// Util function for formatting dates to 'YYYY-MM-DD'
+const formatDate = (date) => {
+  const d = new Date(date);
+  let month = "" + (d.getMonth() + 1);
+  let day = "" + d.getDate();
+  const year = d.getFullYear();
+
+  if (month.length < 2) month = "0" + month;
+  if (day.length < 2) day = "0" + day;
+
+  return [year, month, day].join("-");
+};
+
 const fixedDepositRegister = async (req, res) => {
   try {
     const {
@@ -24,31 +39,14 @@ const fixedDepositRegister = async (req, res) => {
 
     // Ensure the authenticated user is registering the FD for themselves
     if (String(req.user.id) !== String(userId)) {
-      return res
-        .status(403)
-        .json({ statusCode: 403, message: "FD already exists" });
+      return res.status(statusCode.FORBIDDEN).json({ message: message.errorCreatingFD });
     }
 
     // Check if FD already exists
     const fdExists = await FixedDepositModel.findOne({ fdNo, userId });
     if (fdExists) {
-      return res
-        .status(400)
-        .json({ statusCode: 400, message: "FD already exists" });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.errorCreatingFD });
     }
-
-    // Format dates to 'YYYY-MM-DD'
-    const formatDate = (date) => {
-      const d = new Date(date);
-      let month = "" + (d.getMonth() + 1);
-      let day = "" + d.getDate();
-      const year = d.getFullYear();
-
-      if (month.length < 2) month = "0" + month;
-      if (day.length < 2) day = "0" + day;
-
-      return [year, month, day].join("-");
-    };
 
     const formattedStartDate = formatDate(startDate);
     const formattedMaturityDate = formatDate(maturityDate);
@@ -71,112 +69,18 @@ const fixedDepositRegister = async (req, res) => {
     // Save new FD
     await newFixedDeposit.save();
 
-    // Calculate tenure in years for total and completed periods
-    const totalYears = {
-      $divide: [
-        { $subtract: [new Date(maturityDate), new Date(startDate)] },
-        1000 * 60 * 60 * 24 * 365,
-      ],
-    };
-    const completedYears = {
-      $divide: [
-        { $subtract: [new Date(), new Date(startDate)] },
-        1000 * 60 * 60 * 24 * 365,
-      ],
-    };
-
     // Aggregation pipeline for updating the FD with calculated fields
-    const [updatedFd] = await FixedDepositModel.aggregate([
-      { $match: { _id: newFixedDeposit._id } },
-      {
-        $addFields: {
-          tenureInYears: { $round: [totalYears, 0] },
-          tenureCompletedYears: { $round: [completedYears, 0] },
-          currentReturnAmount: {
-            $round: [
-              {
-                $add: [
-                  "$totalInvestedAmount",
-                  {
-                    $multiply: [
-                      "$totalInvestedAmount",
-                      {
-                        $divide: [
-                          {
-                            $multiply: ["$interestRate", completedYears],
-                          },
-                          100,
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-              0,
-            ],
-          },
-          totalReturnedAmount: {
-            $round: [
-              {
-                $add: [
-                  "$totalInvestedAmount",
-                  {
-                    $multiply: [
-                      "$totalInvestedAmount",
-                      {
-                        $divide: [
-                          {
-                            $multiply: ["$interestRate", totalYears],
-                          },
-                          100,
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-              0,
-            ],
-          },
-          currentProfitAmount: {
-            $round: [
-              {
-                $subtract: [
-                  {
-                    $add: [
-                      "$totalInvestedAmount",
-                      {
-                        $multiply: [
-                          "$totalInvestedAmount",
-                          {
-                            $divide: [
-                              {
-                                $multiply: ["$interestRate", completedYears],
-                              },
-                              100,
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  "$totalInvestedAmount",
-                ],
-              },
-              0,
-            ],
-          },
-          totalYears: { $concat: [{ $toString: { $round: [totalYears, 0] } }] },
-        },
-      },
-    ]);
+    const [updatedFd] = await FixedDepositModel.aggregate(registerFdAggregation(
+      newFixedDeposit._id,
+      startDate,
+      maturityDate,
+      totalInvestedAmount,
+      interestRate
+    ));
 
-    // Ensure the aggregation returned a document
     if (!updatedFd) {
       console.error("Aggregation returned no documents");
-      return res
-        .status(500)
-        .json({ statusCode: 500, message: "Failed to update FD details" });
+      return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingFD });
     }
 
     // Update the new FD with the calculated fields
@@ -194,9 +98,7 @@ const fixedDepositRegister = async (req, res) => {
 
     if (!updatedFdResult) {
       console.error("Failed to update FD details after aggregation");
-      return res
-        .status(500)
-        .json({ statusCode: 500, message: "Failed to update FD details" });
+      return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingFD });
     }
 
     // Format dates in the response
@@ -207,18 +109,16 @@ const fixedDepositRegister = async (req, res) => {
     };
 
     // Send the response
-    res.status(201).json({
-      statusCode: 201,
-      message: "FD registered successfully",
+    res.status(statusCode.CREATED).json({
+      message: message.fdCreated,
       data: responseData,
     });
   } catch (error) {
     console.error("Error registering FD:", error);
-    res.status(500).json({ statusCode: 500, message: "Internal server error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorCreatingFD });
   }
 };
 
-// Update a Fixed Deposit
 const updateFixedDeposit = async (req, res) => {
   try {
     const { id } = req.params;
@@ -227,209 +127,60 @@ const updateFixedDeposit = async (req, res) => {
 
     // Validate fdId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ statusCode: 400, message: "Invalid Fixed Deposit ID" });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.errorUpdatingFD });
     }
 
     // Ensure the authenticated user is updating their own FD
-    if (String(req.user.id) !== String(userId)) {
-      return res
-        .status(403)
-        .json({
-          statusCode: 403,
-          message: "You are not authorized to update this FD",
-        });
-    }
-
-    // Convert fdId to ObjectId
-    const fdObjectId = new mongoose.Types.ObjectId(id);
-
-    console.log("Update Fixed Deposit Request:", {
-      fdObjectId,
-      userId,
-      updateData,
+    const fixedDeposit = await FixedDepositModel.findOne({
+      _id: new mongoose.Types.ObjectId(id),
+      userId: new mongoose.Types.ObjectId(userId),
     });
-
-    // Update the Fixed Deposit
-    const updatedFdDocument = await FixedDepositModel.findOneAndUpdate(
-      { _id: fdObjectId, userId: req.user.id },
-      updateData,
-      { new: true }
-    );
-
-    console.log("Updated Fixed Deposit Document:", updatedFdDocument);
-
-    if (!updatedFdDocument) {
-      return res
-        .status(404)
-        .json({
-          statusCode: 404,
-          message:
-            "Fixed deposit not found or you do not have permission to update it",
-        });
+    if (!fixedDeposit) {
+      return res.status(statusCode.NOT_FOUND).json({ message: message.errorFetchingFD });
     }
 
-    // Perform aggregation to calculate fields
-    const updatedFdAggregation = await FixedDepositModel.aggregate([
-      {
-        $match: {
-          _id: fdObjectId,
-          userId: new mongoose.Types.ObjectId(req.user.id),
-        },
-      },
-      {
-        $addFields: {
-          currentDate: new Date(),
-          tenureInYears: {
-            $round: [
-              {
-                $divide: [
-                  { $subtract: ["$maturityDate", "$startDate"] },
-                  1000 * 60 * 60 * 24 * 365,
-                ],
-              },
-              0,
-            ],
-          },
-          tenureCompletedYears: {
-            $round: [
-              {
-                $divide: [
-                  { $subtract: [new Date(), "$startDate"] },
-                  1000 * 60 * 60 * 24 * 365,
-                ],
-              },
-              0,
-            ],
-          },
-        },
-      },
-      {
-        $addFields: {
-          currentReturnAmount: {
-            $round: [
-              {
-                $add: [
-                  "$totalInvestedAmount",
-                  {
-                    $multiply: [
-                      "$totalInvestedAmount",
-                      {
-                        $divide: ["$interestRate", 100],
-                      },
-                      "$tenureCompletedYears",
-                    ],
-                  },
-                ],
-              },
-              0,
-            ],
-          },
-          totalReturnedAmount: {
-            $round: [
-              {
-                $add: [
-                  "$totalInvestedAmount",
-                  {
-                    $multiply: [
-                      "$totalInvestedAmount",
-                      {
-                        $divide: ["$interestRate", 100],
-                      },
-                      "$tenureInYears",
-                    ],
-                  },
-                ],
-              },
-              0,
-            ],
-          },
-          currentProfitAmount: {
-            $round: [
-              {
-                $subtract: [
-                  {
-                    $add: [
-                      "$totalInvestedAmount",
-                      {
-                        $multiply: [
-                          "$totalInvestedAmount",
-                          {
-                            $divide: [
-                              {
-                                $multiply: [
-                                  "$interestRate",
-                                  "$tenureCompletedYears",
-                                ],
-                              },
-                              100,
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  "$totalInvestedAmount",
-                ],
-              },
-              0,
-            ],
-          },
-          totalYears: {
-            $concat: [{ $toString: "$tenureInYears" }],
-          },
-        },
-      },
-    ]);
+    // Update the fixed deposit document with new values
+    await FixedDepositModel.findByIdAndUpdate(id, updateData, { new: true });
 
-    console.log(
-      "Updated Fixed Deposit Aggregation Result:",
-      updatedFdAggregation
-    );
+    // Recalculate values and update the document
+    const [updatedFd] = await FixedDepositModel.aggregate(updateFdAggregation(new mongoose.Types.ObjectId(id), fixedDeposit.startDate, fixedDeposit.maturityDate, fixedDeposit.totalInvestedAmount, fixedDeposit.interestRate));
 
-    if (!updatedFdAggregation.length) {
-      return res
-        .status(404)
-        .json({
-          statusCode: 404,
-          message:
-            "Fixed deposit not found or you do not have permission to view it",
-        });
+    if (!updatedFd) {
+      console.error("Aggregation returned no documents");
+      return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingFD });
     }
 
-    const aggregatedData = updatedFdAggregation[0];
-
-    // Update the Fixed Deposit with aggregated values
-    const finalUpdatedFd = await FixedDepositModel.findOneAndUpdate(
-      { _id: fdObjectId, userId: req.user.id },
+    // Update the FD with recalculated fields
+    const updatedFdResult = await FixedDepositModel.findByIdAndUpdate(
+      id,
       {
-        currentProfitAmount: aggregatedData.currentProfitAmount,
-        currentReturnAmount: aggregatedData.currentReturnAmount,
-        totalReturnedAmount: aggregatedData.totalReturnedAmount,
-        totalYears: aggregatedData.totalYears,
+        currentReturnAmount: updatedFd.currentReturnAmount || 0,
+        totalReturnedAmount: updatedFd.totalReturnedAmount || 0,
+        currentProfitAmount: updatedFd.currentProfitAmount || 0,
+        tenureCompletedYears: updatedFd.tenureCompletedYears || 0,
+        totalYears: updatedFd.totalYears || 0,
       },
-      { new: true }
+      { new: true } // Return the updated document
     );
 
-    console.log("Final Updated Fixed Deposit:", finalUpdatedFd);
+    if (!updatedFdResult) {
+      console.error("Failed to update FD details after aggregation");
+      return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingFD });
+    }
 
-    // Format dates
-    finalUpdatedFd.startDate = formatDate(finalUpdatedFd.startDate);
-    finalUpdatedFd.maturityDate = formatDate(finalUpdatedFd.maturityDate);
-
-    res
-      .status(200)
-      .json({
-        statusCode: 200,
-        message: "Fixed Deposit updated successfully",
-        data: finalUpdatedFd,
-      });
-  } catch (err) {
-    console.error("Error while updating data:", err);
-    res.status(500).json({ statusCode: 500, message: "Internal server error" });
+    // Send the updated FD details as response
+    res.status(statusCode.OK).json({
+      message: message.fdUpdated,
+      data: updatedFdResult,
+    });
+  } catch (error) {
+    console.error("Error updating FD:", error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingFD });
   }
 };
+
+
+
 
 // Delete a Fixed Deposit
 const fixedDepositDelete = async (req, res) => {
@@ -439,8 +190,8 @@ const fixedDepositDelete = async (req, res) => {
     // Validate fdId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
-        .status(400)
-        .json({ statusCode: 400, message: "Invalid Fixed Deposit ID" });
+        .status(statusCode.BAD_REQUEST)
+        .json({ statusCode: statusCode.BAD_REQUEST, message: message.errorDeletingFD });
     }
 
     // Ensure the authenticated user is deleting their own FD
@@ -450,11 +201,10 @@ const fixedDepositDelete = async (req, res) => {
     });
     if (!deletedFixedDeposit) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({
-          statusCode: 404,
-          message:
-            "Fixed Deposit not found or you do not have permission to delete it",
+          statusCode: statusCode.NOT_FOUND,
+          message: message.errorDeletingFD,
         });
     }
 
@@ -462,18 +212,18 @@ const fixedDepositDelete = async (req, res) => {
     await FdAnalysisModel.deleteOne({ userId: req.user.id });
 
     res
-      .status(200)
-      .json({ statusCode: 200, message: "Fd Deleted Successfully" });
+      .status(statusCode.OK)
+      .json({ statusCode: statusCode.OK, message: message.fdDeleted });
   } catch (error) {
     console.error(
       "Error while deleting Fixed Deposit:",
       error.message || error
     );
     res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({
-        statusCode: 500,
-        message: "Error deleting Fixed Deposit",
+        statusCode: statusCode.INTERNAL_SERVER_ERROR,
+        message: message.errorDeletingFD,
         error: error.message || error,
       });
   }
@@ -483,20 +233,30 @@ const fixedDepositDelete = async (req, res) => {
 const getFdDetails = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { id } = req.params; // Assume FD ID is passed as a URL parameter if needed
 
-    // Fetch all FDs for the authenticated user, sorted by createdAt date
-    const fdDetails = await FixedDepositModel.find({ userId })
-      .sort({ createdAt: 1 })
-      .lean();
-
-    if (!fdDetails.length) {
-      return res
-        .status(200)
-        .json({
-          statusCode: 200,
-          message: "No Fixed Deposits found for this user",
-          data: fdDetails,
-        });
+    let fdDetails;
+    if (id) {
+      // Fetch the specific FD for the authenticated user
+      fdDetails = await FixedDepositModel.findOne({ _id: id, userId }).lean();
+      if (!fdDetails) {
+        return res
+          .status(statusCode.NOT_FOUND)
+          .json({ statusCode: statusCode.NOT_FOUND, message: message.errorFetchingFD });
+      }
+      fdDetails = [fdDetails]; // Convert to array for consistent processing
+    } else {
+      // Fetch all FDs for the authenticated user, sorted by createdAt date
+      fdDetails = await FixedDepositModel.find({ userId }).sort({ createdAt: 1 }).lean();
+      if (!fdDetails.length) {
+        return res
+          .status(statusCode.OK)
+          .json({
+            statusCode: statusCode.OK,
+            message: message.errorFetchingFDs,
+            data: fdDetails,
+          });
+      }
     }
 
     // Debugging: Check the raw data before formatting
@@ -519,78 +279,31 @@ const getFdDetails = async (req, res) => {
       return fd;
     });
 
-    // Debugging: Check the formatted data before sending the response
-    console.log("Formatted FD Details:", formattedFdDetails);
+    // Debugging: Check the formatted data
+    console.log("FD Details after formatting:", formattedFdDetails);
 
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({
-        statusCode: 200,
-        message: "Fixed Deposits retrieved successfully",
+        statusCode: statusCode.OK,
+        message: message.fdDetailsFetched,
         data: formattedFdDetails,
       });
-  } catch (err) {
-    console.error("Error while fetching Fixed Deposit details:", err);
-    res.status(500).json({ statusCode: 500, message: "Internal server error" });
-  }
-};
-
-// Get the Fixed Deposit by Id
-const getFdById = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { id } = req.params; // Assume FD ID is passed as a URL parameter
-
-    // Fetch the specific FD for the authenticated user
-    const fdDetail = await FixedDepositModel.findOne({
-      _id: id,
-      userId: userId,
-    });
-
-    if (!fdDetail) {
-      return res
-        .status(404)
-        .json({ statusCode: 404, message: "Fixed Deposit not found" });
-    }
-
-    // Format the dates
-    const formattedFdDetail = {
-      ...fdDetail.toObject(),
-      createdAt: moment(fdDetail.createdAt).format("YYYY-MM-DD"),
-      updatedAt: moment(fdDetail.updatedAt).format("YYYY-MM-DD"),
-      maturityDate: moment(fdDetail.maturityDate).format("YYYY-MM-DD"),
-      startDate: moment(fdDetail.startDate).format("YYYY-MM-DD"),
-    };
-
+  } catch (error) {
+    console.error("Error while getting FD details:", error.message || error);
     res
-      .status(200)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({
-        statusCode: 200,
-        message: "Fixed Deposit retrieved successfully",
-        data: formattedFdDetail,
+        statusCode: statusCode.INTERNAL_SERVER_ERROR,
+        message: message.errorFetchingFDs,
+        error: error.message || error,
       });
-  } catch (err) {
-    console.error("Error while fetching Fixed Deposit detail:", err);
-    res.status(500).json({ statusCode: 500, message: "Internal server error" });
   }
-};
-
-const formatDate = (date) => {
-  const d = new Date(date);
-  let month = "" + (d.getMonth() + 1);
-  let day = "" + d.getDate();
-  const year = d.getFullYear();
-
-  if (month.length < 2) month = "0" + month;
-  if (day.length < 2) day = "0" + day;
-
-  return [year, month, day].join("-");
 };
 
 module.exports = {
   fixedDepositRegister,
-  fixedDepositDelete,
   updateFixedDeposit,
-  getFdDetails,
-  getFdById,
+  fixedDepositDelete,
+  getFdDetails
 };

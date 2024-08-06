@@ -1,27 +1,27 @@
 const mongoose = require('mongoose');
 const FixedDepositModel = require('../models/fixedDeposit');
 const FdAnalysisModel = require('../models/fdAnalysis');
+const { statusCode, message } = require('../utils/api.response');
 
-// Calculate and update FD analysis for a specific user
 const getFdAnalysis = async (req, res) => {
     try {
-        const userId = req.user.id; // Use the authenticated user's ID
+        const userId = req.user.id;
 
         const fdAnalysis = await FixedDepositModel.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } }, // Match FDs for the user
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $addFields: {
-                    currentDate: new Date(), // Add current date
+                    currentDate: new Date(),
                     tenureInYears: {
                         $divide: [
                             { $subtract: ["$maturityDate", "$startDate"] },
-                            1000 * 60 * 60 * 24 * 365 // Calculate tenure in years
+                            1000 * 60 * 60 * 24 * 365
                         ]
                     },
                     tenureCompletedYears: {
                         $divide: [
                             { $subtract: [new Date(), "$startDate"] },
-                            1000 * 60 * 60 * 24 * 365 // Calculate completed tenure in years
+                            1000 * 60 * 60 * 24 * 365
                         ]
                     }
                 }
@@ -65,46 +65,38 @@ const getFdAnalysis = async (req, res) => {
             {
                 $group: {
                     _id: null,
-                    totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" }, // Sum of invested amounts
-                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } } // Sum of current return amounts
+                    totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" },
+                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } }
                 }
             },
             {
                 $addFields: {
                     totalProfitGainedOfFds: {
-                        $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"] // Calculate total profit
+                        $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"]
                     }
                 }
             }
         ]);
 
         if (!fdAnalysis || fdAnalysis.length === 0) {
-            return res.status(200).json({statusCode : 200, message: 'No Fixed Deposits found' });
+            return res.status(statusCode.OK).json({ message: message.errorFetchingFD });
         }
 
         const analysisData = {
             totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
             currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
             totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
-            userId: new mongoose.Types.ObjectId(userId) // Associate with user
+            userId: new mongoose.Types.ObjectId(userId)
         };
 
-        // Update or create FD analysis document for the user
         const filter = { userId: new mongoose.Types.ObjectId(userId) };
         const update = { $set: analysisData };
         const options = { upsert: true, new: true };
         const updatedFdAnalysis = await FdAnalysisModel.findOneAndUpdate(filter, update, options);
 
-        console.log("Updated FD Analysis:", updatedFdAnalysis);
-
-        res.status(200).json({
-            statusCode: 200,
-            message: "Analysis Report of all the fixed deposits",
-            data: analysisData
-        });
+        res.status(statusCode.OK).json({ message: message.fdAnalysis, data: analysisData });
     } catch (error) {
-        console.error("Error calculating FD analytics:", error);
-        res.status(500).json({ statusCode: 500, message: "Error calculating FD analytics", error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFdAnalytics, error: error.message });
     }
 };
 

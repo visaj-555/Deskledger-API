@@ -12,7 +12,6 @@ const validateFixedDeposit = (req, res, next) => {
             .positive()
             .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
             .messages({
-                'number.base': 'FD number must be a number',
                 'number.integer': 'FD number must be an integer',
                 'number.positive': 'FD number must be a positive integer',
                 'any.required': 'FD number is required'
