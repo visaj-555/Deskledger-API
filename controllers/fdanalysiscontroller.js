@@ -3,6 +3,18 @@ const FixedDepositModel = require('../models/fixedDeposit');
 const FdAnalysisModel = require('../models/fdAnalysis');
 const { statusCode, message } = require('../utils/api.response');
 
+// Utility function to format the amount
+const formatAmount = (amount) => {
+    if (amount >= 1000000000) {
+        return (amount / 1000000000).toFixed(2) + ' billion';
+    } else if (amount >= 1000000) {
+        return (amount / 1000000).toFixed(2) + ' million';
+    } else if (amount >= 100000) {
+        return (amount / 100000).toFixed(2) + ' lakh';
+    }
+    return amount.toString();
+};
+
 const getFdAnalysis = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -82,19 +94,28 @@ const getFdAnalysis = async (req, res) => {
             return res.status(statusCode.OK).json({ message: message.errorFetchingFD });
         }
 
-        const analysisData = {
+        // Raw data for storage
+        const rawData = {
             totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
             currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
             totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
             userId: new mongoose.Types.ObjectId(userId)
         };
 
-        const filter = { userId: new mongoose.Types.ObjectId(userId) };
-        const update = { $set: analysisData };
-        const options = { upsert: true, new: true };
-        const updatedFdAnalysis = await FdAnalysisModel.findOneAndUpdate(filter, update, options);
+        // Formatted data for response
+        const formattedData = {
+            totalInvestedAmountOfFds: formatAmount(rawData.totalInvestedAmountOfFds),
+            currentReturnAmountOfFds: formatAmount(rawData.currentReturnAmountOfFds),
+            totalProfitGainedOfFds: formatAmount(rawData.totalProfitGainedOfFds),
+            userId: rawData.userId
+        };
 
-        res.status(statusCode.OK).json({ message: message.fdAnalysis, data: analysisData });
+        const filter = { userId: new mongoose.Types.ObjectId(userId) };
+        const update = { $set: rawData };
+        const options = { upsert: true, new: true };
+        await FdAnalysisModel.findOneAndUpdate(filter, update, options);
+
+        res.status(statusCode.OK).json({ message: message.fdAnalysis, data: formattedData });
     } catch (error) {
         res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFdAnalytics, error: error.message });
     }

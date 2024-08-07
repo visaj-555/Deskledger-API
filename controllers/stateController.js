@@ -3,16 +3,16 @@ const StateModel = require("../models/state");
 // Create a new state
 const stateRegister = async (req, res) => {
   try {
-    const { stateName, country_id } = req.body;
+    const { stateName } = req.body;
 
-    const stateExists = await StateModel.findOne({ stateName, country_id });
+    const stateExists = await StateModel.findOne({ stateName });
     if (stateExists) {
       return res
         .status(400)
         .json({ statusCode: 400, message: "State already exists" });
     }
 
-    const newState = new StateModel({ stateName, country_id });
+    const newState = new StateModel({ stateName});
     const savedState = await newState.save();
 
     res
@@ -32,13 +32,13 @@ const stateRegister = async (req, res) => {
 
 const updateState = async (req, res) => {
   try {
-    const { stateId, stateName, country_id } = req.body;
+    const { stateId, stateName} = req.body;
 
     console.log(stateName);
 
     const updatedState = await StateModel.findByIdAndUpdate(
       stateId,
-      { stateName, country_id },
+      { stateName},
       { new: true }
     );
 
@@ -94,7 +94,7 @@ const getState = async (req, res) => {
     const stateId = req.params.id;
 
     if (stateId) {
-      const state = await StateModel.findById(stateId).populate("country_id");
+      const state = await StateModel.findById(stateId);
 
       if (!state) {
         return res.status(404).json({ statusCode: 404, message: "State not found" });
@@ -102,7 +102,7 @@ const getState = async (req, res) => {
 
       res.status(200).json({ statusCode: 200, data: state });
     } else {
-      const states = await StateModel.find().populate("country_id");
+      const states = await StateModel.find();
       res.status(200).json({ statusCode: 200, data: states });
     }
   } catch (error) {

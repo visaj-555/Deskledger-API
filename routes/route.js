@@ -11,7 +11,8 @@ const {
   deleteUser,
   changePassword, 
   forgotPassword,
-  resetPassword
+  resetPassword, 
+  newPassword
 } = require("../controllers/userController");
 
 const {
@@ -32,14 +33,41 @@ const {
 const {
   userRegisterValidate,
   userLoginValidate,
-} = require("../Validation/userValidator");
+} = require("../validation/userValidator");
+
+const {
+  cityRegister,
+  updateCity,
+  getCity,
+  deleteCity
+} = require('../controllers/cityController');
+
+const {
+  stateRegister,
+  updateState,
+  getState,
+  deleteState
+} = require('../controllers/stateController');
+
+const {
+  createBank,
+  updateBank,
+  deleteBank,
+  getBanks,
+} =  require('../controllers/bankController');
+
+const {
+  stateValidate
+} = require('../validation/stateValidation');
+
+const {
+  cityValidate
+} = require('../validation/cityValidation');
 
 const { getFdAnalysis } = require("../controllers/fdAnalysisController");
-const { ensureAuthenticated } = require("../Validation/authValidator");
-const { validateFixedDeposit } = require("../Validation/fdValidator");
-const { upload, multerErrorHandling  } = require("../Validation/upload");
-
-
+const { ensureAuthenticated } = require("../validation/authValidator");
+const { validateFixedDeposit } = require("../validation/fdValidator");
+const { upload, multerErrorHandling  } = require("../validation/upload");
 
 // User routes
 router.post("/user/login", userLoginValidate, loginUser);
@@ -48,14 +76,15 @@ router.get("/users", getUsers);
 router.get("/user-profile/:id", ensureAuthenticated, getUser);
 router.get("/users/:id", ensureAuthenticated, getUser);
 router.put("/user-profile/update/:id", ensureAuthenticated, upload.single('profileImage'), multerErrorHandling, updateUser);
-
 router.delete("/users/delete", ensureAuthenticated, deleteUser);
 router.post("/user/changepassword",  ensureAuthenticated, changePassword);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
+router.post('/newpassword', newPassword);
 
 // Fixed Deposit routes
 router.post("/fd/register", ensureAuthenticated, validateFixedDeposit, fixedDepositRegister);
 router.post("/fd/create", ensureAuthenticated, validateFixedDeposit, fixedDepositRegister);
-
 router.delete("/fd/delete/:id", ensureAuthenticated, fixedDepositDelete);
 router.get("/fds", ensureAuthenticated, getFdDetails);
 router.put( "/fd/update/:id", ensureAuthenticated,validateFixedDeposit, updateFixedDeposit);
@@ -69,9 +98,27 @@ router.get("/investments-by-sector/:sector",ensureAuthenticated, getInvestmentsB
 router.get("/investments", ensureAuthenticated, getInvestmentById);
 router.get("/investments/highest-growth", ensureAuthenticated, getHighestGrowthInSector);
 
-router.post('/forgot-password', ensureAuthenticated, forgotPassword);
-router.post('/reset-password', ensureAuthenticated, resetPassword);
+// State routes
+router.post('/state', stateValidate, stateRegister);
+router.put('/state/update', stateValidate, updateState);
+router.get('/states', getState);
+router.get('/states/:id', getState);
+router.delete('/state/delete', deleteState);
 
+// City routes
+router.post('/city', cityValidate, cityRegister);
+router.put('/city/update', cityValidate, updateCity);
+router.get('/cities', getCity);
+router.get('/cities/:id', getCity);
+router.delete('/city/delete', deleteCity);
+
+router.post('/banks', createBank);
+
+router.put('/banks', updateBank);
+
+router.delete('/banks',deleteBank);
+
+router.get('/banks/:id?',getBanks);
 
 
 module.exports = router;

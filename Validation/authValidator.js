@@ -12,7 +12,7 @@ const ensureAuthenticated = async (req, res, next) => {
         }
 
         const token = bearheader.split(" ")[1];
-        console.log("Token received:", token);
+        console.log("Token received:", token);  
 
         const is_user = await TokenModel.findOne({ token });
         if (!is_user) {
@@ -23,7 +23,7 @@ const ensureAuthenticated = async (req, res, next) => {
         try {
             const decoded = jwt.verify(token, process.env.SECRET);
             console.log("Decoded token:", decoded);
-            req.user = { id: decoded.id }; // Ensure req.user is set with the correct property
+            req.user = { id: decoded.id }; // Ensure req.user ias set with the correct property
             next();
         } catch (err) {
             console.error("Token verification failed:", err);

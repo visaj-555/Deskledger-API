@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+//aggregationHelper.js
 
 // Helper function to generate common aggregation stages
 const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, interestRate) => {

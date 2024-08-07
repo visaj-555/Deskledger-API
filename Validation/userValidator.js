@@ -1,14 +1,19 @@
+// validation/userValidator
+
 const Joi = require('joi');
 
 
 const userRegisterValidate = (req, res, next) => {
+    const isUpdating = req.method === 'PUT';
+
     const schema = Joi.object({
         id: Joi.string().optional(),
         confirmPassword: Joi.string().optional(),
+        image: Joi.string().optional(),
 
         firstName: Joi.string()
             .min(2).max(50)
-            .optional()
+            .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
             .messages({
                 'string.base': 'First name should be a type of string',
                 'string.empty': 'First name cannot be empty',
@@ -18,7 +23,7 @@ const userRegisterValidate = (req, res, next) => {
             }),
         lastName: Joi.string()
             .min(3).max(50)
-            .optional()
+            .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
             .messages({
                 'string.base': 'Last name should be a type of string',
                 'string.empty': 'Last name cannot be empty',
@@ -29,7 +34,7 @@ const userRegisterValidate = (req, res, next) => {
         phoneNo: Joi.string()
             .length(10)
             .pattern(/^[0-9]+$/)
-            .optional()
+            .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
             .messages({
                 'string.length': 'Phone number should be exactly 10 digits',
                 'string.pattern.base': 'Phone number should contain only digits',
@@ -37,7 +42,7 @@ const userRegisterValidate = (req, res, next) => {
             }),
         email: Joi.string()
             .email()
-            .optional()
+            .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
             .custom((value, helpers) => {
                 const emailDomain = value.split('@')[1];
                 if (/gmail\.com$/i.test(emailDomain) && /gml/.test(value)) {
@@ -60,7 +65,7 @@ const userRegisterValidate = (req, res, next) => {
             .pattern(/[A-Z]/)
             .pattern(/[0-9]/)
             .pattern(/[\W_]/)
-            .optional()
+            .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
             .messages({
                 'string.base': 'Password should be a type of string',
                 'string.empty': 'Password cannot be empty',
@@ -70,7 +75,7 @@ const userRegisterValidate = (req, res, next) => {
             }),
     });
 
-    const { error } = schema.validate(req.body, { abortEarly: false });
+    const { error } = schema.validate(req.body, { abortEarly: false, context: { isUpdating } });
     if (error) {
         const errors = error.details.map(detail => detail.message);
         return res.status(400).json({ statusCode: 400, message: "Validation error", errors });

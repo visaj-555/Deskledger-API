@@ -7,7 +7,7 @@ const CitySchema = new mongoose.Schema({
         minlength: 3,
         maxlength: 100
     },
-    state_id: {
+    stateId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'State',
         required: true

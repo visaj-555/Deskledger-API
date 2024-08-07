@@ -131,43 +131,39 @@ const updateUser = async (req, res) => {
   try {
     if (req.fileValidationError) {
       return res
-        .status(statusCode.BAD_REQUEST)
-        .json({ message: message.imageValidation });
-    }
-
-    if (!req.file) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({ message: message.imageValidation });
+        .status(400)
+        .json({ message: 'Please upload a valid image file' });
     }
 
     if (req.fileSizeLimitError) {
       return res
-        .status(statusCode.BAD_REQUEST)
-        .json({ message: message.fileTooLarge });
+        .status(400)
+        .json({ message: 'File size should be less than 1 MB.' });
     }
 
     const { firstName, lastName, phoneNo, email } = req.body;
-    const profileImage = req.file.path; // Path of uploaded image
+    const profileImage = req.file ? req.file.path : null; // Only set profileImage if file is present
 
     const user = await UserModel.findById(req.params.id);
     if (!user) {
       return res
-        .status(statusCode.NOT_FOUND)
-        .json({ message: message.userNotFound });
+        .status(404)
+        .json({ message: 'User not found' });
     }
 
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.phoneNo = phoneNo || user.phoneNo;
     user.email = email || user.email;
-    user.profileImage = profileImage;
+    if (profileImage) {
+      user.profileImage = profileImage;
+    }
 
     await user.save();
 
     // Respond with success message
-    res.status(statusCode.OK).json({
-      message: message.userProfileUpdated,
+    res.status(200).json({
+      message: 'User profile updated',
       user: {
         firstName: user.firstName,
         lastName: user.lastName,
@@ -179,8 +175,8 @@ const updateUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.updateUserError });
+      .status(500)
+      .json({ message: 'Error updating user profile' });
   }
 };
 
@@ -266,10 +262,10 @@ const forgotPassword = async (req, res) => {
     console.log("Email received:", email);
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: "Invalid email format" });
-    }
+    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // if (!emailRegex.test(email)) {
+    //   return res.status(statusCode.BAD_REQUEST).json({ message: "Invalid email format" });
+    // }
 
     const user = await UserModel.findOne({ email });
 
@@ -308,40 +304,56 @@ const forgotPassword = async (req, res) => {
 // Reset Password
 const resetPassword = async (req, res) => {
   try {
-    const { otp, newPassword, confirmPassword } = req.body;
-
-    // Validate that newPassword and confirmPassword match
-    if (newPassword !== confirmPassword) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.passwordNotMatch });
-    }
+    const { otp } = req.body;
 
     const resetToken = await PasswordResetTokenModel.findOne({ token: otp });
 
     if (!resetToken) {
       console.error('Invalid OTP');
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.otpInvalid });
+      return res.status(statusCode.BAD_REQUEST).json({ message: 'Invalid OTP' });
     }
 
     if (resetToken.expires < Date.now()) {
       console.error('Expired OTP');
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.expiredToken });
+      return res.status(statusCode.BAD_REQUEST).json({ message: 'Expired OTP' });
     }
 
-    const userId = resetToken.userId;
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findById(resetToken.userId);
+
     if (!user) {
-      console.error('User not found');
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.userNotFound });
+      return res.status(statusCode.NOT_FOUND).json({ message: 'User not found' });
+    }
+
+    // OTP verified successfully
+    return res.status(statusCode.OK).json({ message: 'OTP verified successfully', userId: user._id });
+  } catch (error) {
+    console.error('Error validating OTP:', error);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: 'Error resetting password' });
+  }
+};
+
+
+// New Password
+const newPassword = async (req, res) => {
+  try {
+    const { userId, newPassword, confirmPassword } = req.body; 
+
+    if (newPassword !== confirmPassword) {
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.passwordNotMatch });
+    }
+
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
-
     user.password = hashedPassword;
-    await user.save();
 
-    // Delete the reset token from the database using deleteOne
-    await PasswordResetTokenModel.deleteOne({ _id: resetToken._id });
+    await user.save();
+    await PasswordResetTokenModel.deleteOne({ userId: user._id });
 
     res.status(statusCode.OK).json({ message: message.resetPasswordSuccess });
   } catch (error) {
@@ -349,6 +361,8 @@ const resetPassword = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.resetPasswordError });
   }
 };
+
+
 
 
 module.exports = {
@@ -361,4 +375,5 @@ module.exports = {
   changePassword,
   forgotPassword,
   resetPassword,
+  newPassword
 };

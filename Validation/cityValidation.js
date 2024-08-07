@@ -12,7 +12,7 @@ const cityValidate = (req, res, next) => {
             'string.max': 'City name should be at most 100 characters',
             'any.required': 'City name is required'
         }),
-        state_id: isUpdating ? Joi.string().optional() : Joi.string().required().messages({
+        stateId: isUpdating ? Joi.string().optional() : Joi.string().required().messages({
             'string.empty': 'State id is required'
         })
     });

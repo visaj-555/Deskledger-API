@@ -12,11 +12,7 @@ const stateValidate = (req, res, next) => {
             'string.max': 'State name should be at most 100 characters',
             'any.required': 'State name is required',
         }),
-        country_id: isUpdate ? Joi.string().optional() : Joi.string().required().messages({
-            'string.base': 'Country ID should be a type of string',
-            'string.empty': 'Country ID is required',
-            'any.required': 'Country ID is required',
-}),
+     
     });
 
     const { error } = schema.validate(req.body, { abortEarly: false });

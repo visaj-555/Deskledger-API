@@ -3,9 +3,9 @@ const CityModel = require("../models/city");
 // Create a new city
 const cityRegister = async (req, res) => {
   try {
-    const { cityName, state_id } = req.body;
+    const { cityName, stateId } = req.body;
 
-    const cityExists = await CityModel.findOne({ cityName, state_id });
+    const cityExists = await CityModel.findOne({ cityName, stateId });
     if (cityExists) {
       return res
         .status(400)
@@ -14,7 +14,7 @@ const cityRegister = async (req, res) => {
 
     const newCity = new CityModel({
       cityName,
-      state_id,
+      stateId,
     });
 
     const savedCity = await newCity.save();
@@ -35,13 +35,13 @@ const cityRegister = async (req, res) => {
 
 const updateCity = async (req, res) => {
   try {
-    const { cityId, cityName, state_id } = req.body; // Destructure cityId from req.body
+    const { cityId, cityName, stateId } = req.body; // Destructure cityId from req.body
 
     console.log(cityName);
 
     const updatedCity = await CityModel.findByIdAndUpdate(
       cityId, 
-      { cityName, state_id },
+      { cityName, stateId },
       { new: true } // Return the updated document
     );
 
@@ -88,7 +88,7 @@ const getCity = async (req, res) => {
     const cityId = req.params.id;
 
     if (cityId) {
-      const city = await CityModel.findById(cityId).populate("state_id");
+      const city = await CityModel.findById(cityId).populate("stateId");
 
       if (!city) {
         return res.status(404).json({ statusCode: 404, message: "City not found" });
