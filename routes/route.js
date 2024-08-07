@@ -70,7 +70,8 @@ router.get("/investments", ensureAuthenticated, getInvestmentById);
 router.get("/investments/highest-growth", ensureAuthenticated, getHighestGrowthInSector);
 
 router.post('/forgot-password', ensureAuthenticated, forgotPassword);
+router.post('/reset-password', ensureAuthenticated, resetPassword);
 
-router.post('/reset-password/:token',  ensureAuthenticated, resetPassword); 
+
 
 module.exports = router;

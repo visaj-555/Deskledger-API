@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3500;
-const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.135.143';
+const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.0.122';
 const DB_CONNECTION = process.env.CONNECTION;
 
 app.use(express.json());

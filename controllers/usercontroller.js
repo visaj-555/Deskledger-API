@@ -5,7 +5,8 @@ const TokenModel = require("../models/tokenModel");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const PasswordResetTokenModel = require("../models/passwordResetTokenModel");
-const { statusCode, message } = require('../utils/api.response');
+const { statusCode, message } = require("../utils/api.response");
+const { response } = require("express");
 
 // Registering User
 const registerUser = async (req, res) => {
@@ -15,7 +16,9 @@ const registerUser = async (req, res) => {
     const userExists = await UserModel.findOne({ email });
 
     if (userExists) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.userAlreadyExists });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: message.userAlreadyExists });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -35,7 +38,9 @@ const registerUser = async (req, res) => {
       data: { ...savedUser.toObject(), password: undefined },
     });
   } catch (error) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorRegisteringUser, error });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: message.errorRegisteringUser, error });
   }
 };
 
@@ -46,12 +51,16 @@ const loginUser = async (req, res) => {
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.userNotFound });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: message.userNotFound });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.passwordIncorrect });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: message.passwordIncorrect });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.SECRET, {
@@ -75,7 +84,9 @@ const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error logging in user:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorLogin });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: message.errorLogin });
   }
 };
 
@@ -88,7 +99,9 @@ const getUsers = async (req, res) => {
       data: users,
     });
   } catch (error) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingUsers, error });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: message.errorFetchingUsers, error });
   }
 };
 
@@ -98,14 +111,18 @@ const getUser = async (req, res) => {
     const id = req.params.id;
     const user = await UserModel.findById(id, { password: 0 });
     if (!user) {
-      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ message: message.userNotFound });
     }
     res.status(statusCode.OK).json({
       message: message.userView,
       data: user,
     });
   } catch (error) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingUser, error });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: message.errorFetchingUser, error });
   }
 };
 
@@ -113,15 +130,21 @@ const getUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     if (req.fileValidationError) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.imageValidation });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: message.imageValidation });
     }
 
     if (!req.file) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.imageValidation });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: message.imageValidation });
     }
 
     if (req.fileSizeLimitError) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.fileTooLarge });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: message.fileTooLarge });
     }
 
     const { firstName, lastName, phoneNo, email } = req.body;
@@ -129,7 +152,9 @@ const updateUser = async (req, res) => {
 
     const user = await UserModel.findById(req.params.id);
     if (!user) {
-      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ message: message.userNotFound });
     }
 
     user.firstName = firstName || user.firstName;
@@ -153,7 +178,9 @@ const updateUser = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.updateUserError });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: message.updateUserError });
   }
 };
 
@@ -163,11 +190,15 @@ const deleteUser = async (req, res) => {
     const id = req.query.id;
     const deletedUser = await UserModel.findByIdAndDelete(id);
     if (!deletedUser) {
-      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ message: message.userNotFound });
     }
     res.status(statusCode.OK).json({ message: message.userDeleted });
   } catch (error) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.deleteUserError, error: error.message });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: message.deleteUserError, error: error.message });
   }
 };
 
@@ -179,16 +210,22 @@ const changePassword = async (req, res) => {
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ message: message.userNotFound });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.incorrectOldPassword });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: message.incorrectOldPassword });
     }
 
     if (newPassword !== confirmPassword) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.passwordNotMatch });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: message.passwordNotMatch });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -202,8 +239,16 @@ const changePassword = async (req, res) => {
     res.status(statusCode.OK).json({ message: message.passwordChanged });
   } catch (err) {
     console.error(err);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.passwordChangeError });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: message.passwordChangeError });
   }
+};
+
+// Generate OTP function
+
+const generateOtp = () => {
+  return Math.floor(1000 + Math.random() * 9000).toString(); 
 };
 
 // Forgot Password
@@ -218,6 +263,13 @@ const forgotPassword = async (req, res) => {
 
   try {
     const { email } = req.body;
+    console.log("Email received:", email);
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(statusCode.BAD_REQUEST).json({ message: "Invalid email format" });
+    }
 
     const user = await UserModel.findOne({ email });
 
@@ -225,53 +277,60 @@ const forgotPassword = async (req, res) => {
       return res.status(statusCode.BAD_REQUEST).json({ message: message.userNotFound });
     }
 
-    // Generate a password reset token
-    const resetToken = crypto.randomBytes(32).toString("hex");
+    // Generate OTP
+    const otp = generateOtp();
 
     const passwordResetToken = new PasswordResetTokenModel({
-      token: resetToken,
+      token: otp,
       userId: user._id,
+      expires: Date.now() + 3600000, // 1 hour expiration
     });
 
-    // Save the token to the database
+    // Save the OTP to the database
     await passwordResetToken.save();
 
-    // Send email with reset link
-    const resetLink = `${req.protocol}://${req.get("host")}/reset-password/${resetToken}`;
     const mailOptions = {
       to: email,
       from: process.env.EMAIL_USER,
       subject: "Password Reset Request",
-      html: `<p>You requested a password reset. Click the link below to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`,
+      html: `<p>Here is your OTP: <b>${otp}</b></p>`,
     };
 
     await transporter.sendMail(mailOptions);
 
-    res.status(statusCode.OK).json({ message: message.resetPasswordsend });
+    res.status(statusCode.OK).json({ message: message.resetPasswordSend });
   } catch (error) {
     console.error(error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorSendingPasswordResetEmail });
   }
 };
 
+// Reset Password
 const resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
-    const { newPassword } = req.body;
-    const userId = req.user.id;
+    const { otp, newPassword, confirmPassword } = req.body;
 
-    const resetToken = await PasswordResetTokenModel.findOne({ token });
+    // Validate that newPassword and confirmPassword match
+    if (newPassword !== confirmPassword) {
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.passwordNotMatch });
+    }
+
+    const resetToken = await PasswordResetTokenModel.findOne({ token: otp });
 
     if (!resetToken) {
+      console.error('Invalid OTP');
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.otpInvalid });
+    }
+
+    if (resetToken.expires < Date.now()) {
+      console.error('Expired OTP');
       return res.status(statusCode.BAD_REQUEST).json({ message: message.expiredToken });
     }
 
-    if (resetToken.userId.toString() !== userId.toString()) {
-      return res.status(statusCode.FORBIDDEN).json({ message: message.tokenNotMatch });
-    }
-
+    const userId = resetToken.userId;
     const user = await UserModel.findById(userId);
     if (!user) {
+      console.error('User not found');
       return res.status(statusCode.BAD_REQUEST).json({ message: message.userNotFound });
     }
 
@@ -281,15 +340,16 @@ const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    // Delete the reset token from the database
-    await resetToken.delete();
+    // Delete the reset token from the database using deleteOne
+    await PasswordResetTokenModel.deleteOne({ _id: resetToken._id });
 
     res.status(statusCode.OK).json({ message: message.resetPasswordSuccess });
   } catch (error) {
-    console.error(error);
+    console.error('Error resetting password:', error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.resetPasswordError });
   }
 };
+
 
 module.exports = {
   registerUser,

@@ -1,3 +1,5 @@
+//authValidator.js
+
 const jwt = require("jsonwebtoken");
 const TokenModel = require("../models/tokenModel");
 const { statusCode, message } = require('../utils/api.response');

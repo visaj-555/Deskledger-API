@@ -14,6 +14,7 @@ const statusCode = {
 }
 
 const message  = {
+
     // Success messages 
     fdCreated: "FD registered successfully", 
     fdUpdated: "FD updated successfully", 
@@ -39,6 +40,8 @@ const message  = {
     investmentBySector: "Investment data for the specified sector",
     investmentById: "Investment by Id", 
     highestGrowthInSector: "Highest growth in sector retrieved successfully",  
+    otpSuccess : "Otp verified successfully", 
+
 
     // Error Messages  
     userAlreadyExists: "User already exists", 
@@ -72,6 +75,10 @@ const message  = {
     errorDeletingFD: "Error deleting FD",
     errorFetchingFDs: "Error fetching FDs",
     errorFdAnalytics: "Error calculating FD Analytics",
+    errorSendingPasswordResetEmail: "Error sending password reset email",
+    resetPasswordSuccess: "Reset Password Success",
+    resetPasswordError : "Error resetting password",
+    otpInvalid : "Invalid OTP",
 
     // required 
     sectorRequired: "Sector is required"
