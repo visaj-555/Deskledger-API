@@ -4,10 +4,10 @@
 const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, interestRate) => {
   const currentDate = new Date();
   const tenureInYears = { 
-    $round: [{ $divide: [{ $subtract: [new Date(maturityDate), new Date(startDate)] }, 1000 * 60 * 60 * 24 * 365] }, 0] 
+    $divide: [{ $subtract: [new Date(maturityDate), new Date(startDate)] }, 1000 * 60 * 60 * 24 * 365] 
   };
   const tenureCompletedYears = { 
-    $round: [{ $divide: [{ $subtract: [currentDate, new Date(startDate)] }, 1000 * 60 * 60 * 24 * 365] }, 0] 
+    $divide: [{ $subtract: [currentDate, new Date(startDate)] }, 1000 * 60 * 60 * 24 * 365] 
   };
 
   return [
@@ -20,23 +20,23 @@ const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, i
     {
       $addFields: {
         currentReturnAmount: {
-          $round: [{
+          $trunc: {
             $add: [
               totalInvestedAmount,
               { $multiply: [totalInvestedAmount, { $divide: [{ $multiply: [interestRate, "$tenureCompletedYears"] }, 100] }] }
             ]
-          }, 0]
+          }
         },
         totalReturnedAmount: {
-          $round: [{
+          $trunc: {
             $add: [
               totalInvestedAmount,
               { $multiply: [totalInvestedAmount, { $divide: [{ $multiply: [interestRate, "$tenureInYears"] }, 100] }] }
             ]
-          }, 0]
+          }
         },
         currentProfitAmount: {
-          $round: [{
+          $trunc: {
             $subtract: [
               { $add: [
                 totalInvestedAmount,
@@ -44,13 +44,25 @@ const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, i
               ]},
               totalInvestedAmount
             ]
-          }, 0]
+          }
         }
       }
     },
     {
       $addFields: {
-        totalYears: { $toString: "$tenureInYears" }
+        totalYears: {
+          $concat: [
+            { $toString: { $trunc: "$tenureInYears" } }, // integer part for years
+            ".",
+            {
+              $toString: { 
+                $trunc: [
+                  { $multiply: [{ $subtract: ["$tenureInYears", { $trunc: "$tenureInYears" }] }, 12] }, 0 // fractional part converted to months
+                ]
+              }
+            }
+          ]
+        }
       }
     }
   ];
@@ -71,10 +83,7 @@ const updateFdAggregation = (fdId, startDate, maturityDate, totalInvestedAmount,
   ...commonAggregationStages(startDate, maturityDate, totalInvestedAmount, interestRate)
 ];
 
-
 module.exports = {
   registerFdAggregation,
   updateFdAggregation
 };
-
-
