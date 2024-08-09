@@ -16,6 +16,7 @@ const statusCode = {
 const message  = {
 
     // Success messages 
+    fdExists : "FD Already Exists",
     fdCreated: "FD registered successfully", 
     fdUpdated: "FD updated successfully", 
     fdDeleted: "FD deleted successfully",
@@ -79,6 +80,7 @@ const message  = {
     resetPasswordSuccess: "Reset Password Success",
     resetPasswordError : "Error resetting password",
     otpInvalid : "Invalid OTP",
+    validImageError : "Profile Image should be Less than 1 MB",
 
     // required 
     sectorRequired: "Sector is required"

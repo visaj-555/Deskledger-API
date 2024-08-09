@@ -45,7 +45,7 @@ const fixedDepositRegister = async (req, res) => {
     // Check if FD already exists
     const fdExists = await FixedDepositModel.findOne({ fdNo, userId });
     if (fdExists) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.errorCreatingFD });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.fdExists });
     }
 
     const formattedStartDate = formatDate(startDate);

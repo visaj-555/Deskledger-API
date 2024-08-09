@@ -3,6 +3,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const { statusCode, message } = require('../utils/api.response');
 
 const app = express();
 
@@ -38,7 +39,7 @@ const upload = multer({
 function multerErrorHandling(err, req, res, next) {
     if (err.code === 'LIMIT_FILE_SIZE') {
         req.fileSizeLimitError = true;
-        return res.status(400).json({ message: 'File size should be less than 1 MB.' });
+        return res.status(statusCode.BAD_REQUEST).json({ message: validImageError });
     }
     next(err);
 }

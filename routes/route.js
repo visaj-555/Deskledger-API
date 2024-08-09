@@ -64,7 +64,9 @@ const {
   cityValidate
 } = require('../validation/cityValidation');
 
-const { getFdAnalysis } = require("../controllers/fdAnalysisController");
+
+
+const { getFdAnalysis,  getFdAnalysisbyNumber} = require("../controllers/fdAnalysisController");
 const { ensureAuthenticated } = require("../validation/authValidator");
 const { validateFixedDeposit } = require("../validation/fdValidator");
 const { upload, multerErrorHandling  } = require("../validation/upload");
@@ -90,12 +92,14 @@ router.get("/fds", ensureAuthenticated, getFdDetails);
 router.put( "/fd/update/:id", ensureAuthenticated,validateFixedDeposit, updateFixedDeposit);
 router.get("/fd/:id", ensureAuthenticated, getFdDetails);
 router.get("/fd-analysis", ensureAuthenticated, getFdAnalysis);
+router.get("/fd-analysis-number", ensureAuthenticated, getFdAnalysisbyNumber);
+
 
 // Investment routes
 router.get("/top-gainers", ensureAuthenticated, getTopGainers);
 router.get("/overall-investment-by-sector", ensureAuthenticated, getOverallInvestmentBySector);
 router.get("/investments-by-sector/:sector",ensureAuthenticated, getInvestmentsBySector);
-router.get("/investments", ensureAuthenticated, getInvestmentById);
+router.get("/investments/:id", ensureAuthenticated, getInvestmentById);
 router.get("/investments/highest-growth", ensureAuthenticated, getHighestGrowthInSector);
 
 // State routes

@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const routes = require('./routes/route'); 
+const fs = require('fs');
+const path = require('path');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -28,6 +30,20 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); 
 
 app.use('/', routes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.get('/image/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filepath = path.join(__dirname, 'uploads', filename);
+
+  fs.access(filepath, fs.constants.F_OK, (err) => {
+      if (err) {
+          return res.status(404).send('File not found');
+      }
+
+      res.sendFile(filepath);
+  });
+});
 
 const databaseConnection = async () => {
   try {

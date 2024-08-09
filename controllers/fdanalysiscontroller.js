@@ -6,11 +6,11 @@ const { statusCode, message } = require('../utils/api.response');
 // Utility function to format the amount
 const formatAmount = (amount) => {
     if (amount >= 1000000000) {
-        return (amount / 1000000000).toFixed(2) + ' billion';
+        return (amount / 1000000000).toFixed(2) + ' Billion';
     } else if (amount >= 1000000) {
-        return (amount / 1000000).toFixed(2) + ' million';
+        return (amount / 1000000).toFixed(2) + ' Million';
     } else if (amount >= 100000) {
-        return (amount / 100000).toFixed(2) + ' lakh';
+        return (amount / 100000).toFixed(2) + ' Lakh';
     }
     return amount.toString();
 };
@@ -109,7 +109,6 @@ const getFdAnalysis = async (req, res) => {
             totalProfitGainedOfFds: formatAmount(rawData.totalProfitGainedOfFds),
             userId: rawData.userId
         };
-
         const filter = { userId: new mongoose.Types.ObjectId(userId) };
         const update = { $set: rawData };
         const options = { upsert: true, new: true };
@@ -121,6 +120,112 @@ const getFdAnalysis = async (req, res) => {
     }
 };
 
+const getFdAnalysisbyNumber = async (req, res) => {
+    try {
+        const userId = req.user.id; // Use the authenticated user's ID
+
+        const fdAnalysis = await FixedDepositModel.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } }, // Match FDs for the user
+            {
+                $addFields: {
+                    currentDate: new Date(), // Add current date
+                    tenureInYears: {
+                        $divide: [
+                            { $subtract: ["$maturityDate", "$startDate"] },
+                            1000 * 60 * 60 * 24 * 365 // Calculate tenure in years
+                        ]
+                    },
+                    tenureCompletedYears: {
+                        $divide: [
+                            { $subtract: [new Date(), "$startDate"] },
+                            1000 * 60 * 60 * 24 * 365 // Calculate completed tenure in years
+                        ]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    currentReturnAmount: {
+                        $round: [
+                            {
+                                $cond: {
+                                    if: { $gte: [new Date(), "$maturityDate"] },
+                                    then: {
+                                        $multiply: [
+                                            "$totalInvestedAmount",
+                                            {
+                                                $pow: [
+                                                    { $add: [1, { $divide: ["$interestRate", 100] }] },
+                                                    { $round: ["$tenureInYears", 2] }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    else: {
+                                        $multiply: [
+                                            "$totalInvestedAmount",
+                                            {
+                                                $pow: [
+                                                    { $add: [1, { $divide: ["$interestRate", 100] }] },
+                                                    { $round: ["$tenureCompletedYears", 2] }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            0
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" }, // Sum of invested amounts
+                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } } // Sum of current return amounts
+                }
+            },
+            {
+                $addFields: {
+                    totalProfitGainedOfFds: {
+                        $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"] // Calculate total profit
+                    }
+                }
+            }
+        ]);
+
+        if (!fdAnalysis || fdAnalysis.length === 0) {
+            return res.status(200).json({statusCode : 200, message: 'No Fixed Deposits found' });
+        }
+
+        const analysisData = {
+            totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
+            currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
+            totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
+            userId: new mongoose.Types.ObjectId(userId) // Associate with user
+        };
+
+        // Update or create FD analysis document for the user
+        const filter = { userId: new mongoose.Types.ObjectId(userId) };
+        const update = { $set: analysisData };
+        const options = { upsert: true, new: true };
+        const updatedFdAnalysis = await FdAnalysisModel.findOneAndUpdate(filter, update, options);
+
+        console.log("Updated FD Analysis:", updatedFdAnalysis);
+
+        res.status(200).json({
+            statusCode: 200,
+            message: "Analysis Report of all the fixed deposits",
+            data: analysisData
+        });
+    } catch (error) {
+        console.error("Error calculating FD analytics:", error);
+        res.status(500).json({ statusCode: 500, message: "Error calculating FD analytics", error: error.message });
+    }
+};
+
 module.exports = {
-    getFdAnalysis
+    getFdAnalysis,
+    getFdAnalysisbyNumber
 };
