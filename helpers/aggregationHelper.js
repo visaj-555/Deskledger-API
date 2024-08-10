@@ -1,20 +1,21 @@
-//aggregationHelper.js
-
 // Helper function to generate common aggregation stages
 const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, interestRate) => {
-  const currentDate = new Date();
-  const tenureInYears = { 
-    $divide: [{ $subtract: [new Date(maturityDate), new Date(startDate)] }, 1000 * 60 * 60 * 24 * 365] 
-  };
-  const tenureCompletedYears = { 
-    $divide: [{ $subtract: [currentDate, new Date(startDate)] }, 1000 * 60 * 60 * 24 * 365] 
-  };
-
   return [
     {
       $addFields: {
-        tenureInYears,
-        tenureCompletedYears
+        startDate: new Date(startDate),
+        maturityDate: new Date(maturityDate),
+        currentDate: new Date(),
+      }
+    },
+    {
+      $addFields: {
+        tenureInYears: { 
+          $divide: [{ $subtract: ["$maturityDate", "$startDate"] }, 1000 * 60 * 60 * 24 * 365] 
+        },
+        tenureCompletedYears: { 
+          $divide: [{ $subtract: ["$currentDate", "$startDate"] }, 1000 * 60 * 60 * 24 * 365] 
+        }
       }
     },
     {
@@ -23,7 +24,12 @@ const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, i
           $trunc: {
             $add: [
               totalInvestedAmount,
-              { $multiply: [totalInvestedAmount, { $divide: [{ $multiply: [interestRate, "$tenureCompletedYears"] }, 100] }] }
+              { 
+                $multiply: [
+                  totalInvestedAmount, 
+                  { $divide: [{ $multiply: [interestRate, "$tenureCompletedYears"] }, 100] }
+                ]
+              }
             ]
           }
         },
@@ -31,7 +37,12 @@ const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, i
           $trunc: {
             $add: [
               totalInvestedAmount,
-              { $multiply: [totalInvestedAmount, { $divide: [{ $multiply: [interestRate, "$tenureInYears"] }, 100] }] }
+              { 
+                $multiply: [
+                  totalInvestedAmount, 
+                  { $divide: [{ $multiply: [interestRate, "$tenureInYears"] }, 100] }
+                ]
+              }
             ]
           }
         },
@@ -40,7 +51,12 @@ const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, i
             $subtract: [
               { $add: [
                 totalInvestedAmount,
-                { $multiply: [totalInvestedAmount, { $divide: [{ $multiply: [interestRate, "$tenureCompletedYears"] }, 100] }] }
+                { 
+                  $multiply: [
+                    totalInvestedAmount, 
+                    { $divide: [{ $multiply: [interestRate, "$tenureCompletedYears"] }, 100] }
+                  ]
+                }
               ]},
               totalInvestedAmount
             ]
@@ -77,9 +93,6 @@ const registerFdAggregation = (fdId, startDate, maturityDate, totalInvestedAmoun
 // Aggregation pipeline for updating an FD
 const updateFdAggregation = (fdId, startDate, maturityDate, totalInvestedAmount, interestRate) => [
   { $match: { _id: fdId } },
-  {
-    $addFields: { currentDate: new Date() }
-  },
   ...commonAggregationStages(startDate, maturityDate, totalInvestedAmount, interestRate)
 ];
 

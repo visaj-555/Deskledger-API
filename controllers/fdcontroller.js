@@ -137,11 +137,21 @@ const updateFixedDeposit = async (req, res) => {
       return res.status(statusCode.NOT_FOUND).json({ message: message.errorFetchingFD });
     }
 
-    // Update the fixed deposit document with new values
-    await FixedDepositModel.findByIdAndUpdate(id, updateData, { new: true });
+    // Update the fixed deposit document with new values (e.g., totalInvestedAmount)
+    const updatedFixedDeposit = await FixedDepositModel.findByIdAndUpdate(id, updateData, { new: true });
 
-    // Recalculate values and update the document
-    const [updatedFd] = await FixedDepositModel.aggregate(updateFdAggregation(new mongoose.Types.ObjectId(id), fixedDeposit.startDate, fixedDeposit.maturityDate, fixedDeposit.totalInvestedAmount, fixedDeposit.interestRate));
+    if (!updatedFixedDeposit) {
+      return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingFD });
+    }
+
+    // Recalculate values using the updated `totalInvestedAmount`
+    const [updatedFd] = await FixedDepositModel.aggregate(updateFdAggregation(
+      new mongoose.Types.ObjectId(id),
+      updatedFixedDeposit.startDate, 
+      updatedFixedDeposit.maturityDate, 
+      updatedFixedDeposit.totalInvestedAmount, // Use the updated totalInvestedAmount
+      updatedFixedDeposit.interestRate
+    ));
 
     if (!updatedFd) {
       console.error("Aggregation returned no documents");
@@ -176,6 +186,7 @@ const updateFixedDeposit = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingFD });
   }
 };
+
 
 const fixedDepositDelete = async (req, res) => {
   try {

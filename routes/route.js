@@ -81,7 +81,6 @@ router.get("/investments/highest-growth", ensureAuthenticated, getHighestGrowthI
 router.post('/banks', createBank);
 router.put('/banks', updateBank);
 router.delete('/banks',deleteBank);
-router.get('/banks/:id?',getBanks);
-
+router.get('/banks',getBanks);
 
 module.exports = router;

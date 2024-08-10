@@ -89,22 +89,11 @@ const deleteBank = async (req, res) => {
 };
 
 // Get banks
+// Get banks
 const getBanks = async (req, res) => {
   try {
-    const bankId = req.params.id;
-
-    if (bankId) {
-      const bank = await BankModel.findById(bankId);
-
-      if (!bank) {
-        return res.status(404).json({ statusCode: 404, message: "Bank not found" });
-      }
-
-      res.status(200).json({ statusCode: 200, data: bank });
-    } else {
-      const banks = await BankModel.find();
-      res.status(200).json({ statusCode: 200, data: banks });
-    }
+    const banks = await BankModel.find();
+    res.status(200).json({ statusCode: 200, data: banks });
   } catch (error) {
     console.error("Error while fetching banks:", error);
     res.status(500).json({ statusCode: 500, message: "Error fetching banks", error: error.message });
