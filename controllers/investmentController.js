@@ -87,42 +87,6 @@ const getInvestmentsBySector = async (req, res) => {
     }
 };
 
-// const getInvestmentsBySector = async (req, res) => {
-//     const { sector } = req.params;
-//     const userId = req.user.id;
-
-//     if (!sector) {
-//         return res.status(statusCode.BAD_REQUEST).json({ message: message.sectorRequired });
-//     }
-
-//     let investments = [];
-//     try {
-//         switch (sector.toLowerCase()) {
-//             case 'banking':
-//                 investments = await FixedDeposit.find({ userId });
-//                 investments = investments.map((item, index) => ({
-//                     srNo: index + 1,
-//                     sector: 'Banking',
-//                     ...item._doc
-//                 }));
-//                 break;
-//             default:
-//                 return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingSector });
-//         }
-
-//         // Send data as an object
-//         const investmentsObject = investments.reduce((acc, investment) => {
-//             acc[`investment_${investment.srNo}`] = investment;
-//             return acc;
-//         }, {});
-
-//         res.status(statusCode.OK).json({ message: message.investmentBySector, data: investmentsObject });
-//     } catch (error) {
-//         res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingInvestments, error: error.message });
-//     }
-// };
-
-
 const getInvestmentById = async (req, res) => {
     try {
         const { id } = req.params;

@@ -1,6 +1,5 @@
 //fdcontroller.js
 
-
 const FixedDepositModel = require("../models/fixedDeposit");
 const mongoose = require("mongoose");
 const moment = require("moment");
@@ -8,7 +7,6 @@ const FdAnalysisModel = require("../models/fdAnalysis");
 const { statusCode, message } = require('../utils/api.response');
 const { registerFdAggregation, updateFdAggregation } = require("../helpers/aggregationHelper");
 
-// Util function for formatting dates to 'YYYY-MM-DD'
 const formatDate = (date) => {
   const d = new Date(date);
   let month = "" + (d.getMonth() + 1);
@@ -179,10 +177,6 @@ const updateFixedDeposit = async (req, res) => {
   }
 };
 
-
-
-
-// Delete a Fixed Deposit
 const fixedDepositDelete = async (req, res) => {
   try {
     const { id } = req.params;
@@ -229,48 +223,39 @@ const fixedDepositDelete = async (req, res) => {
   }
 };
 
-// Get all Fixed Deposit Details
 const getFdDetails = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { id } = req.params; // Assume FD ID is passed as a URL parameter if needed
+    const { id } = req.params;
 
     let fdDetails;
     if (id) {
-      // Fetch the specific FD for the authenticated user
       fdDetails = await FixedDepositModel.findOne({ _id: id, userId }).lean();
       if (!fdDetails) {
-        return res
-          .status(statusCode.NOT_FOUND)
-          .json({ statusCode: statusCode.NOT_FOUND, message: message.errorFetchingFD });
+        return res.status(statusCode.NOT_FOUND).json({ 
+          statusCode: statusCode.NOT_FOUND, 
+          message: message.errorFetchingFD 
+        });
       }
-      fdDetails = [fdDetails]; // Convert to array for consistent processing
+      fdDetails = [fdDetails];
     } else {
-      // Fetch all FDs for the authenticated user, sorted by createdAt date
       fdDetails = await FixedDepositModel.find({ userId }).sort({ createdAt: 1 }).lean();
       if (!fdDetails.length) {
-        return res
-          .status(statusCode.OK)
-          .json({
-            statusCode: statusCode.OK,
-            message: message.errorFetchingFDs,
-            data: fdDetails,
-          });
+        return res.status(statusCode.OK).json({
+          statusCode: statusCode.OK,
+          message: message.errorFetchingFDs,
+          data: fdDetails,
+        });
       }
     }
 
-    // Debugging: Check the raw data before formatting
     console.log("FD Details before formatting:", fdDetails);
 
-    // Format the dates and add srNo starting from 1
     const formattedFdDetails = fdDetails.map((fd, index) => {
-      const srNo = index + 1; // Ensure srNo starts from 1
+      const srNo = index + 1;
       console.log(`Index: ${index}, Assigned srNo: ${srNo}, FD ID: ${fd._id}`);
 
-      // Add srNo to the plain object
       fd.srNo = srNo;
-
-      // Format dates
       fd.createdAt = moment(fd.createdAt).format("YYYY-MM-DD");
       fd.updatedAt = moment(fd.updatedAt).format("YYYY-MM-DD");
       fd.maturityDate = moment(fd.maturityDate).format("YYYY-MM-DD");
@@ -279,27 +264,23 @@ const getFdDetails = async (req, res) => {
       return fd;
     });
 
-    // Debugging: Check the formatted data
     console.log("FD Details after formatting:", formattedFdDetails);
 
-    res
-      .status(statusCode.OK)
-      .json({
-        statusCode: statusCode.OK,
-        message: message.fdDetailsFetched,
-        data: formattedFdDetails,
-      });
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.fdDetailsFetched,
+      data: formattedFdDetails,
+    });
   } catch (error) {
     console.error("Error while getting FD details:", error.message || error);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({
-        statusCode: statusCode.INTERNAL_SERVER_ERROR,
-        message: message.errorFetchingFDs,
-        error: error.message || error,
-      });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorFetchingFDs,
+      error: error.message || error,
+    });
   }
 };
+
 
 module.exports = {
   fixedDepositRegister,

@@ -36,35 +36,11 @@ const {
 } = require("../validation/userValidator");
 
 const {
-  cityRegister,
-  updateCity,
-  getCity,
-  deleteCity
-} = require('../controllers/cityController');
-
-const {
-  stateRegister,
-  updateState,
-  getState,
-  deleteState
-} = require('../controllers/stateController');
-
-const {
   createBank,
   updateBank,
   deleteBank,
   getBanks,
 } =  require('../controllers/bankController');
-
-const {
-  stateValidate
-} = require('../validation/stateValidation');
-
-const {
-  cityValidate
-} = require('../validation/cityValidation');
-
-
 
 const { getFdAnalysis,  getFdAnalysisbyNumber} = require("../controllers/fdAnalysisController");
 const { ensureAuthenticated } = require("../validation/authValidator");
@@ -94,7 +70,6 @@ router.get("/fd/:id", ensureAuthenticated, getFdDetails);
 router.get("/fd-analysis", ensureAuthenticated, getFdAnalysis);
 router.get("/fd-analysis-number", ensureAuthenticated, getFdAnalysisbyNumber);
 
-
 // Investment routes
 router.get("/top-gainers", ensureAuthenticated, getTopGainers);
 router.get("/overall-investment-by-sector", ensureAuthenticated, getOverallInvestmentBySector);
@@ -102,26 +77,10 @@ router.get("/investments-by-sector/:sector",ensureAuthenticated, getInvestmentsB
 router.get("/investments/:id", ensureAuthenticated, getInvestmentById);
 router.get("/investments/highest-growth", ensureAuthenticated, getHighestGrowthInSector);
 
-// State routes
-router.post('/state', stateValidate, stateRegister);
-router.put('/state/update', stateValidate, updateState);
-router.get('/states', getState);
-router.get('/states/:id', getState);
-router.delete('/state/delete', deleteState);
-
-// City routes
-router.post('/city', cityValidate, cityRegister);
-router.put('/city/update', cityValidate, updateCity);
-router.get('/cities', getCity);
-router.get('/cities/:id', getCity);
-router.delete('/city/delete', deleteCity);
-
+//Bank routes
 router.post('/banks', createBank);
-
 router.put('/banks', updateBank);
-
 router.delete('/banks',deleteBank);
-
 router.get('/banks/:id?',getBanks);
 
 

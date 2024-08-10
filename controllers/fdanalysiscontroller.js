@@ -6,7 +6,7 @@ const { statusCode, message } = require('../utils/api.response');
 // Utility function to format the amount
 const formatAmount = (amount) => {
     if (amount >= 1000000000) {
-        return (amount / 1000000000).toFixed(2) + ' Billion';
+        return (amount / 1000000000).toFixed(2) + 'Billion';
     } else if (amount >= 1000000) {
         return (amount / 1000000).toFixed(2) + ' Million';
     } else if (amount >= 100000) {
