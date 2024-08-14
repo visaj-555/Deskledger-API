@@ -16,7 +16,9 @@ const statusCode = {
 const message  = {
 
     // Success messages 
-    fdExists : "FD Already Exists",
+    goldInfoRegister : "Gold info registered successfully",
+    goldInfoUpdate : "Gold info updated successfully", 
+    goldInfoDelete : "Gold info deleted successfully",
     fdCreated: "FD registered successfully", 
     fdUpdated: "FD updated successfully", 
     fdDeleted: "FD deleted successfully",
@@ -28,9 +30,9 @@ const message  = {
     userLoggedIn: "User logged in successfully",
     userLoggedOut: "User logged out successfully",
     userProfileUpdated: "User profile updated successfully",
-    userCreated: "User registered successfully",
-    userUpdated: "User updated successfully",
-    userDeleted: "User deleted successfully",
+    userCreated: "You are Registered Successfully",
+    userUpdated: "Account updated successfully",
+    userDeleted: "Account deleted successfully",
     userView: "User retrieved successfully", 
     usersView: "Users retrieved successfully",
     passwordChanged: "Password changed successfully",
@@ -45,7 +47,13 @@ const message  = {
 
 
     // Error Messages  
+    errorDeletingGoldInfo : "Error deleting Gold Information",
+    errorUpdatingGoldInfo :"Error updating Gold Information",
+    errorFetchingGoldInfo: "Gold Information not found",
+    goldExists : "Gold Information Already Exists",
+    goldRegisterError : "Error registering Gold Information",
     userAlreadyExists: "User already exists", 
+    goldExists : "Gold Info already exists",
     errorRegisteringUser: "Error registering user", 
     userNotFound: "User not found", 
     passwordIncorrect: "Invalid password", 
@@ -58,6 +66,7 @@ const message  = {
     incorrectOldPassword: "Invalid old password",
     passwordNotMatch: "Passwords do not match",
     expiredToken: "Invalid or expired token",
+    unAuthUser : "Unauthorized User",
     tokenNotMatch: "Unauthorized. Token does not match user",
     tokenNotFound: "Token not found in the database",
     tokenVerifyFail: "Token verification failed", 
@@ -68,6 +77,7 @@ const message  = {
     errorFetchingSector: "Error fetching Sector",
     errorCreatingInvestment: "Error creating Investment",
     errorFetchingFD: "Error fetching FD",
+    fdExists : "FD Already Exists",
     errorFetchingFDAnalysis: "Error fetching FD Analysis",
     errorFetchingInvestmentBySector: "Error fetching Investment by sector",
     errorFetchingInvestmentById: "Error fetching Investment by Id",
@@ -81,6 +91,7 @@ const message  = {
     resetPasswordError : "Error resetting password",
     otpInvalid : "Invalid OTP",
     validImageError : "Profile Image should be Less than 1 MB",
+    deleteAuth : "You are unauthorized to delete this account", 
 
     // required 
     sectorRequired: "Sector is required"

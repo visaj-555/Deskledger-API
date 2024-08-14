@@ -74,6 +74,22 @@ const getFdAnalysis = async (req, res) => {
                             },
                             0
                         ]
+                    },
+                    totalReturnedAmount: {
+                        $round: [
+                            {
+                                $multiply: [
+                                    "$totalInvestedAmount",
+                                    {
+                                        $pow: [
+                                            { $add: [1, { $divide: ["$interestRate", 100] }] },
+                                            { $round: ["$tenureInYears", 2] }
+                                        ]
+                                    }
+                                ]
+                            },
+                            0
+                        ]
                     }
                 }
             },
@@ -81,7 +97,8 @@ const getFdAnalysis = async (req, res) => {
                 $group: {
                     _id: null,
                     totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" },
-                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } }
+                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } },
+                    totalReturnAmountofFds: { $sum: "$totalReturnedAmount" } // New field added here
                 }
             },
             {
@@ -97,21 +114,22 @@ const getFdAnalysis = async (req, res) => {
             return res.status(statusCode.OK).json({ message: message.errorFetchingFD });
         }
 
-        // Raw data for storage
         const rawData = {
             totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
             currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
+            totalReturnAmountofFds: Math.round(fdAnalysis[0].totalReturnAmountofFds), // New field
             totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
             userId: new mongoose.Types.ObjectId(userId)
         };
 
-        // Formatted data for response
         const formattedData = {
             totalInvestedAmountOfFds: formatAmount(rawData.totalInvestedAmountOfFds),
             currentReturnAmountOfFds: formatAmount(rawData.currentReturnAmountOfFds),
+            totalReturnAmountofFds: formatAmount(rawData.totalReturnAmountofFds), // New field
             totalProfitGainedOfFds: formatAmount(rawData.totalProfitGainedOfFds),
             userId: rawData.userId
         };
+
         const filter = { userId: new mongoose.Types.ObjectId(userId) };
         const update = { $set: rawData };
         const options = { upsert: true, new: true };
@@ -125,23 +143,23 @@ const getFdAnalysis = async (req, res) => {
 
 const getFdAnalysisbyNumber = async (req, res) => {
     try {
-        const userId = req.user.id; // Use the authenticated user's ID
+        const userId = req.user.id;
 
         const fdAnalysis = await FixedDepositModel.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } }, // Match FDs for the user
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $addFields: {
-                    currentDate: new Date(), // Add current date
+                    currentDate: new Date(),
                     tenureInYears: {
                         $divide: [
                             { $subtract: ["$maturityDate", "$startDate"] },
-                            1000 * 60 * 60 * 24 * 365 // Calculate tenure in years
+                            1000 * 60 * 60 * 24 * 365
                         ]
                     },
                     tenureCompletedYears: {
                         $divide: [
                             { $subtract: [new Date(), "$startDate"] },
-                            1000 * 60 * 60 * 24 * 365 // Calculate completed tenure in years
+                            1000 * 60 * 60 * 24 * 365
                         ]
                     }
                 }
@@ -179,37 +197,54 @@ const getFdAnalysisbyNumber = async (req, res) => {
                             },
                             0
                         ]
+                    },
+                    totalReturnedAmount: {
+                        $round: [
+                            {
+                                $multiply: [
+                                    "$totalInvestedAmount",
+                                    {
+                                        $pow: [
+                                            { $add: [1, { $divide: ["$interestRate", 100] }] },
+                                            { $round: ["$tenureInYears", 2] }
+                                        ]
+                                    }
+                                ]
+                            },
+                            0
+                        ]
                     }
                 }
             },
             {
                 $group: {
                     _id: null,
-                    totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" }, // Sum of invested amounts
-                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } } // Sum of current return amounts
+                    totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" },
+                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } },
+                    totalReturnAmountofFds: { $sum: "$totalReturnedAmount" } // New field added here
                 }
             },
             {
                 $addFields: {
                     totalProfitGainedOfFds: {
-                        $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"] // Calculate total profit
+                        $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"]
                     }
                 }
             }
         ]);
 
         if (!fdAnalysis || fdAnalysis.length === 0) {
-            return res.status(200).json({statusCode : 200, message: 'No Fixed Deposits found' });
+            return res.status(200).json({ statusCode: 200, message: 'No Fixed Deposits found' });
         }
 
         const analysisData = {
             totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
             currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
+            totalReturnAmountofFds: Math.round(fdAnalysis[0].totalReturnAmountofFds), // New field
             totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
-            userId: new mongoose.Types.ObjectId(userId) // Associate with user
+            userId: new mongoose.Types.ObjectId(userId)
         };
 
-        // Update or create FD analysis document for the user
         const filter = { userId: new mongoose.Types.ObjectId(userId) };
         const update = { $set: analysisData };
         const options = { upsert: true, new: true };
@@ -227,6 +262,7 @@ const getFdAnalysisbyNumber = async (req, res) => {
         res.status(500).json({ statusCode: 500, message: "Error calculating FD analytics", error: error.message });
     }
 };
+
 
 module.exports = {
     getFdAnalysis,

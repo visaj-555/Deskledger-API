@@ -1,7 +1,7 @@
 //validation/upload.js
 
 const express = require('express');
-const multer = require('multer');
+const multer = require('multer'); // middleware for form data / uploading values
 const path = require('path');
 const { statusCode, message } = require('../utils/api.response');
 
@@ -11,7 +11,7 @@ const app = express();
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/profile_images');
-    },
+    }, // store image path 
     filename: function (req, file, cb) {
         cb(null, `${Date.now()}_${file.originalname}`);
     }
@@ -39,7 +39,7 @@ const upload = multer({
 function multerErrorHandling(err, req, res, next) {
     if (err.code === 'LIMIT_FILE_SIZE') {
         req.fileSizeLimitError = true;
-        return res.status(statusCode.BAD_REQUEST).json({ message: validImageError });
+        return res.status(statusCode.BAD_REQUEST).json({ message : message.validImageError });
     }
     next(err);
 }

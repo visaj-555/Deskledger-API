@@ -1,4 +1,5 @@
-// Helper function to generate common aggregation stages
+//aggregationHelper.js
+
 const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, interestRate) => {
   return [
     {

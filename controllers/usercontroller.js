@@ -3,10 +3,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const TokenModel = require("../models/tokenModel");
 const nodemailer = require("nodemailer");
-const crypto = require("crypto");
 const PasswordResetTokenModel = require("../models/passwordResetTokenModel");
 const { statusCode, message } = require("../utils/api.response");
-const { response } = require("express");
+const FixedDepositModel = require("../models/fixedDeposit");
+
+
 
 // Registering User
 const registerUser = async (req, res) => {
@@ -181,15 +182,29 @@ const updateUser = async (req, res) => {
 };
 
 // Delete User
+// Delete User
 const deleteUser = async (req, res) => {
   try {
-    const id = req.query.id;
-    const deletedUser = await UserModel.findByIdAndDelete(id);
+    const userId = req.params.id;
+
+    // Assuming req.user is populated with the authenticated user's data
+    if (req.user.id !== userId) {
+      return res
+        .status(statusCode.UNAUTHORIZED)
+        .json({ message: message.deleteAuth });
+    }
+
+    // Delete all Fixed Deposits associated with the user
+    await FixedDepositModel.deleteMany({ userId });
+
+    // Delete the user
+    const deletedUser = await UserModel.findByIdAndDelete(userId);
     if (!deletedUser) {
       return res
         .status(statusCode.NOT_FOUND)
         .json({ message: message.userNotFound });
     }
+
     res.status(statusCode.OK).json({ message: message.userDeleted });
   } catch (error) {
     res
@@ -197,6 +212,8 @@ const deleteUser = async (req, res) => {
       .json({ message: message.deleteUserError, error: error.message });
   }
 };
+
+
 
 // Change Password
 const changePassword = async (req, res) => {
