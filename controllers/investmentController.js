@@ -1,11 +1,15 @@
-const FixedDeposit = require('../models/fixedDeposit');
 const mongoose = require('mongoose');
+const FixedDeposit = require('../models/fixedDeposit');
+const GoldModel = require('../models/goldModel');
 const { statusCode, message } = require('../utils/api.response');
 
 const getOverallInvestmentBySector = async (req, res) => {
     try {
-        const overallInvestment = await FixedDeposit.aggregate([
-            { $match: { userId: req.user.id } },
+        const userId = req.user.id;
+
+        // Aggregate data for both sectors
+        const fdInvestment = await FixedDeposit.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $group: {
                     _id: '$sector',
@@ -19,6 +23,25 @@ const getOverallInvestmentBySector = async (req, res) => {
                 }
             }
         ]);
+
+        const goldInvestment = await GoldModel.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+            {
+                $group: {
+                    _id: '$sector',
+                    totalProfitAmount: { $sum: '$profit' }
+                }
+            },
+            {
+                $project: {
+                    sector: '$_id',
+                    totalProfitAmount: 1
+                }
+            }
+        ]);
+
+        const overallInvestment = [...fdInvestment, ...goldInvestment];
+
         res.status(statusCode.OK).json({ message: message.investmentinAllSectors, data: overallInvestment });
     } catch (error) {
         res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingInvestments, error: error.message });
@@ -28,25 +51,45 @@ const getOverallInvestmentBySector = async (req, res) => {
 const getTopGainers = async (req, res) => {
     try {
         const userId = req.user.id;
-        const topGainers = await FixedDeposit.aggregate([
+
+        // Get top gainers from Fixed Deposits
+        const topGainersFD = await FixedDeposit.aggregate([
             { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $addFields: {
                     profit: { $subtract: ['$currentReturnAmount', '$totalInvestedAmount'] }
                 }
             },
-            { $sort: { currentReturnAmount: -1 } },
-            { $limit: 10 },
+            { $sort: { profit: -1 } },
+            { $limit: 5 },  // Limit to top 5
             {
                 $project: {
                     investmentType: { $literal: 'Fixed Deposit' },
-                    sector: { $literal: 'Bank' },
+                    sector: { $literal: 'Banking' },
                     totalInvestedAmount: 1,
                     currentReturnAmount: 1,
                     profit: 1
                 }
             }
         ]);
+
+        // Get top gainers from Gold
+        const topGainersGold = await GoldModel.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+            { $sort: { profit: -1 } },
+            { $limit: 5 },  // Limit to top 5
+            {
+                $project: {
+                    investmentType: { $literal: 'Gold' },
+                    sector: { $literal: 'Gold' },
+                    totalInvestedAmount: '$goldPurchasePrice',
+                    currentReturnAmount: '$totalReturnAmount',
+                    profit: 1
+                }
+            }
+        ]);
+
+        const topGainers = [...topGainersFD, ...topGainersGold].sort((a, b) => b.profit - a.profit).slice(0, 10);
 
         topGainers.forEach((item, index) => {
             item.srNo = index + 1;
@@ -77,6 +120,14 @@ const getInvestmentsBySector = async (req, res) => {
                     ...item._doc
                 }));
                 break;
+            case 'gold':
+                investments = await GoldModel.find({ userId });
+                investments = investments.map((item, index) => ({
+                    srNo: index + 1,
+                    sector: 'Gold',
+                    ...item._doc
+                }));
+                break;
             default:
                 return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingSector });
         }
@@ -90,7 +141,10 @@ const getInvestmentsBySector = async (req, res) => {
 const getInvestmentById = async (req, res) => {
     try {
         const { id } = req.params;
-        const investment = await FixedDeposit.findOne({ _id: id, userId: req.user.id });
+        const investmentFD = await FixedDeposit.findOne({ _id: id, userId: req.user.id });
+        const investmentGold = await GoldModel.findOne({ _id: id, userId: req.user.id });
+
+        const investment = investmentFD || investmentGold;
 
         if (!investment) {
             return res.status(statusCode.NOT_FOUND).json({ message: message.errorFetchingInvestment });
@@ -119,6 +173,15 @@ const getHighestGrowthInSector = async (req, res) => {
                 })
                 .sort({ currentReturnAmount: -1 })
                 .select('totalInvestedAmount currentReturnAmount bankName fdType interestRate tenureInYears')
+                .lean();
+                break;
+            case 'gold':
+                highestGrowth = await GoldModel.findOne({
+                    sector: 'Gold',
+                    userId: req.user.id
+                })
+                .sort({ totalReturnAmount: -1 })
+                .select('goldPurchasePrice totalReturnAmount formOfGold purityOfGold goldWeight')
                 .lean();
                 break;
             default:
