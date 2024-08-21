@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const schema = mongoose.Schema;
+const Schema = mongoose.Schema; // Corrected this line to use 'Schema' with an uppercase 'S'
 
-const goldSchema = new schema({
+const goldSchema = new Schema({
     goldId: {
         type: String,
     },
@@ -29,11 +29,6 @@ const goldSchema = new schema({
         type: Number, // input from user
         required: true, // 22k, 24k, etc...
     },
-    // goldMasterId: {   
-    //     type: schema.Types.ObjectId,
-    //     ref: 'GoldMaster',
-    //     required: true,
-    // },
     totalReturnAmount: {
         type: Number, // Current Calculated Gold Price
     },
@@ -43,7 +38,11 @@ const goldSchema = new schema({
     sector: {
         type: String,
         default: 'Gold' 
-    }
+    }, 
+    userId: {
+        type: Schema.Types.ObjectId, // Corrected this line to use 'Schema' with an uppercase 'S'
+        ref: 'userModel',
+    }, 
 }, { timestamps: true });
 
 const GoldModel = mongoose.model("Gold", goldSchema);

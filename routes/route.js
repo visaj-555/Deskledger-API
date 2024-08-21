@@ -57,6 +57,8 @@ const {
   deleteGoldRecord,
 } = require('../controllers/goldController');
 
+const {getOverallAnalysis} =  require('../controllers/overallAnalysis');
+
 const { getFdAnalysis,  getFdAnalysisbyNumber} = require("../controllers/fdAnalysisController");
 const { ensureAuthenticated } = require("../validation/authValidator");
 const { validateFixedDeposit } = require("../validation/fdValidator");
@@ -86,6 +88,7 @@ router.get("/fd-analysis", ensureAuthenticated, getFdAnalysis);
 router.get("/fd-analysis-number", ensureAuthenticated, getFdAnalysisbyNumber);
 
 // Investment routes
+router.get("/overall-investment", ensureAuthenticated ,getOverallAnalysis);
 router.get("/top-gainers", ensureAuthenticated, getTopGainers);
 router.get("/overall-investment-by-sector", ensureAuthenticated, getOverallInvestmentBySector);
 router.get("/investments-by-sector/:sector",ensureAuthenticated, getInvestmentsBySector);
@@ -105,11 +108,11 @@ router.delete("/goldMaster/delete/:id", deleteGoldMasterInfo);
 router.get("/goldMaster", getGoldMasterInfo);
 
 // Gold routes
-router.post("/gold/register",  createGoldRecord);
-router.put("/gold/update/:id",  updateGoldRecord);
-router.delete("/gold/delete/:id", deleteGoldRecord);
-router.get("/gold-info", getAllGoldRecords);
-router.get("/gold-info/:id", getGoldRecordById); 
+router.post("/gold/register", ensureAuthenticated,  createGoldRecord);
+router.put("/gold/update/:id", ensureAuthenticated, updateGoldRecord);
+router.delete("/gold/delete/:id", ensureAuthenticated, deleteGoldRecord);
+router.get("/gold-info",ensureAuthenticated, getAllGoldRecords);
+router.get("/gold-info/:id", ensureAuthenticated, getGoldRecordById); 
 
 
 module.exports = router;
