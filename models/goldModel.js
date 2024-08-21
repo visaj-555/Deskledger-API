@@ -39,6 +39,10 @@ const goldSchema = new schema({
     },
     profit: {
         type: Number,
+    }, 
+    sector: {
+        type: String,
+        default: 'Gold' 
     }
 }, { timestamps: true });
 

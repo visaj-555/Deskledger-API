@@ -56,7 +56,6 @@ exports.createGoldRecord = async (req, res) => {
     }
 };
 
-
 // Get all gold records
 exports.getAllGoldRecords = async (req, res) => {
     try {
