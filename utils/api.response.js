@@ -19,6 +19,9 @@ const message  = {
     goldInfoRegister : "Gold info registered successfully",
     goldInfoUpdate : "Gold info updated successfully", 
     goldInfoDelete : "Gold info deleted successfully",
+    goldNotFetch : "Gold Master data is not available",
+    goldRecords : "Gold records fetched successfully",
+    goldNotFound : "Gold records not found",
     fdCreated: "FD registered successfully", 
     fdUpdated: "FD updated successfully", 
     fdDeleted: "FD deleted successfully",
@@ -92,6 +95,7 @@ const message  = {
     otpInvalid : "Invalid OTP",
     validImageError : "Profile Image should be Less than 1 MB",
     deleteAuth : "You are unauthorized to delete this account", 
+    internalError : "Internal Server Error",
 
     // required 
     sectorRequired: "Sector is required"

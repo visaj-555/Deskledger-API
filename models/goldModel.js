@@ -1,45 +1,46 @@
 const mongoose = require('mongoose');
-const schema  = mongoose.Schema;
+const schema = mongoose.Schema;
 
 const goldSchema = new schema({
     goldId: {
         type: String,
     },
-    firstName :{
-        type: String,
-        required: true
-    }, 
-    lastName:{
-        type: String,
-        required: true
-    }, 
+    firstName: {
+        type: String,   // input from user
+        required: true,
+    },
+    lastName: {
+        type: String,      // input from user
+        required: true,
+    },
     goldWeight: {
         type: Number,
-        required: true
-    }, 
+        required: true, // input from user (in grams)
+    },
     goldPurchasePrice: {
-        type: Number,
-        required: true
+        type: Number,   // input from user 
+        required: true,
     },
-    goldCurrentPricePerGram:{
-        type: Number,
-    }, 
-    makingChargesPerGram:{
-        type :Number, 
+    formOfGold: {
+        type: String, // Biscuit, chain, locket, etc...
+        required: true,
     },
-    goldCurrentValue:{
-        type: Number,
-    }, 
-    gst:{
-        type: Number,
-    }, 
-    finalGoldPrice:{
-        type: Number,
-    }, 
-    profit:{
+    purityOfGold: {
+        type: Number, // input from user
+        required: true, // 22k, 24k, etc...
+    },
+    // goldMasterId: {   
+    //     type: schema.Types.ObjectId,
+    //     ref: 'GoldMaster',
+    //     required: true,
+    // },
+    totalReturnAmount: {
+        type: Number, // Current Calculated Gold Price
+    },
+    profit: {
         type: Number,
     }
-})
+}, { timestamps: true });
 
-const GoldModel = mongoose.model("Gold", goldSchema); 
+const GoldModel = mongoose.model("Gold", goldSchema);
 module.exports = GoldModel;

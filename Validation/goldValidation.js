@@ -5,7 +5,7 @@ const validateGold = (req, res, next) => {
 
     const schema = Joi.object({
         goldId: Joi.string()
-            .optional() // Since it is an optional field in the schema
+            .optional() // Optional field
             .messages({
                 'string.empty': 'Gold ID is required'
             }),
@@ -35,41 +35,15 @@ const validateGold = (req, res, next) => {
                 'number.positive': 'Gold purchase price must be a positive number',
                 'any.required': 'Gold purchase price is required'
             }),
-        goldCurrentPricePerGram: Joi.number().positive()
-            .optional()
+        formOfGold: Joi.string().required()
             .messages({
-                'number.base': 'Gold current price per gram must be a number',
-                'number.positive': 'Gold current price per gram must be a positive number'
+                'string.empty': 'Form of gold is required',
+                'any.required': 'Form of gold is required'
             }),
-        makingChargesPerGram: Joi.number().positive()
-            .optional()
+        purityOfGold: Joi.number().positive().required()
             .messages({
-                'number.base': 'Making charges per gram must be a number',
-                'number.positive': 'Making charges per gram must be a positive number'
-            }),
-        goldCurrentValue: Joi.number().positive()
-            .optional()
-            .messages({
-                'number.base': 'Gold current value must be a number',
-                'number.positive': 'Gold current value must be a positive number'
-            }),
-        gst: Joi.number().positive()
-            .optional()
-            .messages({
-                'number.base': 'GST must be a number',
-                'number.positive': 'GST must be a positive number'
-            }),
-        finalGoldPrice: Joi.number().positive()
-            .optional()
-            .messages({
-                'number.base': 'Final gold price must be a number',
-                'number.positive': 'Final gold price must be a positive number'
-            }),
-        profit: Joi.number().positive()
-            .optional()
-            .messages({
-                'number.base': 'Profit must be a number',
-                'number.positive': 'Profit must be a positive number'
+                'string.empty': 'Purity of gold is required',
+                'any.required': 'Purity of gold is required'
             }),
     });
 

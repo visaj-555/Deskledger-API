@@ -49,6 +49,14 @@ const {
   getGoldMasterInfo
 } = require('../controllers/goldMasterController');
 
+const {
+  createGoldRecord,
+  getAllGoldRecords,
+  getGoldRecordById,
+  updateGoldRecord,
+  deleteGoldRecord,
+} = require('../controllers/goldController');
+
 const { getFdAnalysis,  getFdAnalysisbyNumber} = require("../controllers/fdAnalysisController");
 const { ensureAuthenticated } = require("../validation/authValidator");
 const { validateFixedDeposit } = require("../validation/fdValidator");
@@ -91,10 +99,17 @@ router.delete('/banks',deleteBank);
 router.get('/banks',getBanks);
 
 // Gold Master routes
+router.post("/goldMaster/register",  goldMasterInfoRegister);
+router.put("/goldMaster/update/:id",  updateGoldMasterInfo);
+router.delete("/goldMaster/delete/:id", deleteGoldMasterInfo);
+router.get("/goldMaster", getGoldMasterInfo);
 
-router.post("/gold/register",  goldMasterInfoRegister);
-router.put("/gold/update/:id",  updateGoldMasterInfo);
-router.delete("/gold/delete/:id", deleteGoldMasterInfo);
-router.get("/gold/:id", getGoldMasterInfo);
+// Gold routes
+router.post("/gold/register",  createGoldRecord);
+router.put("/gold/update/:id",  updateGoldRecord);
+router.delete("/gold/delete/:id", deleteGoldRecord);
+router.get("/gold-info", getAllGoldRecords);
+router.get("/gold-info/:id", getGoldRecordById); 
+
 
 module.exports = router;
