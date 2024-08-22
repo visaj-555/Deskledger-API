@@ -63,16 +63,14 @@ const getOverallAnalysis = async (req, res) => {
     };
 
     res.status(statusCode.OK).json({
-      message: "Overall Analysis of FDs and Gold",
+      message: message.overAllAnalysis,
       data: overallAnalysis,
     });
   } catch (error) {
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({
-        message: "Error calculating overall analysis",
-        error: error.message,
-      });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      message: message.errorOverAllAnalysis,
+      error: error.message,
+    });
   }
 };
 

@@ -12,7 +12,7 @@ exports.createGoldRecord = async (req, res) => {
         const goldMaster = await GoldMasterModel.findOne().sort({ createdAt: -1 });
 
         if (!goldMaster) {
-            return res.status(statusCode.BAD_REQUEST).json({ message: message.goldRegisterError });
+            return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingGoldMaster });
         }
 
         // Destructure values from goldMaster
@@ -53,7 +53,7 @@ exports.createGoldRecord = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.internalError });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorCreatingGoldInfo });
     }
 };
 
@@ -72,10 +72,10 @@ exports.getAllGoldRecords = async (req, res) => {
             };
         });
 
-        return res.status(200).json({ message: "Gold records fetched successfully", data: goldRecordsWithSrNo });
+        return res.status(statusCode.OK).json({ message: message.goldRecords, data: goldRecordsWithSrNo });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorGoldRecords });
     }
 };
 
@@ -94,7 +94,7 @@ exports.getGoldRecordById = async (req, res) => {
         return res.status(statusCode.OK).json({ message: message.goldRecords, data: goldRecord });
     } catch (error) {
         console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.internalError });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingGoldInfo });
     }
 };
 
@@ -111,7 +111,7 @@ exports.updateGoldRecord = async (req, res) => {
         const existingGoldRecord = await GoldModel.findOne({ _id: id, userId });
 
         if (!existingGoldRecord) {
-            return res.status(404).json({ message: "Gold record not found" });
+            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
         }
 
         // Use existing values if not provided in the request body
@@ -124,14 +124,14 @@ exports.updateGoldRecord = async (req, res) => {
             const goldMaster = await GoldMasterModel.findOne().sort({ createdAt: -1 });
 
             if (!goldMaster) {
-                return res.status(400).json({ message: "Unable to fetch gold master data" });
+                return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingGoldMaster });
             }
 
             const { goldRate22KPerGram, goldRate24KPerGram, gst, makingChargesPerGram } = goldMaster;
 
             // Validate purityOfGold
             if (![22, 24].includes(updatedPurityOfGold)) {
-                return res.status(400).json({ message: "Invalid purity of gold" });
+                return res.status(statusCode.BAD_REQUEST).json({ message: message.errorUpdatingGoldInfo });
             }
 
             goldCurrentPricePerGram = updatedPurityOfGold === 22 ? goldRate22KPerGram : goldRate24KPerGram;
@@ -164,13 +164,13 @@ exports.updateGoldRecord = async (req, res) => {
         );
 
         if (!updatedGoldRecord) {
-            return res.status(404).json({ message: "Gold record not found" });
+            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
         }
 
-        return res.status(200).json({ message: "Gold information updated", data: updatedGoldRecord });
+        return res.status(statusCode.OK).json({ message: message.goldInfoUpdate, data: updatedGoldRecord });
     } catch (error) {
         console.error("Error updating gold record:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingGoldInfo });
     }
 };
 
@@ -191,7 +191,32 @@ exports.deleteGoldRecord = async (req, res) => {
         return res.status(statusCode.OK).json({ message: message.goldInfoDelete });
     } catch (error) {
         console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.internalError });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorDeletingGoldInfo });
     }
 };
 
+// Delete multiple gold records
+exports.deleteMultipleGoldRecords = async (req, res) => {
+    try {
+        const { ids } = req.body; // Expecting an array of IDs to delete
+        const userId = req.user.id; // Get the user ID from the authenticated request
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(statusCode.BAD_REQUEST).json({ message: message.invalidIds });
+        }
+
+        // Ensure that the gold records belong to the authenticated user
+        const result = await GoldModel.deleteMany({ _id: { $in: ids }, userId });
+
+        if (result.deletedCount === 0) {
+            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
+        }
+
+        return res.status(statusCode.OK).json({ 
+            message: `${result.deletedCount} gold records have been successfully deleted.` 
+        });
+    } catch (error) {
+        console.error("Error deleting multiple gold records:", error);
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorDeletingGoldInfo });
+    }
+};

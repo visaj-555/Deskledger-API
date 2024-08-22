@@ -317,9 +317,55 @@ const getFdDetails = async (req, res) => {
   }
 };
 
+const deleteMultipleFDs = async (req, res) => {
+  try {
+    const { ids } = req.body; // Array of FD IDs to delete
+    const userId = req.user.id;
+
+    // Validate that the provided IDs are valid MongoDB ObjectIDs
+    if (!Array.isArray(ids) || ids.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+      return res.status(statusCode.BAD_REQUEST).json({
+        statusCode: statusCode.BAD_REQUEST,
+        message: "Invalid FD ID format in the provided list",
+      });
+    }
+
+    // Check if the FDs exist and belong to the authenticated user
+    const fdsToDelete = await FixedDepositModel.find({
+      _id: { $in: ids },
+      userId,
+    });
+
+    if (fdsToDelete.length !== ids.length) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: "Some FDs not found or not authorized to delete",
+      });
+    }
+
+    // Delete the FDs
+    await FixedDepositModel.deleteMany({ _id: { $in: ids }, userId });
+    await FdAnalysisModel.deleteMany({ fdId: { $in: ids }, userId });
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: "FDs deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error while deleting multiple FDs:", error.message || error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: "Error deleting FDs",
+      error: error.message || error,
+    });
+  }
+};
+
+
 module.exports = {
   fixedDepositRegister,
   updateFixedDeposit,
   fixedDepositDelete,
   getFdDetails,
+  deleteMultipleFDs
 };

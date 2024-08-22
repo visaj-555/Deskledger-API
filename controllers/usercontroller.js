@@ -278,13 +278,6 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     console.log("Email received:", email);
-
-    // Validate email format
-    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    // if (!emailRegex.test(email)) {
-    //   return res.status(statusCode.BAD_REQUEST).json({ message: "Invalid email format" });
-    // }
-
     const user = await UserModel.findOne({ email });
 
     if (!user) {
@@ -328,7 +321,7 @@ const resetPassword = async (req, res) => {
 
     if (!resetToken) {
       console.error('Invalid OTP');
-      return res.status(statusCode.BAD_REQUEST).json({ message: 'Invalid OTP' });
+      return res.status(statusCode.BAD_REQUEST).json({ message: message.in });
     }
 
     if (resetToken.expires < Date.now()) {

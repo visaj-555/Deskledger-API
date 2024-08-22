@@ -24,7 +24,7 @@ const goldMasterInfoRegister = async (req, res) => {
       goldRate22KPerGram, 
       goldRate24KPerGram, 
       gst,
-      makingChargesPerGram
+      makingChargesPerGram3
     });
 
     const saveGoldMasterInfo = await newGoldMasterInfo.save();
