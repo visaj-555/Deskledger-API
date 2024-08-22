@@ -5,6 +5,9 @@ const goldSchema = new Schema({
     goldId: {
         type: String,
     },
+    srNo :{
+        type: Number
+    },
     firstName: {
         type: String,   // input from user
         required: true,

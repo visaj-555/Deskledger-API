@@ -157,7 +157,7 @@ const getInvestmentById = async (req, res) => {
 };
 
 const getHighestGrowthInSector = async (req, res) => {
-    const { sector } = req.body;
+    const { sector } = req.params;
 
     if (!sector) {
         return res.status(statusCode.BAD_REQUEST).json({ message: message.sectorRequired });
@@ -175,6 +175,7 @@ const getHighestGrowthInSector = async (req, res) => {
                 .select('totalInvestedAmount currentReturnAmount bankName fdType interestRate tenureInYears')
                 .lean();
                 break;
+                
             case 'gold':
                 highestGrowth = await GoldModel.findOne({
                     sector: 'Gold',

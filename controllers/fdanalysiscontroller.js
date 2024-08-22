@@ -6,15 +6,14 @@ const { statusCode, message } = require('../utils/api.response');
 // Utility function to format the amount
 const formatAmount = (amount) => {
     if (amount >= 1000000000) {
-        return (amount / 1000000000).toFixed(2) + 'Arab';
+        return (amount / 1000000000).toFixed(2) + ' Arab';
     } else if (amount >= 10000000) {
         return (amount / 10000000).toFixed(2) + ' Crore';
     } else if (amount >= 100000) {
         return (amount / 100000).toFixed(2) + ' Lakh';
-    }
-     else if(amount < 100000){
+    } else if(amount < 100000){
         return (amount / 100000).toFixed(2) + 'K';
-     }
+    }
     return amount.toString();
 };
 
@@ -111,7 +110,7 @@ const getFdAnalysis = async (req, res) => {
         ]);
 
         if (!fdAnalysis || fdAnalysis.length === 0) {
-            return res.status(statusCode.OK).json({ message: message.errorFetchingFD });
+            return res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.errorFetchingFD });
         }
 
         const rawData = {
@@ -135,9 +134,9 @@ const getFdAnalysis = async (req, res) => {
         const options = { upsert: true, new: true };
         await FdAnalysisModel.findOneAndUpdate(filter, update, options);
 
-        res.status(statusCode.OK).json({ message: message.fdAnalysis, data: formattedData });
+        res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.analysisReportofFd, data: formattedData });
     } catch (error) {
-        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFdAnalytics, error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFdAnalytics, error: error.message });
     }
 };
 
@@ -234,10 +233,10 @@ const getFdAnalysisbyNumber = async (req, res) => {
         ]);
 
         if (!fdAnalysis || fdAnalysis.length === 0) {
-            return res.status(200).json({ statusCode: 200, message: 'No Fixed Deposits found' });
+            return res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.errorFetchingFD });
         }
 
-        const analysisData = {
+        const rawData = {
             totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
             currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
             totalReturnAmountofFds: Math.round(fdAnalysis[0].totalReturnAmountofFds), // New field
@@ -245,24 +244,19 @@ const getFdAnalysisbyNumber = async (req, res) => {
             userId: new mongoose.Types.ObjectId(userId)
         };
 
-        const filter = { userId: new mongoose.Types.ObjectId(userId) };
-        const update = { $set: analysisData };
-        const options = { upsert: true, new: true };
-        const updatedFdAnalysis = await FdAnalysisModel.findOneAndUpdate(filter, update, options);
+        const formattedData = {
+            totalInvestedAmountOfFds: formatAmount(rawData.totalInvestedAmountOfFds),
+            currentReturnAmountOfFds: formatAmount(rawData.currentReturnAmountOfFds),
+            totalReturnAmountofFds: formatAmount(rawData.totalReturnAmountofFds), // New field
+            totalProfitGainedOfFds: formatAmount(rawData.totalProfitGainedOfFds),
+            userId: rawData.userId
+        };
 
-        console.log("Updated FD Analysis:", updatedFdAnalysis);
-
-        res.status(200).json({
-            statusCode: 200,
-            message: "Analysis Report of all the fixed deposits",
-            data: analysisData
-        });
+        res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.analysisReportofFd, data: rawData });
     } catch (error) {
-        console.error("Error calculating FD analytics:", error);
-        res.status(500).json({ statusCode: 500, message: "Error calculating FD analytics", error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFdAnalytics, error: error.message });
     }
 };
-
 
 module.exports = {
     getFdAnalysis,

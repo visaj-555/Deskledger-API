@@ -224,46 +224,38 @@ const fixedDepositDelete = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate fdId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          statusCode: statusCode.BAD_REQUEST,
-          message: message.errorDeletingFD,
-        });
-    }
-
-    // Ensure the authenticated user is deleting their own FD
-    const deletedFixedDeposit = await FixedDepositModel.findOneAndDelete({
-      _id: id,
-      userId: req.user.id,
-    });
-    if (!deletedFixedDeposit) {
-      return res.status(statusCode.NOT_FOUND).json({
-        statusCode: statusCode.NOT_FOUND,
-        message: message.errorDeletingFD,
+      return res.status(statusCode.BAD_REQUEST).json({
+        statusCode: statusCode.BAD_REQUEST,
+        message: "Invalid FD ID format",
       });
     }
 
-    // Delete the associated FD Analysis data
-    await FdAnalysisModel.deleteOne({ userId: req.user.id });
+    const fixedDeposit = await FixedDepositModel.findOne({ _id: id, userId: req.user.id });
+    if (!fixedDeposit) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: "FD not found or not authorized to delete",
+      });
+    }
 
-    res
-      .status(statusCode.OK)
-      .json({ statusCode: statusCode.OK, message: message.fdDeleted });
+    await FixedDepositModel.findByIdAndDelete(id);
+    await FdAnalysisModel.deleteOne({ fdId: id, userId: req.user.id });
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: "FD deleted successfully",
+    });
   } catch (error) {
-    console.error(
-      "Error while deleting Fixed Deposit:",
-      error.message || error
-    );
+    console.error("Error while deleting Fixed Deposit:", error.message || error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorDeletingFD,
+      message: "Error deleting FD",
       error: error.message || error,
     });
   }
 };
+
 
 const getFdDetails = async (req, res) => {
   try {

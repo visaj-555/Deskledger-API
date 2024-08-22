@@ -1,4 +1,5 @@
 const GoldMasterModel = require("../models/goldMaster");
+
 const { statusCode, message } = require("../utils/api.response");
 
 // Create a new gold information

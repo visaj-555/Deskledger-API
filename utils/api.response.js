@@ -16,6 +16,15 @@ const statusCode = {
 const message  = {
 
     // Success messages 
+    otpSuccess : "OTP Verified Successfully",
+    analysisReportofFd : "Analysis Report of all the fixed deposits",
+    analysisReportofGold : "Analysis Report of all the gold investments",
+    overAllAnalysis : "Overall Analysis of FDs and Gold",
+    bankCreated : "Bank created Successfully", 
+    bankUpdated : "Bank updated successfully", 
+    bankDeleted : "Bank deleted successfully",
+    banksView: "Banks retrieved successfully",
+    bankView: "Bank retrieved successfully",
     goldInfoRegister : "Gold info registered successfully",
     goldInfoUpdate : "Gold info updated successfully", 
     goldInfoDelete : "Gold info deleted successfully",
@@ -29,6 +38,7 @@ const message  = {
     fdView: "FD retrieved successfully", 
     fdAnalysis: "Analysis Report of all the fixed deposits",
     userNotFound: "User not found",
+    userProfileUpdated: "User profile updated Successfully",
     userExists: "User already exists",
     userLoggedIn: "User logged in successfully",
     userLoggedOut: "User logged out successfully",
@@ -50,6 +60,23 @@ const message  = {
 
 
     // Error Messages  
+    otpInvalid : "Invalid OTP",
+    otpExpired : "Expired OTP",
+    errorResetPassword : "Error resetting password",
+    errorUserUpdate : "Error updating user profile",
+    errorOverAllAnalysis : "Error calculating overall analysis",
+    errorFdAnalytics : "Error calculating FD analytics",
+    errorGoldAnalytics : "Error calculating Gold analytics",
+    errorFetchingGoldMaster : "Error fetching Gold Master",
+    errorGoldRecords : "Error fetching Gold Records",
+    errorCreatingGoldInfo : "Error registering Gold Information",
+    errorUpdatingGoldInfo :"Error updating Gold Information",
+    bankAlreadyExists : "Bank already exists",
+    errorCreatingBank : "Error creating Bank",
+    errorUpdatingBank : "Error updating Bank",
+    errorDeletingBank : "Error deleting Bank",
+    errorFetchingBanks : "Error fetching Banks",
+    errorFetchingBank: "Error fetching Bank",
     errorDeletingGoldInfo : "Error deleting Gold Information",
     errorUpdatingGoldInfo :"Error updating Gold Information",
     errorFetchingGoldInfo: "Gold Information not found",

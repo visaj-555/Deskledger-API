@@ -12,7 +12,7 @@ const FixedDepositModel = require("../models/fixedDeposit");
 // Registering User
 const registerUser = async (req, res) => {
   try {
-    const { firstName, lastName, phoneNo, email, password } = req.body;
+    const { firstName, lastName, phoneNo, email, password} = req.body;
 
     const userExists = await UserModel.findOne({ email });
 
@@ -31,6 +31,7 @@ const registerUser = async (req, res) => {
       phoneNo,
       email,
       password: hashedPassword,
+      
     });
 
     const savedUser = await newUser.save();

@@ -73,6 +73,7 @@ const userRegisterValidate = (req, res, next) => {
                 'string.pattern.base': 'Password should contain at least one lowercase letter, one uppercase letter, one number, and one special character',
                 'any.required': 'Password is required'
             }),
+        is_admin: Joi.boolean().optional()
     });
 
     const { error } = schema.validate(req.body, { abortEarly: false, context: { isUpdating } });

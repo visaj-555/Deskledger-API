@@ -57,10 +57,14 @@ const {
   deleteGoldRecord,
 } = require('../controllers/goldController');
 
+const {
+  getGoldAnalysis
+} =  require('../controllers/goldAnalysisController');
+
 const {getOverallAnalysis} =  require('../controllers/overallAnalysis');
 
 const { getFdAnalysis,  getFdAnalysisbyNumber} = require("../controllers/fdAnalysisController");
-const { ensureAuthenticated } = require("../validation/authValidator");
+const { ensureAuthenticated, ensureAdmin } = require("../validation/authValidator");
 const { validateFixedDeposit } = require("../validation/fdValidator");
 const { upload, multerErrorHandling  } = require("../validation/upload");
 
@@ -93,19 +97,20 @@ router.get("/top-gainers", ensureAuthenticated, getTopGainers);
 router.get("/overall-investment-by-sector", ensureAuthenticated, getOverallInvestmentBySector);
 router.get("/investments-by-sector/:sector",ensureAuthenticated, getInvestmentsBySector);
 router.get("/investments/:id", ensureAuthenticated, getInvestmentById);
-router.get("/investments/highest-growth", ensureAuthenticated, getHighestGrowthInSector);
+router.get("/investments/highest-growth/:sector", ensureAuthenticated, getHighestGrowthInSector);
+router.get('/gold-analysis', ensureAuthenticated, getGoldAnalysis);
 
 //Bank routes
-router.post('/banks', createBank);
-router.put('/banks', updateBank);
-router.delete('/banks',deleteBank);
-router.get('/banks',getBanks);
+router.post('/bank-register',  ensureAuthenticated, ensureAdmin, createBank);
+router.put('/bank-update', ensureAuthenticated, ensureAdmin, updateBank);
+router.delete('/bank-delete',  ensureAuthenticated, ensureAdmin, deleteBank);
+router.get('/banks', ensureAuthenticated, ensureAdmin, getBanks);
 
 // Gold Master routes
-router.post("/goldMaster/register",  goldMasterInfoRegister);
-router.put("/goldMaster/update/:id",  updateGoldMasterInfo);
-router.delete("/goldMaster/delete/:id", deleteGoldMasterInfo);
-router.get("/goldMaster", getGoldMasterInfo);
+router.post("/goldMaster/register", ensureAuthenticated, ensureAdmin,  goldMasterInfoRegister);
+router.put("/goldMaster/update/:id",  ensureAuthenticated, ensureAdmin, updateGoldMasterInfo);
+router.delete("/goldMaster/delete/:id", ensureAuthenticated, ensureAdmin, deleteGoldMasterInfo);
+router.get("/goldMaster", ensureAuthenticated, ensureAdmin, getGoldMasterInfo);
 
 // Gold routes
 router.post("/gold/register", ensureAuthenticated,  createGoldRecord);
