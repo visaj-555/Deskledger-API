@@ -15,6 +15,21 @@ exports.createGoldRecord = async (req, res) => {
             return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingGoldMaster });
         }
 
+        // Check if the gold information already exists for this user
+        const existingGoldRecord = await GoldModel.findOne({
+            firstName,
+            lastName,
+            goldWeight,
+            goldPurchasePrice,
+            formOfGold,
+            purityOfGold,
+            userId
+        });
+
+        if (existingGoldRecord) {
+            return res.status(statusCode.CONFLICT).json({ message: "Gold information already exists" });
+        }
+
         // Destructure values from goldMaster
         const { goldRate22KPerGram, goldRate24KPerGram, gst, makingChargesPerGram } = goldMaster;
 
@@ -56,6 +71,7 @@ exports.createGoldRecord = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorCreatingGoldInfo });
     }
 };
+
 
 // Get all gold records for the authenticated user
 exports.getAllGoldRecords = async (req, res) => {

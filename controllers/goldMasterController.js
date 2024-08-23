@@ -1,5 +1,4 @@
 const GoldMasterModel = require("../models/goldMaster");
-
 const { statusCode, message } = require("../utils/api.response");
 
 // Create a new gold information
@@ -7,12 +6,8 @@ const goldMasterInfoRegister = async (req, res) => {
   try {
     const { goldRate22KPerGram, goldRate24KPerGram, gst, makingChargesPerGram } = req.body;
 
-    const masterGoldInfoExists = await GoldMasterModel.findOne({
-      goldRate22KPerGram, 
-      goldRate24KPerGram, 
-      gst,
-      makingChargesPerGram
-    });
+    // Check if any gold master record exists
+    const masterGoldInfoExists = await GoldMasterModel.findOne();
 
     if (masterGoldInfoExists) {
       return res
@@ -24,7 +19,7 @@ const goldMasterInfoRegister = async (req, res) => {
       goldRate22KPerGram, 
       goldRate24KPerGram, 
       gst,
-      makingChargesPerGram3
+      makingChargesPerGram
     });
 
     const saveGoldMasterInfo = await newGoldMasterInfo.save();
@@ -41,7 +36,6 @@ const goldMasterInfoRegister = async (req, res) => {
     });
   }
 };
-
 
 // Update gold information
 const updateGoldMasterInfo = async (req, res) => {

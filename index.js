@@ -13,7 +13,7 @@ dotenv.config(); // load env variables from .env file
 // Setting up express app 
 const app = express(); 
 const PORT = process.env.PORT || 3500;
-const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.54.143';
+const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.29.16';
 const DB_CONNECTION = process.env.CONNECTION;
 
 app.use(express.json()); // allows app to handle json data 
