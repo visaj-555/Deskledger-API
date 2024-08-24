@@ -123,7 +123,7 @@ const message  = {
     validImageError : "Profile Image should be Less than 1 MB",
     deleteAuth : "You are unauthorized to delete this account", 
     internalError : "Internal Server Error",
-
+    errorUserProfile : "Error updating profile image", 
     // required 
     sectorRequired: "Sector is required"
 }

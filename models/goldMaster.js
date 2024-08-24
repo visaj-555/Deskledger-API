@@ -1,31 +1,15 @@
 const mongoose = require('mongoose');
-const { FormFieldValidationStatus } = require('sanity');
-const schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
-const goldMasterSchema = new schema({
-    goldRate22KPerGram :{ // 22 carat Gold rate per gram
+const GoldMasterSchema = new Schema({
+    goldRate22KPerGram: {
         type: Number,
-        required: true,
-    }, 
-    goldRate24KPerGram :{
-        type: Number, // 24 carat Gold rate per gram
-        required: true,
     },
-    gst: {
+    goldRate24KPerGram: {
         type: Number,
-        required: true,
-    }, 
-    makingChargesPerGram: {
-        type: Number, // (In %)
-        required: true,
     },
-
-
-
+    // Removed makingChargesPerGram and gst as they are no longer needed
 }, { timestamps: true });
 
-const GoldMasterModel = mongoose.model("GoldMaster", goldMasterSchema);
+const GoldMasterModel = mongoose.model('GoldMaster', GoldMasterSchema);
 module.exports = GoldMasterModel;
-
-
-

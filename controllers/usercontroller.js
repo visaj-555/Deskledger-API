@@ -19,7 +19,7 @@ const registerUser = async (req, res) => {
     if (userExists) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ message: message.userAlreadyExists });
+        .json({ statusCode : statusCode.BAD_REQUEST,  message: message.userAlreadyExists });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -36,13 +36,14 @@ const registerUser = async (req, res) => {
 
     const savedUser = await newUser.save();
     res.status(statusCode.CREATED).json({
+      statusCode : statusCode.CREATED,  
       message: message.userCreated,
       data: { ...savedUser.toObject(), password: undefined },
     });
   } catch (error) {
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.errorRegisteringUser, error });
+      .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorRegisteringUser, error });
   }
 };
 
@@ -55,14 +56,14 @@ const loginUser = async (req, res) => {
     if (!user) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ message: message.userNotFound });
+        .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.userNotFound });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ message: message.passwordIncorrect });
+        .json({ statusCode : statusCode.BAD_REQUEST,  message: message.passwordIncorrect });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.SECRET, {
@@ -74,6 +75,7 @@ const loginUser = async (req, res) => {
     await tokenDoc.save();
 
     res.status(statusCode.OK).json({
+      statusCode : statusCode.OK,
       message: message.userLoggedIn,
       data: {
         token,
@@ -88,7 +90,7 @@ const loginUser = async (req, res) => {
     console.error("Error logging in user:", error);
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.errorLogin });
+      .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorLogin });
   }
 };
 
@@ -97,13 +99,14 @@ const getUsers = async (req, res) => {
   try {
     const users = await UserModel.find({}, { password: 0 });
     res.status(statusCode.OK).json({
+      statusCode : statusCode.OK, 
       message: message.usersView,
       data: users,
     });
   } catch (error) {
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.errorFetchingUsers, error });
+      .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorFetchingUsers, error });
   }
 };
 
@@ -115,16 +118,17 @@ const getUser = async (req, res) => {
     if (!user) {
       return res
         .status(statusCode.NOT_FOUND)
-        .json({ message: message.userNotFound });
+        .json({ statusCode : statusCode.NOT_FOUND,  message: message.userNotFound });
     }
     res.status(statusCode.OK).json({
+      statusCode : statusCode.OK,
       message: message.userView,
       data: user,
     });
   } catch (error) {
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.errorFetchingUser, error });
+      .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorFetchingUser, error });
   }
 };
 
@@ -133,14 +137,14 @@ const updateUser = async (req, res) => {
   try {
     if (req.fileValidationError) {
       return res
-        .status(400)
-        .json({ message: 'Please upload a valid image file' });
+        .status(statusCode.BAD_REQUEST)
+        .json({ statusCode : statusCode.BAD_REQUEST,  message: 'Please upload a valid image file' });
     }
 
     if (req.fileSizeLimitError) {
       return res
-        .status(400)
-        .json({ message: 'File size should be less than 1 MB.' });
+        .status(statusCode.BAD_REQUEST)
+        .json({ statusCode : statusCode.BAD_REQUEST, message: 'File size should be less than 1 MB.' });
     }
 
     const { firstName, lastName, phoneNo, email } = req.body;
@@ -149,8 +153,8 @@ const updateUser = async (req, res) => {
     const user = await UserModel.findById(req.params.id);
     if (!user) {
       return res
-        .status(404)
-        .json({ message: 'User not found' });
+        .status(statusCode.NOT_FOUND)
+        .json({ statusCode : statusCode.NOT_FOUND, message: message.userNotFound });
     }
 
     user.firstName = firstName || user.firstName;
@@ -164,8 +168,9 @@ const updateUser = async (req, res) => {
     await user.save();
 
     // Respond with success message
-    res.status(200).json({
-      message: 'User profile updated',
+    res.status(statusCode.OK).json({
+      statusCode : statusCode.OK,  
+      message: message.userProfileUpdated,
       user: {
         firstName: user.firstName,
         lastName: user.lastName,
@@ -177,8 +182,8 @@ const updateUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     res
-      .status(500)
-      .json({ message: 'Error updating user profile' });
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorUserProfile });
   }
 };
 
@@ -192,7 +197,7 @@ const deleteUser = async (req, res) => {
     if (req.user.id !== userId) {
       return res
         .status(statusCode.UNAUTHORIZED)
-        .json({ message: message.deleteAuth });
+        .json({ statusCode : statusCode.UNAUTHORIZED, message: message.deleteAuth });
     }
 
     // Delete all Fixed Deposits associated with the user
@@ -203,14 +208,14 @@ const deleteUser = async (req, res) => {
     if (!deletedUser) {
       return res
         .status(statusCode.NOT_FOUND)
-        .json({ message: message.userNotFound });
+        .json({ statusCode : statusCode.NOT_FOUND, message: message.userNotFound });
     }
 
-    res.status(statusCode.OK).json({ message: message.userDeleted });
+    res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.userDeleted });
   } catch (error) {
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.deleteUserError, error: error.message });
+      .json({statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.deleteUserError, error: error.message });
   }
 };
 
@@ -226,20 +231,20 @@ const changePassword = async (req, res) => {
     if (!user) {
       return res
         .status(statusCode.NOT_FOUND)
-        .json({ message: message.userNotFound });
+        .json({statusCode : statusCode.NOT_FOUND, message: message.userNotFound });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ message: message.incorrectOldPassword });
+        .json({ statusCode : statusCode.BAD_REQUEST, message: message.incorrectOldPassword });
     }
 
     if (newPassword !== confirmPassword) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ message: message.passwordNotMatch });
+        .json({ statusCode : statusCode.BAD_REQUEST,  message: message.passwordNotMatch });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -250,12 +255,12 @@ const changePassword = async (req, res) => {
 
     await TokenModel.deleteMany({ userId: userId });
 
-    res.status(statusCode.OK).json({ message: message.passwordChanged });
+    res.status(statusCode.OK).json({ statusCode :  statusCode.OK, message: message.passwordChanged });
   } catch (err) {
     console.error(err);
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.passwordChangeError });
+      .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.passwordChangeError });
   }
 };
 
@@ -281,7 +286,7 @@ const forgotPassword = async (req, res) => {
     const user = await UserModel.findOne({ email });
 
     if (!user) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.userNotFound });
+      return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST,  message: message.userNotFound });
     }
 
     // Generate OTP
@@ -305,10 +310,10 @@ const forgotPassword = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    res.status(statusCode.OK).json({ message: message.resetPasswordSend });
+    res.status(statusCode.OK).json({ statusCode : statusCode.OK,  message: message.resetPasswordSend });
   } catch (error) {
     console.error(error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorSendingPasswordResetEmail });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorSendingPasswordResetEmail });
   }
 };
 
@@ -321,25 +326,25 @@ const resetPassword = async (req, res) => {
 
     if (!resetToken) {
       console.error('Invalid OTP');
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.in });
+      return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST, message: message.in });
     }
 
     if (resetToken.expires < Date.now()) {
       console.error('Expired OTP');
-      return res.status(statusCode.BAD_REQUEST).json({ message: 'Expired OTP' });
+      return res.status(statusCode.BAD_REQUEST).json({statusCode : statusCode.BAD_REQUEST, message: 'Expired OTP' });
     }
 
     const user = await UserModel.findById(resetToken.userId);
 
     if (!user) {
-      return res.status(statusCode.NOT_FOUND).json({ message: 'User not found' });
+      return res.status(statusCode.NOT_FOUND).json({ statusCode : statusCode.NOT_FOUND,  message: 'User not found' });
     }
 
     // OTP verified successfully
-    return res.status(statusCode.OK).json({ message: 'OTP verified successfully', userId: user._id });
+    return res.status(statusCode.OK).json({ statusCode : statusCode.OK,  message: 'OTP verified successfully', userId: user._id });
   } catch (error) {
     console.error('Error validating OTP:', error);
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: 'Error resetting password' });
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: 'Error resetting password' });
   }
 };
 
@@ -350,13 +355,13 @@ const newPassword = async (req, res) => {
     const { userId, newPassword, confirmPassword } = req.body; 
 
     if (newPassword !== confirmPassword) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: message.passwordNotMatch });
+      return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST, message: message.passwordNotMatch });
     }
 
     const user = await UserModel.findById(userId);
 
     if (!user) {
-      return res.status(statusCode.NOT_FOUND).json({ message: message.userNotFound });
+      return res.status(statusCode.NOT_FOUND).json({statusCode : statusCode.BAD_REQUEST,  message: message.userNotFound });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -366,10 +371,10 @@ const newPassword = async (req, res) => {
     await user.save();
     await PasswordResetTokenModel.deleteOne({ userId: user._id });
 
-    res.status(statusCode.OK).json({ message: message.resetPasswordSuccess });
+    res.status(statusCode.OK).json({ statusCode : statusCode.OK,  message: message.resetPasswordSuccess });
   } catch (error) {
     console.error('Error resetting password:', error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.resetPasswordError });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.resetPasswordError });
   }
 };
 

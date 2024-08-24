@@ -31,22 +31,15 @@ exports.createGoldRecord = async (req, res) => {
         }
 
         // Destructure values from goldMaster
-        const { goldRate22KPerGram, goldRate24KPerGram, gst, makingChargesPerGram } = goldMaster;
+        const { goldRate22KPerGram, goldRate24KPerGram } = goldMaster;
 
         // Determine the gold rate based on purity
         const goldCurrentPricePerGram = purityOfGold === 22 ? goldRate22KPerGram : goldRate24KPerGram;
 
-        // Perform calculations using provided making charges
+        // Calculate the current value and profit
         const goldCurrentValue = goldCurrentPricePerGram * goldWeight;
-        const calculatedMakingCharges = (goldCurrentPricePerGram * goldWeight) * (makingChargesPerGram / 100);
-        const totalGoldPrice = calculatedMakingCharges + goldCurrentValue;
-        const calculatedGst = (gst / 100) * totalGoldPrice;
-        let totalReturnAmount = totalGoldPrice + calculatedGst;
-        let profit = totalReturnAmount - goldPurchasePrice;
-
-        // Round the values to remove decimal places
-        totalReturnAmount = Math.round(totalReturnAmount);
-        profit = Math.round(profit);
+        let totalReturnAmount = Math.round(goldCurrentValue);
+        let profit = Math.round(totalReturnAmount - goldPurchasePrice);
 
         // Create a new gold record
         const newGoldRecord = new GoldModel({
@@ -64,13 +57,19 @@ exports.createGoldRecord = async (req, res) => {
         // Save the new record to the database
         const saveGoldInfo = await newGoldRecord.save();
 
-        return res.status(statusCode.CREATED).json({ message: message.goldInfoRegister, data: saveGoldInfo });
+        return res.status(statusCode.CREATED).json({ statusCode : statusCode.CREATED, message: message.goldInfoRegister, data: saveGoldInfo });
 
     } catch (error) {
         console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorCreatingGoldInfo });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorCreatingGoldInfo });
     }
 };
+
+// return res.status(statusCode.CREATED).json({
+//     statusCode: statusCode.CREATED,
+//     message: message.goldInfoRegister,
+//     data: saveGoldInfo
+// });
 
 
 // Get all gold records for the authenticated user
@@ -88,13 +87,12 @@ exports.getAllGoldRecords = async (req, res) => {
             };
         });
 
-        return res.status(statusCode.OK).json({ message: message.goldRecords, data: goldRecordsWithSrNo });
+        return res.status(statusCode.OK).json({ statusCode : statusCode.OK, message: message.goldRecords, data: goldRecordsWithSrNo });
     } catch (error) {
         console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorGoldRecords });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorGoldRecords });
     }
 };
-
 
 // Get a single gold record by ID
 exports.getGoldRecordById = async (req, res) => {
@@ -104,15 +102,16 @@ exports.getGoldRecordById = async (req, res) => {
         const goldRecord = await GoldModel.findOne({ _id: id, userId }); // Ensure the record belongs to the user
 
         if (!goldRecord) {
-            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
+            return res.status(statusCode.NOT_FOUND).json({statusCode : statusCode.NOT_FOUND,  message: message.goldNotFound });
         }
 
-        return res.status(statusCode.OK).json({ message: message.goldRecords, data: goldRecord });
+        return res.status(statusCode.OK).json({statusCode : statusCode.OK, message: message.goldRecords, data: goldRecord });
     } catch (error) {
         console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingGoldInfo });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingGoldInfo });
     }
 };
+
 
 // Update a gold record
 exports.updateGoldRecord = async (req, res) => {
@@ -140,14 +139,14 @@ exports.updateGoldRecord = async (req, res) => {
             const goldMaster = await GoldMasterModel.findOne().sort({ createdAt: -1 });
 
             if (!goldMaster) {
-                return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingGoldMaster });
+                return res.status(statusCode.BAD_REQUEST).json({statusCode : statusCode.BAD_REQUEST,  message: message.errorFetchingGoldMaster });
             }
 
-            const { goldRate22KPerGram, goldRate24KPerGram, gst, makingChargesPerGram } = goldMaster;
+            const { goldRate22KPerGram, goldRate24KPerGram } = goldMaster;
 
             // Validate purityOfGold
             if (![22, 24].includes(updatedPurityOfGold)) {
-                return res.status(statusCode.BAD_REQUEST).json({ message: message.errorUpdatingGoldInfo });
+                return res.status(statusCode.BAD_REQUEST).json({statusCode : statusCode.BAD_REQUEST,  message: message.errorUpdatingGoldInfo });
             }
 
             goldCurrentPricePerGram = updatedPurityOfGold === 22 ? goldRate22KPerGram : goldRate24KPerGram;
@@ -155,10 +154,7 @@ exports.updateGoldRecord = async (req, res) => {
             // Perform calculations if necessary values are available
             if (updatedGoldWeight && updatedGoldPurchasePrice) {
                 const goldCurrentValue = goldCurrentPricePerGram * updatedGoldWeight;
-                const calculatedMakingCharges = goldCurrentValue * (makingChargesPerGram / 100);
-                const totalGoldPrice = calculatedMakingCharges + goldCurrentValue;
-                const calculatedGst = (gst / 100) * totalGoldPrice;
-                totalReturnAmount = Math.round(totalGoldPrice + calculatedGst);
+                totalReturnAmount = Math.round(goldCurrentValue);
                 profit = Math.round(totalReturnAmount - updatedGoldPurchasePrice);
             }
         }
@@ -180,16 +176,15 @@ exports.updateGoldRecord = async (req, res) => {
         );
 
         if (!updatedGoldRecord) {
-            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
+            return res.status(statusCode.NOT_FOUND).json({statusCode : statusCode.NOT_FOUND, message: message.goldNotFound });
         }
 
-        return res.status(statusCode.OK).json({ message: message.goldInfoUpdate, data: updatedGoldRecord });
+        return res.status(statusCode.OK).json({ statusCode :statusCode.OK, message: message.goldInfoUpdate, data: updatedGoldRecord });
     } catch (error) {
         console.error("Error updating gold record:", error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorUpdatingGoldInfo });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingGoldInfo });
     }
 };
-
 
 // Delete a gold record
 exports.deleteGoldRecord = async (req, res) => {
@@ -201,13 +196,13 @@ exports.deleteGoldRecord = async (req, res) => {
         const deletedGoldRecord = await GoldModel.findOneAndDelete({ _id: id, userId });
 
         if (!deletedGoldRecord) {
-            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
+            return res.status(statusCode.NOT_FOUND).json({ statusCode : statusCode.NOT_FOUND,  message: message.goldNotFound });
         }
 
-        return res.status(statusCode.OK).json({ message: message.goldInfoDelete });
+        return res.status(statusCode.OK).json({statusCode : statusCode.OK,  message: message.goldInfoDelete });
     } catch (error) {
         console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorDeletingGoldInfo });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorDeletingGoldInfo });
     }
 };
 
@@ -218,21 +213,22 @@ exports.deleteMultipleGoldRecords = async (req, res) => {
         const userId = req.user.id; // Get the user ID from the authenticated request
 
         if (!Array.isArray(ids) || ids.length === 0) {
-            return res.status(statusCode.BAD_REQUEST).json({ message: message.invalidIds });
+            return res.status(statusCode.BAD_REQUEST).json({statusCode :statusCode.BAD_REQUEST,  message: message.invalidIds });
         }
 
         // Ensure that the gold records belong to the authenticated user
         const result = await GoldModel.deleteMany({ _id: { $in: ids }, userId });
 
         if (result.deletedCount === 0) {
-            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
+            return res.status(statusCode.NOT_FOUND).json({statusCode : statusCode.NOT_FOUND, message: message.goldNotFound });
         }
 
         return res.status(statusCode.OK).json({ 
+            statusCode: statusCode.OK, 
             message: `${result.deletedCount} gold records have been successfully deleted.` 
         });
     } catch (error) {
         console.error("Error deleting multiple gold records:", error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorDeletingGoldInfo });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorDeletingGoldInfo });
     }
 };

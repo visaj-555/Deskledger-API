@@ -42,7 +42,7 @@ const fixedDepositRegister = async (req, res) => {
     if (String(req.user.id) !== String(userId)) {
       return res
         .status(statusCode.FORBIDDEN)
-        .json({ message: message.errorCreatingFD });
+        .json({ statusCode :statusCode.FORBIDDEN, message: message.errorCreatingFD });
     }
 
     // Check if FD already exists
@@ -50,7 +50,7 @@ const fixedDepositRegister = async (req, res) => {
     if (fdExists) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ message: message.fdExists });
+        .json({ statusCode : statusCode.BAD_REQUEST, message: message.fdExists });
     }
 
     const formattedStartDate = formatDate(startDate);
@@ -89,7 +89,7 @@ const fixedDepositRegister = async (req, res) => {
       console.error("Aggregation returned no documents");
       return res
         .status(statusCode.INTERNAL_SERVER_ERROR)
-        .json({ message: message.errorUpdatingFD });
+        .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorUpdatingFD });
     }
 
     // Update the new FD with the calculated fields
@@ -109,7 +109,7 @@ const fixedDepositRegister = async (req, res) => {
       console.error("Failed to update FD details after aggregation");
       return res
         .status(statusCode.INTERNAL_SERVER_ERROR)
-        .json({ message: message.errorUpdatingFD });
+        .json({ statusCode :statusCode.INTERNAL_SERVER_ERROR,  message: message.errorUpdatingFD });
     }
 
     // Format dates in the response
@@ -121,6 +121,7 @@ const fixedDepositRegister = async (req, res) => {
 
     // Send the response
     res.status(statusCode.CREATED).json({
+      statusCode : statusCode.CREATED,
       message: message.fdCreated,
       data: responseData,
     });
@@ -128,7 +129,7 @@ const fixedDepositRegister = async (req, res) => {
     console.error("Error registering FD:", error);
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.errorCreatingFD });
+      .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorCreatingFD });
   }
 };
 
@@ -142,7 +143,7 @@ const updateFixedDeposit = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ message: message.errorUpdatingFD });
+        .json({ statusCode :statusCode.BAD_REQUEST , message: message.errorUpdatingFD });
     }
 
     // Ensure the authenticated user is updating their own FD
@@ -153,7 +154,7 @@ const updateFixedDeposit = async (req, res) => {
     if (!fixedDeposit) {
       return res
         .status(statusCode.NOT_FOUND)
-        .json({ message: message.errorFetchingFD });
+        .json({ statusCode : statusCode.NOT_FOUND, message: message.errorFetchingFD });
     }
 
     // Update the fixed deposit document with new values (e.g., totalInvestedAmount)
@@ -166,7 +167,7 @@ const updateFixedDeposit = async (req, res) => {
     if (!updatedFixedDeposit) {
       return res
         .status(statusCode.INTERNAL_SERVER_ERROR)
-        .json({ message: message.errorUpdatingFD });
+        .json({ statusCode :statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingFD });
     }
 
     // Recalculate values using the updated `totalInvestedAmount`
@@ -184,7 +185,7 @@ const updateFixedDeposit = async (req, res) => {
       console.error("Aggregation returned no documents");
       return res
         .status(statusCode.INTERNAL_SERVER_ERROR)
-        .json({ message: message.errorUpdatingFD });
+        .json({statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorUpdatingFD });
     }
 
     // Update the FD with recalculated fields
@@ -204,7 +205,7 @@ const updateFixedDeposit = async (req, res) => {
       console.error("Failed to update FD details after aggregation");
       return res
         .status(statusCode.INTERNAL_SERVER_ERROR)
-        .json({ message: message.errorUpdatingFD });
+        .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorUpdatingFD });
     }
 
     // Send the updated FD details as response
@@ -216,7 +217,7 @@ const updateFixedDeposit = async (req, res) => {
     console.error("Error updating FD:", error);
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: message.errorUpdatingFD });
+      .json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorUpdatingFD });
   }
 };
 

@@ -16,20 +16,6 @@ const validateGoldMaster = (req, res, next) => {
                 'number.positive': 'Gold rate for 24K per gram must be a positive number',
                 'any.required': 'Gold rate for 24K per gram is required'
             }),
-        gst: Joi.number().positive()
-            .required()
-            .messages({
-                'number.base': 'GST must be a number',
-                'number.positive': 'GST must be a positive number',
-                'any.required': 'GST is required'
-            }),
-        makingChargesPerGram: Joi.number().positive()
-            .required()
-            .messages({
-                'number.base': 'Making charges per gram must be a number',
-                'number.positive': 'Making charges per gram must be a positive number',
-                'any.required': 'Making charges per gram is required'
-            }),
     });
 
     const { error } = schema.validate(req.body);

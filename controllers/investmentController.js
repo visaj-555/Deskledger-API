@@ -42,9 +42,9 @@ const getOverallInvestmentBySector = async (req, res) => {
 
         const overallInvestment = [...fdInvestment, ...goldInvestment];
 
-        res.status(statusCode.OK).json({ message: message.investmentinAllSectors, data: overallInvestment });
+        res.status(statusCode.OK).json({statusCode : statusCode.OK, message: message.investmentinAllSectors, data: overallInvestment });
     } catch (error) {
-        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingInvestments, error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingInvestments, error: error.message });
     }
 };
 
@@ -89,24 +89,30 @@ const getTopGainers = async (req, res) => {
             }
         ]);
 
-        const topGainers = [...topGainersFD, ...topGainersGold].sort((a, b) => b.profit - a.profit).slice(0, 10);
+        // Combine and sort by profit
+        const topGainers = [...topGainersFD, ...topGainersGold]
+            .sort((a, b) => b.profit - a.profit) // Sort in descending order
+            .slice(0, 10); // Limit to top 10
 
+        // Assign srNo starting from 1
         topGainers.forEach((item, index) => {
             item.srNo = index + 1;
         });
 
-        res.status(statusCode.OK).json({ message: message.topGainers, data: topGainers });
+        // Respond with the top gainers data
+        res.status(statusCode.OK).json({ statusCode : statusCode.OK,  message: message.topGainers, data: topGainers });
     } catch (error) {
-        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingInvestments, error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorFetchingInvestments, error: error.message });
     }
 };
+
 
 const getInvestmentsBySector = async (req, res) => {
     const { sector } = req.params;
     const userId = req.user.id;
 
     if (!sector) {
-        return res.status(statusCode.BAD_REQUEST).json({ message: message.sectorRequired });
+        return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST,  message: message.sectorRequired });
     }
 
     let investments = [];
@@ -129,12 +135,12 @@ const getInvestmentsBySector = async (req, res) => {
                 }));
                 break;
             default:
-                return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingSector });
+                return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST, message: message.errorFetchingSector });
         }
 
-        res.status(statusCode.OK).json({ message: message.investmentBySector, data: investments });
+        res.status(statusCode.OK).json({statusCode : statusCode.OK,  message: message.investmentBySector, data: investments });
     } catch (error) {
-        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingInvestments, error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingInvestments, error: error.message });
     }
 };
 
@@ -147,12 +153,12 @@ const getInvestmentById = async (req, res) => {
         const investment = investmentFD || investmentGold;
 
         if (!investment) {
-            return res.status(statusCode.NOT_FOUND).json({ message: message.errorFetchingInvestment });
+            return res.status(statusCode.NOT_FOUND).json({ statusCode :statusCode.NOT_FOUND, message: message.errorFetchingInvestment });
         }
 
-        res.status(statusCode.OK).json({ message: message.investmentById, data: investment });
+        res.status(statusCode.OK).json({statusCode : statusCode.OK,  message: message.investmentById, data: investment });
     } catch (error) {
-        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingInvestment, error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorFetchingInvestment, error: error.message });
     }
 };
 
@@ -160,7 +166,7 @@ const getHighestGrowthInSector = async (req, res) => {
     const { sector } = req.params;
 
     if (!sector) {
-        return res.status(statusCode.BAD_REQUEST).json({ message: message.sectorRequired });
+        return res.status(statusCode.BAD_REQUEST).json({ statusCode :statusCode.BAD_REQUEST,  message: message.sectorRequired });
     }
 
     try {
@@ -186,16 +192,16 @@ const getHighestGrowthInSector = async (req, res) => {
                 .lean();
                 break;
             default:
-                return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingSector });
+                return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST,   message: message.errorFetchingSector });
         }
 
         if (!highestGrowth) {
-            return res.status(statusCode.NOT_FOUND).json({ message: message.errorFetchingSector });
+            return res.status(statusCode.NOT_FOUND).json({ statusCode : statusCode.NOT_FOUND, message: message.errorFetchingSector });
         }
 
-        res.status(statusCode.OK).json({ message: message.highestGrowthinSector, data: highestGrowth });
+        res.status(statusCode.OK).json({statusCode: statusCode.OK,  message: message.highestGrowthinSector, data: highestGrowth });
     } catch (error) {
-        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorFetchingSector, error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingSector, error: error.message });
     }
 };
 

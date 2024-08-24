@@ -1,43 +1,79 @@
 const mongoose = require('mongoose');
-const BankModel = require('../models/bank'); // Ensure this path is correct
+const BankModel = require('../models/bank'); // Adjust the path to your Bank model
 
-// List of all banks
-const banks = [
-  { bankName: "Bank of Baroda" },
-  { bankName: "Bank of India" },
-  { bankName: "Canara Bank" },
-  { bankName: "Central Bank of India" },
-  { bankName: "State Bank of India" },
-  { bankName: "Punjab National Bank" },
-  { bankName: "Axis Bank" },
-  { bankName: "HDFC Bank" },
-  { bankName: "ICICI Bank" },
-  { bankName: "IDFC Bank" },
-  { bankName: "Kotak Mahindra Bank" },
-  { bankName: "IDBI Bank" },
+// Load environment variables from .env file
+require('dotenv').config();
+
+// Debugging log to check if the environment variable is loaded correctly
+console.log('DB_CONNECTION:', process.env.CONNECTION);
+
+// List of Indian banks
+const indianBanks = [
+    "State Bank of India",
+    "HDFC Bank",
+    "ICICI Bank",
+    "Axis Bank",
+    "Kotak Mahindra Bank",
+    "IndusInd Bank",
+    "Bank of Baroda",
+    "Punjab National Bank",
+    "Yes Bank",
+    "Union Bank of India",
+    "Canara Bank",
+    "IDFC First Bank",
+    "Federal Bank",
+    "Bank of India",
+    "Central Bank of India",
+    "Indian Bank",
+    "Indian Overseas Bank",
+    "UCO Bank",
+    "Punjab & Sind Bank",
+    "Bank of Maharashtra",
+    "RBL Bank",
+    "Dhanlaxmi Bank",
+    "South Indian Bank",
+    "Karur Vysya Bank",
+    "Tamilnad Mercantile Bank",
+    "City Union Bank",
+    "Lakshmi Vilas Bank",
+    "IDBI Bank",
+    "Jammu & Kashmir Bank",
+    "Karnataka Bank",
+    "Suryoday Small Finance Bank",
+    "Utkarsh Small Finance Bank",
+    "AU Small Finance Bank",
+    "Equitas Small Finance Bank",
+    "Ujjivan Small Finance Bank",
+    "ESAF Small Finance Bank",
+    "North East Small Finance Bank",
+    "Bandhan Bank",
+    "Fincare Small Finance Bank",
+    "Jana Small Finance Bank"
 ];
 
-(async () => {
-  try {
-    // Connect to MongoDB
-    await mongoose.connect('mongodb://localhost:27017/bankdb', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+// Function to insert the bank data
+async function insertIndianBanks() {
+    const bankDataArray = indianBanks.map(bank => ({ bankName: bank }));
 
+    try {
+        const result = await BankModel.insertMany(bankDataArray);
+        console.log('All Indian banks inserted successfully:', result);
+    } catch (err) {
+        console.error('Error inserting bank data:', err.message);
+    }
+}
+
+// Connect to MongoDB and run the insertion
+mongoose.connect(process.env.CONNECTION, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 45000
+})
+.then(() => {
     console.log('Connected to MongoDB');
-
-    // Remove existing banks to avoid duplication
-    await BankModel.deleteMany({});
-
-    // Insert banks
-    await BankModel.insertMany(banks);
-
-    console.log('Banks inserted successfully');
-
-    // Close the connection
-    mongoose.connection.close();
-  } catch (error) {
-    console.error('Error:', error);
-  }
-})();
+    insertIndianBanks();
+})
+.catch(err => {
+    console.error('Connection error:', err.message);
+});

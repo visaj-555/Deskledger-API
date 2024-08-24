@@ -63,11 +63,13 @@ const getOverallAnalysis = async (req, res) => {
     };
 
     res.status(statusCode.OK).json({
+      statusCode :  statusCode.OK, 
       message: message.overAllAnalysis,
       data: overallAnalysis,
     });
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,  
       message: message.errorOverAllAnalysis,
       error: error.message,
     });

@@ -37,6 +37,10 @@ const {
 } = require("../validation/userValidator");
 
 const {
+  getCombinedAnalysis
+} = require("../controllers/combinedAnalysis");
+
+const {
   createBank,
   updateBank,
   deleteBank,
@@ -124,6 +128,10 @@ router.delete("/gold/delete/:id", ensureAuthenticated, deleteGoldRecord);
 router.get("/gold-info",ensureAuthenticated, getAllGoldRecords);
 router.get("/gold-info/:id", ensureAuthenticated, getGoldRecordById); 
 router.delete('/gold/delete-multiple', ensureAuthenticated, deleteMultipleGoldRecords);
+
+// Combined Analysis routes
+
+router.get("/combined-analysis", ensureAuthenticated, getCombinedAnalysis);
 
 
 
