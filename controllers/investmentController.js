@@ -112,7 +112,7 @@ const getInvestmentsBySector = async (req, res) => {
     const userId = req.user.id;
 
     if (!sector) {
-        return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST,  message: message.sectorRequired });
+        return res.status(statusCode.BAD_REQUEST).json({ statusCode: statusCode.BAD_REQUEST, message: message.sectorRequired });
     }
 
     let investments = [];
@@ -121,7 +121,7 @@ const getInvestmentsBySector = async (req, res) => {
             case 'banking':
                 investments = await FixedDeposit.find({ userId });
                 investments = investments.map((item, index) => ({
-                    srNo: index + 1,
+                    srNo: index + 1, // Incrementing index by 1
                     sector: 'Banking',
                     ...item._doc
                 }));
@@ -129,20 +129,21 @@ const getInvestmentsBySector = async (req, res) => {
             case 'gold':
                 investments = await GoldModel.find({ userId });
                 investments = investments.map((item, index) => ({
-                    srNo: index + 1,
+                    srNo: index + 1, // Incrementing index by 1
                     sector: 'Gold',
                     ...item._doc
                 }));
                 break;
             default:
-                return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST, message: message.errorFetchingSector });
+                return res.status(statusCode.BAD_REQUEST).json({ statusCode: statusCode.BAD_REQUEST, message: message.errorFetchingSector });
         }
 
-        res.status(statusCode.OK).json({statusCode : statusCode.OK,  message: message.investmentBySector, data: investments });
+        res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.investmentBySector, data: investments });
     } catch (error) {
-        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingInvestments, error: error.message });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingInvestments, error: error.message });
     }
 };
+
 
 const getInvestmentById = async (req, res) => {
     try {

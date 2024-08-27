@@ -40,19 +40,22 @@ const goldMasterInfoRegister = async (req, res) => {
 // Update gold information
 const updateGoldMasterInfo = async (req, res) => {
   try {
-    const { goldId } = req.params; 
+    const { id } = req.params; // Using 'id' from req.params
     const { goldRate22KPerGram, goldRate24KPerGram } = req.body;
 
+    console.log("Received id:", id); // Debug log
+
     const updateGoldInfo = await GoldMasterModel.findByIdAndUpdate(
-      goldId,
+      id, // Using 'id' here
       { goldRate22KPerGram, goldRate24KPerGram },
       { new: true }
     );
 
     if (!updateGoldInfo) {
+      console.log("No record found with id:", id); // Debug log
       return res
         .status(statusCode.NOT_FOUND)
-        .json({statusCode : statusCode.NOT_FOUND,  message: message.errorFetchingGoldInfo });
+        .json({ statusCode: statusCode.NOT_FOUND, message: message.errorFetchingGoldInfo });
     }
 
     return res.status(statusCode.OK).json({
@@ -73,17 +76,17 @@ const updateGoldMasterInfo = async (req, res) => {
 // Delete gold information
 const deleteGoldMasterInfo = async (req, res) => {
   try {
-    const { goldId } = req.params;
+    const { id } = req.params; 
 
-    const deleteGoldMasterInfo = await GoldMasterModel.findByIdAndDelete(goldId);
+    const deleteGoldMasterInfo = await GoldMasterModel.findByIdAndDelete(id);
 
     if (!deleteGoldMasterInfo) {
       return res
         .status(statusCode.NOT_FOUND)
-        .json({ statusCode : statusCode.NOT_FOUND, message: message.errorFetchingGoldInfo });
+        .json({ statusCode: statusCode.NOT_FOUND, message: message.errorFetchingGoldInfo });
     }
 
-    return res.status(statusCode.OK).json({ statusCode : statusCode.OK, message: message.goldInfoDelete });
+    return res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.goldInfoDelete });
   } catch (error) {
     console.error("Error while deleting gold information:", error);
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -94,15 +97,15 @@ const deleteGoldMasterInfo = async (req, res) => {
   }
 };
 
+
 // Get gold master information
 const getGoldMasterInfo = async (req, res) => {
   try {
     const goldMasterInformation = await GoldMasterModel.find();
 
-    // Add srNo to each gold master record
     const goldMasterWithSrNo = goldMasterInformation.map((record, index) => ({
-      srNo: index + 1, // Adding srNo starting from 1
-      ...record.toObject(), // Spread the existing properties of the record
+      srNo: index + 1, 
+      ...record.toObject(),
     }));
 
     return res.status(statusCode.OK).json({ statusCode : statusCode.OK, data: goldMasterWithSrNo });
