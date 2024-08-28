@@ -65,55 +65,6 @@ exports.createGoldRecord = async (req, res) => {
     }
 };
 
-// return res.status(statusCode.CREATED).json({
-//     statusCode: statusCode.CREATED,
-//     message: message.goldInfoRegister,
-//     data: saveGoldInfo
-// });
-
-
-// Get all gold records for the authenticated user
-exports.getAllGoldRecords = async (req, res) => {
-    try {
-        const userId = req.user.id; // Get the user ID from the authenticated request
-        const goldRecords = await GoldModel.find({ userId }); // Fetch records for this user
-
-        // Add srNo to each record
-        const goldRecordsWithSrNo = goldRecords.map((record, index) => {
-            const recordObj = record.toObject(); // Convert Mongoose document to plain object
-            return {
-                ...recordObj,
-                srNo: index + 1 // Add srNo starting from 1
-            };
-        });
-
-        return res.status(statusCode.OK).json({ statusCode : statusCode.OK, message: message.goldRecords, data: goldRecordsWithSrNo });
-    } catch (error) {
-        console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorGoldRecords });
-    }
-};
-
-// Get a single gold record by ID
-exports.getGoldRecordById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user.id; // Get the user ID from the authenticated request
-        const goldRecord = await GoldModel.findOne({ _id: id, userId }); // Ensure the record belongs to the user
-
-        if (!goldRecord) {
-            return res.status(statusCode.NOT_FOUND).json({statusCode : statusCode.NOT_FOUND,  message: message.goldNotFound });
-        }
-
-        return res.status(statusCode.OK).json({statusCode : statusCode.OK, message: message.goldRecords, data: goldRecord });
-    } catch (error) {
-        console.error(error);
-        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingGoldInfo });
-    }
-};
-
-
-// Update a gold record
 exports.updateGoldRecord = async (req, res) => {
     try {
         const { id } = req.params;
@@ -185,6 +136,50 @@ exports.updateGoldRecord = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingGoldInfo });
     }
 };
+
+// Get all gold records for the authenticated user
+exports.getAllGoldRecords = async (req, res) => {
+    try {
+        const userId = req.user.id; // Get the user ID from the authenticated request
+        const goldRecords = await GoldModel.find({ userId }); // Fetch records for this user
+
+        // Add srNo to each record
+        const goldRecordsWithSrNo = goldRecords.map((record, index) => {
+            const recordObj = record.toObject(); // Convert Mongoose document to plain object
+            return {
+                ...recordObj,
+                srNo: index + 1 // Add srNo starting from 1
+            };
+        });
+
+        return res.status(statusCode.OK).json({ statusCode : statusCode.OK, message: message.goldRecords, data: goldRecordsWithSrNo });
+    } catch (error) {
+        console.error(error);
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorGoldRecords });
+    }
+};
+
+// Get a single gold record by ID
+exports.getGoldRecordById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id; // Get the user ID from the authenticated request
+        const goldRecord = await GoldModel.findOne({ _id: id, userId }); // Ensure the record belongs to the user
+
+        if (!goldRecord) {
+            return res.status(statusCode.NOT_FOUND).json({statusCode : statusCode.NOT_FOUND,  message: message.goldNotFound });
+        }
+
+        return res.status(statusCode.OK).json({statusCode : statusCode.OK, message: message.goldRecords, data: goldRecord });
+    } catch (error) {
+        console.error(error);
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingGoldInfo });
+    }
+};
+
+
+// Update a gold record
+
 
 // Delete a gold record
 exports.deleteGoldRecord = async (req, res) => {

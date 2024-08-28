@@ -148,7 +148,6 @@ const getFdAnalysisbyNumber = async (req, res) => {
             { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             {
                 $addFields: {
-                    currentDate: new Date(),
                     tenureInYears: {
                         $divide: [
                             { $subtract: ["$maturityDate", "$startDate"] },
@@ -165,53 +164,32 @@ const getFdAnalysisbyNumber = async (req, res) => {
             },
             {
                 $addFields: {
-                    currentReturnAmount: {
-                        $round: [
-                            {
-                                $cond: {
-                                    if: { $gte: [new Date(), "$maturityDate"] },
-                                    then: {
-                                        $multiply: [
-                                            "$totalInvestedAmount",
-                                            {
-                                                $pow: [
-                                                    { $add: [1, { $divide: ["$interestRate", 100] }] },
-                                                    { $round: ["$tenureInYears", 2] }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    else: {
-                                        $multiply: [
-                                            "$totalInvestedAmount",
-                                            {
-                                                $pow: [
-                                                    { $add: [1, { $divide: ["$interestRate", 100] }] },
-                                                    { $round: ["$tenureCompletedYears", 2] }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                }
-                            },
-                            0
-                        ]
-                    },
+                    // Simple Interest Calculation for Maturity Amount
                     totalReturnedAmount: {
-                        $round: [
-                            {
-                                $multiply: [
-                                    "$totalInvestedAmount",
-                                    {
-                                        $pow: [
-                                            { $add: [1, { $divide: ["$interestRate", 100] }] },
-                                            { $round: ["$tenureInYears", 2] }
-                                        ]
-                                    }
-                                ]
-                            },
-                            0
-                        ]
+                        $trunc: {
+                            $add: [
+                                "$totalInvestedAmount",
+                                { 
+                                    $multiply: [
+                                        "$totalInvestedAmount", 
+                                        { $multiply: ["$interestRate", "$tenureInYears", 0.01] }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    currentReturnAmount: {
+                        $trunc: {
+                            $add: [
+                                "$totalInvestedAmount",
+                                { 
+                                    $multiply: [
+                                        "$totalInvestedAmount", 
+                                        { $multiply: ["$interestRate", "$tenureCompletedYears", 0.01] }
+                                    ]
+                                }
+                            ]
+                        }
                     }
                 }
             },
@@ -219,14 +197,16 @@ const getFdAnalysisbyNumber = async (req, res) => {
                 $group: {
                     _id: null,
                     totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" },
-                    currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } },
-                    totalReturnAmountofFds: { $sum: "$totalReturnedAmount" } // New field added here
+                    currentReturnAmountOfFds: { $sum: "$currentReturnAmount" },
+                    totalReturnAmountofFds: { $sum: "$totalReturnedAmount" }
                 }
             },
             {
                 $addFields: {
                     totalProfitGainedOfFds: {
-                        $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"]
+                        $trunc: {
+                            $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"]
+                        }
                     }
                 }
             }
@@ -239,7 +219,7 @@ const getFdAnalysisbyNumber = async (req, res) => {
         const rawData = {
             totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
             currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
-            totalReturnAmountofFds: Math.round(fdAnalysis[0].totalReturnAmountofFds), // New field
+            totalReturnAmountofFds: Math.round(fdAnalysis[0].totalReturnAmountofFds),
             totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
             userId: new mongoose.Types.ObjectId(userId)
         };
@@ -247,7 +227,7 @@ const getFdAnalysisbyNumber = async (req, res) => {
         const formattedData = {
             totalInvestedAmountOfFds: formatAmount(rawData.totalInvestedAmountOfFds),
             currentReturnAmountOfFds: formatAmount(rawData.currentReturnAmountOfFds),
-            totalReturnAmountofFds: formatAmount(rawData.totalReturnAmountofFds), // New field
+            totalReturnAmountofFds: formatAmount(rawData.totalReturnAmountofFds),
             totalProfitGainedOfFds: formatAmount(rawData.totalProfitGainedOfFds),
             userId: rawData.userId
         };
@@ -257,6 +237,12 @@ const getFdAnalysisbyNumber = async (req, res) => {
         res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFdAnalytics, error: error.message });
     }
 };
+
+
+
+
+
+
 
 module.exports = {
     getFdAnalysis,
