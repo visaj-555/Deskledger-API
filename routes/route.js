@@ -64,10 +64,17 @@ const {
 } = require('../controllers/goldController');
 
 const {
+  getCombinedNumAnalysis
+
+} = require('../controllers/combinedNumAnalysis');
+
+const {
   getGoldAnalysis
 } =  require('../controllers/goldAnalysisController');
 
 const {getOverallAnalysis} =  require('../controllers/overallAnalysis');
+
+const { getPieAnalysis} = require('../controllers/pieAnalysis.js');
 
 
 const { getFdAnalysis,  getFdAnalysisbyNumber} = require("../controllers/fdAnalysisController");
@@ -132,6 +139,9 @@ router.delete('/gold/delete-multiple', ensureAuthenticated, deleteMultipleGoldRe
 // Combined Analysis routes
 
 router.get("/combined-analysis", ensureAuthenticated, getCombinedAnalysis);
+router.get("/combined-num-analysis", ensureAuthenticated, getCombinedNumAnalysis);
+router.get("/pie-analysis", ensureAuthenticated, getPieAnalysis);
+
 
 
 
