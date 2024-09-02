@@ -122,7 +122,7 @@ const getCombinedAnalysis = async (req, res) => {
                     _id: null,
                     totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" },
                     currentReturnAmountOfFds: { $sum: { $round: ["$currentReturnAmount", 0] } },
-                    totalReturnAmountofFds: { $sum: "$totalReturnedAmount" } // New field added here
+                    totalReturnAmountofFds: { $sum: "$totalReturnedAmount" }
                 }
             },
             {
@@ -146,13 +146,17 @@ const getCombinedAnalysis = async (req, res) => {
             userId: new mongoose.Types.ObjectId(userId)
         };
 
+        // Combine Gold and FD Analysis Data
+        const combinedAnalysis = {
+            totalInvestedAmount: (goldAnalysisData.totalInvestedAmountOfGold + fdAnalysisData.totalInvestedAmountOfFds).toLocaleString('en-IN'),
+            currentReturnAmount: (goldAnalysisData.currentReturnAmountOfGold + fdAnalysisData.currentReturnAmountOfFds).toLocaleString('en-IN'),
+            totalProfitGained: (goldAnalysisData.totalProfitGainedOfGold + fdAnalysisData.totalProfitGainedOfFds).toLocaleString('en-IN')
+        };
+
         res.status(statusCode.OK).json({
             statusCode: statusCode.OK,
             message: message.combinedAnalysisReport,
-            data: {
-                goldAnalysis: goldAnalysisData,
-                fdAnalysis: fdAnalysisData
-            }
+            data: combinedAnalysis
         });
     } catch (error) {
         console.error("Error calculating combined analytics:", error);
