@@ -28,9 +28,11 @@ const createBank = async (req, res) => {
 // Update a bank
 const updateBank = async (req, res) => {
   try {
-    const { bankId, bankName } = req.body;
+    const {id} = req.params;
 
-    const updatedBank = await BankModel.findByIdAndUpdate(bankId, { bankName }, { new: true });
+    const {bankName} = req.body;
+
+    const updatedBank = await BankModel.findByIdAndUpdate(id, { bankName }, { new: true });
 
     if (!updatedBank) {
       return res.status(statusCode.NOT_FOUND).json({ statusCode: statusCode.NOT_FOUND, message: message.errorFetchingBank });
@@ -54,7 +56,7 @@ const updateBank = async (req, res) => {
 // Delete a bank
 const deleteBank = async (req, res) => {
   try {
-    const { id } = req.body;
+    const { id } = req.params;
 
     const deletedBank = await BankModel.findByIdAndDelete(id);
 
@@ -77,12 +79,28 @@ const deleteBank = async (req, res) => {
 const getBanks = async (req, res) => {
   try {
     const banks = await BankModel.find();
-    res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.banksView, data: banks });
+
+    // Add srNo to each bank, starting from 1
+    const banksWithSrNo = banks.map((bank, index) => ({
+      srNo: index + 1,
+      ...bank.toObject() // Convert the Mongoose document to a plain JavaScript object
+    }));
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.banksView,
+      data: banksWithSrNo
+    });
   } catch (error) {
     console.error("Error while fetching banks:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingBanks, error: error.message });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorFetchingBanks,
+      error: error.message
+    });
   }
 };
+
 
 module.exports = {
   createBank,

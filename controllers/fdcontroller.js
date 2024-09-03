@@ -22,27 +22,29 @@ const formatDate = (date) => {
   return [year, month, day].join("-");
 };
 
-const calculateTotalYears = (startDate, maturityDate) => {
+function calculateTotalYears(startDate, maturityDate) {
   const start = new Date(startDate);
-  const end = new Date(maturityDate);
-  const diff = end - start;
+  const maturity = new Date(maturityDate);
 
-  // Calculate the total number of months
-  const totalMonths = diff / (1000 * 60 * 60 * 24 * 30);
-  const years = Math.floor(totalMonths / 12);
-  const months = Math.round(totalMonths % 12);
+  // Calculate the difference in full years
+  let years = maturity.getFullYear() - start.getFullYear();
 
-  // Format the output
-  if (years > 0 && months > 0) {
-    return `${years}y ${months}M`;
-  } else if (years > 0) {
-    return `${years}y`;
-  } else if (months > 0) {
-    return `${months}M`;
-  } else {
-    return "0M";
+  // Calculate the difference in months and days
+  let months = maturity.getMonth() - start.getMonth();
+  let days = maturity.getDate() - start.getDate();
+
+  // If the maturity date is before the anniversary in the current year, adjust the years
+  if (months < 0 || (months === 0 && days < 0)) {
+    years--;
   }
-};
+
+  // If the maturity date is on or after the anniversary date, it should count as a full year
+  if (maturity >= start && maturity.getFullYear() === start.getFullYear() + years) {
+    return `${years + 1}`;
+  }
+
+  return `${years}`;
+}
 
 
 
@@ -74,7 +76,7 @@ const fixedDepositRegister = async (req, res) => {
     if (fdExists) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ statusCode: statusCode.BAD_REQUEST, message: message.fdExists });
+        .json({ statusCode: statusCode.BAD_REQUEST, message: message.fdAlreadyExists });
     }
 
     const formattedStartDate = formatDate(startDate);
@@ -245,6 +247,7 @@ const updateFixedDeposit = async (req, res) => {
 
     // Send the updated FD details as response
     res.status(statusCode.OK).json({
+      statusCode : statusCode.OK,
       message: message.fdUpdated,
       data: updatedFdResult,
     });
@@ -341,7 +344,7 @@ const getFdDetails = async (req, res) => {
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
-      message: message.fdDetailsFetched,
+      message: message.fdsView,
       data: formattedFdDetails,
     });
   } catch (error) {

@@ -106,44 +106,57 @@ const getTopGainers = async (req, res) => {
     }
 };
 
-
 const getInvestmentsBySector = async (req, res) => {
     const { sector } = req.params;
     const userId = req.user.id;
 
     if (!sector) {
-        return res.status(statusCode.BAD_REQUEST).json({ statusCode: statusCode.BAD_REQUEST, message: message.sectorRequired });
+        return res.status(statusCode.BAD_REQUEST).json({ 
+            statusCode: statusCode.BAD_REQUEST, 
+            message: message.sectorRequired 
+        });
     }
 
-    let investments = [];
     try {
+        let investments = [];
         switch (sector.toLowerCase()) {
             case 'banking':
-                investments = await FixedDeposit.find({ userId });
-                investments = investments.map((item, index) => ({
-                    srNo: index + 1, // Incrementing index by 1
-                    sector: 'Banking',
-                    ...item._doc
-                }));
+                console.log('Fetching Banking Investments for User ID:', userId);
+                investments = await FixedDeposit.find({ userId }).lean(); // Fetch documents as plain objects directly
                 break;
             case 'gold':
-                investments = await GoldModel.find({ userId });
-                investments = investments.map((item, index) => ({
-                    srNo: index + 1, // Incrementing index by 1
-                    sector: 'Gold',
-                    ...item._doc
-                }));
+                console.log('Fetching Gold Investments for User ID:', userId);
+                investments = await GoldModel.find({ userId }).lean(); // Fetch documents as plain objects directly
                 break;
             default:
-                return res.status(statusCode.BAD_REQUEST).json({ statusCode: statusCode.BAD_REQUEST, message: message.errorFetchingSector });
+                return res.status(statusCode.BAD_REQUEST).json({ 
+                    statusCode: statusCode.BAD_REQUEST, 
+                    message: message.errorFetchingSector 
+                });
         }
 
-        res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.investmentBySector, data: investments });
+        // Map investments and add srNo, explicitly set srNo to avoid overriding
+        investments = investments.map((item, index) => ({
+            srNo: index + 1, // Incremental numbering
+            sector: sector.charAt(0).toUpperCase() + sector.slice(1), // Capitalize sector
+            ...item, // Spread the plain object properties
+            srNo: index + 1 // Override srNo with the correct value
+        }));
+
+        res.status(statusCode.OK).json({ 
+            statusCode: statusCode.OK, 
+            message: message.investmentBySector, 
+            data: investments 
+        });
     } catch (error) {
-        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingInvestments, error: error.message });
+        console.error('Error fetching investments:', error.message);
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ 
+            statusCode: statusCode.INTERNAL_SERVER_ERROR, 
+            message: message.errorFetchingInvestments, 
+            error: error.message 
+        });
     }
 };
-
 
 const getInvestmentById = async (req, res) => {
     try {

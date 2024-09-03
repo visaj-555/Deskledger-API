@@ -12,7 +12,7 @@ exports.createGoldRecord = async (req, res) => {
         const goldMaster = await GoldMasterModel.findOne().sort({ createdAt: -1 });
 
         if (!goldMaster) {
-            return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingGoldMaster });
+            return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST, message: message.errorFetchingGoldMaster });
         }
 
         // Check if the gold information already exists for this user
@@ -27,7 +27,7 @@ exports.createGoldRecord = async (req, res) => {
         });
 
         if (existingGoldRecord) {
-            return res.status(statusCode.CONFLICT).json({ message: "Gold information already exists" });
+            return res.status(statusCode.CONFLICT).json({ statusCode : statusCode.CONFLICT,message: "Gold information already exists" });
         }
 
         // Destructure values from goldMaster
@@ -64,7 +64,6 @@ exports.createGoldRecord = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorCreatingGoldInfo });
     }
 };
-
 exports.updateGoldRecord = async (req, res) => {
     try {
         const { id } = req.params;
@@ -77,7 +76,7 @@ exports.updateGoldRecord = async (req, res) => {
         const existingGoldRecord = await GoldModel.findOne({ _id: id, userId });
 
         if (!existingGoldRecord) {
-            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
+            return res.status(statusCode.NOT_FOUND).json({statusCode : statusCode.NOT_FOUND,  message: message.goldNotFound });
         }
 
         // Use existing values if not provided in the request body
@@ -136,7 +135,6 @@ exports.updateGoldRecord = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingGoldInfo });
     }
 };
-
 // Get all gold records for the authenticated user
 exports.getAllGoldRecords = async (req, res) => {
     try {
@@ -158,7 +156,6 @@ exports.getAllGoldRecords = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorGoldRecords });
     }
 };
-
 // Get a single gold record by ID
 exports.getGoldRecordById = async (req, res) => {
     try {
@@ -176,11 +173,6 @@ exports.getGoldRecordById = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingGoldInfo });
     }
 };
-
-
-// Update a gold record
-
-
 // Delete a gold record
 exports.deleteGoldRecord = async (req, res) => {
     try {

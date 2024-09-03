@@ -76,6 +76,13 @@ const {getOverallAnalysis} =  require('../controllers/overallAnalysis');
 
 const { getPieAnalysis} = require('../controllers/pieAnalysis.js');
 
+const {
+  createAreaPrice,
+  updateAreaPrice,
+  deleteAreaPrice,
+  getAreaPrices,
+} =  require('../controllers/areaPriceController');
+
 
 const { getFdAnalysis,  getFdAnalysisbyNumber} = require("../controllers/fdAnalysisController");
 const { ensureAuthenticated, ensureAdmin } = require("../validation/authValidator");
@@ -118,9 +125,10 @@ router.get('/gold-analysis', ensureAuthenticated, getGoldAnalysis);
 
 //Bank routes
 router.post('/bank-register',  ensureAuthenticated, ensureAdmin, createBank);
-router.put('/bank-update', ensureAuthenticated, ensureAdmin, updateBank);
-router.delete('/bank-delete',  ensureAuthenticated, ensureAdmin, deleteBank);
+router.put('/bank-update/:id', ensureAuthenticated, ensureAdmin, updateBank);
+router.delete('/bank-delete/:id',  ensureAuthenticated, ensureAdmin, deleteBank);
 router.get('/banks', ensureAuthenticated, ensureAdmin, getBanks);
+router.get('/banks-dropdown-user', ensureAuthenticated, getBanks);
 
 // Gold Master routes
 router.post("/goldMaster/register", ensureAuthenticated, ensureAdmin,  goldMasterInfoRegister);
@@ -141,6 +149,12 @@ router.delete('/gold/delete-multiple', ensureAuthenticated, deleteMultipleGoldRe
 router.get("/combined-analysis", ensureAuthenticated, getCombinedAnalysis);
 router.get("/combined-num-analysis", ensureAuthenticated, getCombinedNumAnalysis);
 router.get("/pie-analysis", ensureAuthenticated, getPieAnalysis);
+
+// Area Price routes
+router.post("/area-price/register", ensureAuthenticated, ensureAdmin,  createAreaPrice);
+router.put("/area-price/update/:id",  ensureAuthenticated, ensureAdmin, updateAreaPrice);
+router.delete("/area-price/delete/:id", ensureAuthenticated, ensureAdmin, deleteAreaPrice);
+router.get("/area-prices", ensureAuthenticated, ensureAdmin, getAreaPrices);
 
 
 

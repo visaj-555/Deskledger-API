@@ -238,12 +238,6 @@ const getFdAnalysisbyNumber = async (req, res) => {
     }
 };
 
-
-
-
-
-
-
 module.exports = {
     getFdAnalysis,
     getFdAnalysisbyNumber
