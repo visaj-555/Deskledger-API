@@ -13,7 +13,7 @@ dotenv.config();
 // Setting up express app 
 const app = express(); 
 const PORT = parseInt(process.env.PORT, 10) || 3500; // Parse the PORT value as an integer
-const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.29.2';
+const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.0.122';
 const DB_CONNECTION = process.env.CONNECTION;
 
 app.use(express.json());
@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const corsOptions = {
-  origin: 'https://deskledger.vercel.app/',
+  origin: 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'ids'], 

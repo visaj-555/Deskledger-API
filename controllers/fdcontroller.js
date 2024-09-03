@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const moment = require("moment");
 const FdAnalysisModel = require("../models/fdAnalysis");
 const { statusCode, message } = require("../utils/api.response");
+const {formatAmount} = require('../utils/formatAmount');
 const {
   registerFdAggregation,
   updateFdAggregation,
@@ -22,29 +23,29 @@ const formatDate = (date) => {
   return [year, month, day].join("-");
 };
 
-const calculateTotalYears = (startDate, maturityDate) => {
+function calculateTotalYears(startDate, maturityDate) {
   const start = new Date(startDate);
-  const end = new Date(maturityDate);
-  const diff = end - start;
+  const maturity = new Date(maturityDate);
 
-  // Calculate the total number of months
-  const totalMonths = diff / (1000 * 60 * 60 * 24 * 30);
-  const years = Math.floor(totalMonths / 12);
-  const months = Math.round(totalMonths % 12);
+  // Calculate the difference in full years
+  let years = maturity.getFullYear() - start.getFullYear();
 
-  // Format the output
-  if (years > 0 && months > 0) {
-    return `${years}y ${months}M`;
-  } else if (years > 0) {
-    return `${years}y`;
-  } else if (months > 0) {
-    return `${months}M`;
-  } else {
-    return "0M";
+  // Calculate the difference in months and days
+  let months = maturity.getMonth() - start.getMonth();
+  let days = maturity.getDate() - start.getDate();
+
+  // If the maturity date is before the anniversary in the current year, adjust the years
+  if (months < 0 || (months === 0 && days < 0)) {
+    years--;
   }
-};
 
+  // If the maturity date is on or after the anniversary date, it should count as a full year
+  if (maturity >= start && maturity.getFullYear() === start.getFullYear() + years) {
+    return `${years + 1}`;
+  }
 
+  return `${years}`;
+}
 
 const fixedDepositRegister = async (req, res) => {
   try {
@@ -74,7 +75,7 @@ const fixedDepositRegister = async (req, res) => {
     if (fdExists) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({ statusCode: statusCode.BAD_REQUEST, message: message.fdExists });
+        .json({ statusCode: statusCode.BAD_REQUEST, message: message.fdAlreadyExists });
     }
 
     const formattedStartDate = formatDate(startDate);
@@ -160,8 +161,6 @@ const fixedDepositRegister = async (req, res) => {
   }
 };
 
-
-
 const updateFixedDeposit = async (req, res) => {
   try {
     const { id } = req.params;
@@ -245,6 +244,7 @@ const updateFixedDeposit = async (req, res) => {
 
     // Send the updated FD details as response
     res.status(statusCode.OK).json({
+      statusCode : statusCode.OK,
       message: message.fdUpdated,
       data: updatedFdResult,
     });
@@ -255,7 +255,6 @@ const updateFixedDeposit = async (req, res) => {
       .json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingFD });
   }
 };
-
 
 const fixedDepositDelete = async (req, res) => {
   try {
@@ -292,7 +291,6 @@ const fixedDepositDelete = async (req, res) => {
     });
   }
 };
-
 
 const getFdDetails = async (req, res) => {
   try {
@@ -341,7 +339,7 @@ const getFdDetails = async (req, res) => {
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
-      message: message.fdDetailsFetched,
+      message: message.fdsView,
       data: formattedFdDetails,
     });
   } catch (error) {
@@ -398,11 +396,109 @@ const deleteMultipleFDs = async (req, res) => {
   }
 };
 
+const getFdAnalysisbyNumber = async (req, res) => {
+  try {
+      const userId = req.user.id;
+
+      const fdAnalysis = await FixedDepositModel.aggregate([
+          { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+          {
+              $addFields: {
+                  tenureInYears: {
+                      $divide: [
+                          { $subtract: ["$maturityDate", "$startDate"] },
+                          1000 * 60 * 60 * 24 * 365
+                      ]
+                  },
+                  tenureCompletedYears: {
+                      $divide: [
+                          { $subtract: [new Date(), "$startDate"] },
+                          1000 * 60 * 60 * 24 * 365
+                      ]
+                  }
+              }
+          },
+          {
+              $addFields: {
+                  // Simple Interest Calculation for Maturity Amount
+                  totalReturnedAmount: {
+                      $trunc: {
+                          $add: [
+                              "$totalInvestedAmount",
+                              { 
+                                  $multiply: [
+                                      "$totalInvestedAmount", 
+                                      { $multiply: ["$interestRate", "$tenureInYears", 0.01] }
+                                  ]
+                              }
+                          ]
+                      }
+                  },
+                  currentReturnAmount: {
+                      $trunc: {
+                          $add: [
+                              "$totalInvestedAmount",
+                              { 
+                                  $multiply: [
+                                      "$totalInvestedAmount", 
+                                      { $multiply: ["$interestRate", "$tenureCompletedYears", 0.01] }
+                                  ]
+                              }
+                          ]
+                      }
+                  }
+              }
+          },
+          {
+              $group: {
+                  _id: null,
+                  totalInvestedAmountOfFds: { $sum: "$totalInvestedAmount" },
+                  currentReturnAmountOfFds: { $sum: "$currentReturnAmount" },
+                  totalReturnAmountofFds: { $sum: "$totalReturnedAmount" }
+              }
+          },
+          {
+              $addFields: {
+                  totalProfitGainedOfFds: {
+                      $trunc: {
+                          $subtract: ["$currentReturnAmountOfFds", "$totalInvestedAmountOfFds"]
+                      }
+                  }
+              }
+          }
+      ]);
+
+      if (!fdAnalysis || fdAnalysis.length === 0) {
+          return res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.errorFetchingFD });
+      }
+
+      const rawData = {
+          totalInvestedAmountOfFds: Math.round(fdAnalysis[0].totalInvestedAmountOfFds),
+          currentReturnAmountOfFds: Math.round(fdAnalysis[0].currentReturnAmountOfFds),
+          totalReturnAmountofFds: Math.round(fdAnalysis[0].totalReturnAmountofFds),
+          totalProfitGainedOfFds: Math.round(fdAnalysis[0].totalProfitGainedOfFds),
+          userId: new mongoose.Types.ObjectId(userId)
+      };
+
+      const formattedData = {
+          totalInvestedAmountOfFds: formatAmount(rawData.totalInvestedAmountOfFds),
+          currentReturnAmountOfFds: formatAmount(rawData.currentReturnAmountOfFds),
+          totalReturnAmountofFds: formatAmount(rawData.totalReturnAmountofFds),
+          totalProfitGainedOfFds: formatAmount(rawData.totalProfitGainedOfFds),
+          userId: rawData.userId
+      };
+
+      res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.analysisReportofFd, data: rawData });
+  } catch (error) {
+      res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFdAnalytics, error: error.message });
+  }
+};
 
 module.exports = {
   fixedDepositRegister,
   updateFixedDeposit,
   fixedDepositDelete,
   getFdDetails,
-  deleteMultipleFDs
+  deleteMultipleFDs,
+  getFdAnalysisbyNumber
 };

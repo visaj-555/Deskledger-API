@@ -12,7 +12,7 @@ const goldMasterInfoRegister = async (req, res) => {
     if (masterGoldInfoExists) {
       return res
         .status(statusCode.BAD_REQUEST)
-        .json({  statusCode : statusCode.BAD_REQUEST, message: message.goldExists });
+        .json({ statusCode : statusCode.CONFLICT, message: message.goldExists });
     }
 
     const newGoldMasterInfo = new GoldMasterModel({ 

@@ -1,6 +1,8 @@
 const GoldModel = require('../models/goldModel');
 const GoldMasterModel = require('../models/goldMaster');
+const GoldAnalysisModel = require('../models/goldAnalysis');
 const { message, statusCode } = require('../utils/api.response');
+const mongoose = require('mongoose');
 
 // Create a new gold record
 exports.createGoldRecord = async (req, res) => {
@@ -12,7 +14,7 @@ exports.createGoldRecord = async (req, res) => {
         const goldMaster = await GoldMasterModel.findOne().sort({ createdAt: -1 });
 
         if (!goldMaster) {
-            return res.status(statusCode.BAD_REQUEST).json({ message: message.errorFetchingGoldMaster });
+            return res.status(statusCode.BAD_REQUEST).json({ statusCode : statusCode.BAD_REQUEST, message: message.errorFetchingGoldMaster });
         }
 
         // Check if the gold information already exists for this user
@@ -27,7 +29,7 @@ exports.createGoldRecord = async (req, res) => {
         });
 
         if (existingGoldRecord) {
-            return res.status(statusCode.CONFLICT).json({ message: "Gold information already exists" });
+            return res.status(statusCode.CONFLICT).json({ statusCode : statusCode.CONFLICT,message: "Gold information already exists" });
         }
 
         // Destructure values from goldMaster
@@ -64,7 +66,6 @@ exports.createGoldRecord = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorCreatingGoldInfo });
     }
 };
-
 exports.updateGoldRecord = async (req, res) => {
     try {
         const { id } = req.params;
@@ -77,7 +78,7 @@ exports.updateGoldRecord = async (req, res) => {
         const existingGoldRecord = await GoldModel.findOne({ _id: id, userId });
 
         if (!existingGoldRecord) {
-            return res.status(statusCode.NOT_FOUND).json({ message: message.goldNotFound });
+            return res.status(statusCode.NOT_FOUND).json({statusCode : statusCode.NOT_FOUND,  message: message.goldNotFound });
         }
 
         // Use existing values if not provided in the request body
@@ -136,7 +137,6 @@ exports.updateGoldRecord = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingGoldInfo });
     }
 };
-
 // Get all gold records for the authenticated user
 exports.getAllGoldRecords = async (req, res) => {
     try {
@@ -158,7 +158,6 @@ exports.getAllGoldRecords = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorGoldRecords });
     }
 };
-
 // Get a single gold record by ID
 exports.getGoldRecordById = async (req, res) => {
     try {
@@ -176,11 +175,6 @@ exports.getGoldRecordById = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingGoldInfo });
     }
 };
-
-
-// Update a gold record
-
-
 // Delete a gold record
 exports.deleteGoldRecord = async (req, res) => {
     try {
@@ -200,7 +194,6 @@ exports.deleteGoldRecord = async (req, res) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode : statusCode.INTERNAL_SERVER_ERROR, message: message.errorDeletingGoldInfo });
     }
 };
-
 // Delete multiple gold records
 exports.deleteMultipleGoldRecords = async (req, res) => {
     try {
@@ -225,5 +218,57 @@ exports.deleteMultipleGoldRecords = async (req, res) => {
     } catch (error) {
         console.error("Error deleting multiple gold records:", error);
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({statusCode : statusCode.INTERNAL_SERVER_ERROR,  message: message.errorDeletingGoldInfo });
+    }
+};
+
+exports.getGoldAnalysis = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const goldAnalysis = await GoldModel.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+            {
+                $addFields: {
+                    totalInvestedAmount: "$goldPurchasePrice",
+                    currentReturnAmount: "$totalReturnAmount",
+                    profit: "$profit"
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalInvestedAmountOfGold: { $sum: "$totalInvestedAmount" },
+                    currentReturnAmountOfGold: { $sum: "$currentReturnAmount" },
+                    totalProfitGainedOfGold: { $sum: "$profit" }
+                }
+            }
+        ]);
+
+        if (!goldAnalysis || goldAnalysis.length === 0) {
+            return res.status(statusCode.NO_CONTENT).json({ statusCode: statusCode.NO_CONTENT, message: message.goldNotFetch });
+        }
+
+        const analysisData = {
+            totalInvestedAmountOfGold: Math.round(goldAnalysis[0].totalInvestedAmountOfGold),
+            currentReturnAmountOfGold: Math.round(goldAnalysis[0].currentReturnAmountOfGold),
+            totalProfitGainedOfGold: Math.round(goldAnalysis[0].totalProfitGainedOfGold),
+            userId: new mongoose.Types.ObjectId(userId)
+        };
+
+        const filter = { userId: new mongoose.Types.ObjectId(userId) };
+        const update = { $set: analysisData };
+        const options = { upsert: true, new: true };
+        const updatedGoldAnalysis = await GoldAnalysisModel.findOneAndUpdate(filter, update, options);
+
+        console.log("Updated Gold Analysis:", updatedGoldAnalysis);
+
+        res.status(statusCode.OK).json({
+            statusCode: statusCode.OK,
+            message: message.analysisReportofGold,
+            data: analysisData
+        });
+    } catch (error) {
+        console.error("Error calculating Gold analytics:", error);
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorGoldAnalytics, error: error.message });
     }
 };

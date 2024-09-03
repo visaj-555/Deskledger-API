@@ -16,6 +16,7 @@ const statusCode = {
 const message  = {
 
     // Success messages 
+    loginAdmin : "Admin Logged In Successfully",
     otpSuccess : "OTP Verified Successfully",
     analysisReportofFd : "Analysis Report of all the fixed deposits",
     analysisReportofGold : "Analysis Report of all the gold investments",
@@ -40,10 +41,10 @@ const message  = {
     userNotFound: "User not found",
     userProfileUpdated: "User profile updated Successfully",
     userExists: "User already exists",
-    userLoggedIn: "User logged in successfully",
+    userLoggedIn: "Logged in successfully",
     userLoggedOut: "User logged out successfully",
     userProfileUpdated: "User profile updated successfully",
-    userCreated: "You are Registered Successfully",
+    userCreated: "Registered Successfully",
     userUpdated: "Account updated successfully",
     userDeleted: "Account deleted successfully",
     userView: "User retrieved successfully", 
@@ -60,6 +61,8 @@ const message  = {
 
 
     // Error Messages  
+    fdAlreadyExists : "FD already exists",
+    goldNotFound : "Gold not found",
     otpInvalid : "Invalid OTP",
     otpExpired : "Expired OTP",
     errorResetPassword : "Error resetting password",
