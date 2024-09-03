@@ -34,18 +34,19 @@ function calculateTotalYears(startDate, maturityDate) {
   let months = maturity.getMonth() - start.getMonth();
   let days = maturity.getDate() - start.getDate();
 
-  // If the maturity date is before the anniversary in the current year, adjust the years
-  if (months < 0 || (months === 0 && days < 0)) {
-    years--;
+  // Format the output
+  if (years > 0 && months > 0) {
+    return `${years}y ${months}M`;
+  } else if (years > 0) {
+    return `${years}y`;
+  } else if (months > 0) {
+    return `${months}M`;
+  } else {
+    return "0M";
   }
+};
 
-  // If the maturity date is on or after the anniversary date, it should count as a full year
-  if (maturity >= start && maturity.getFullYear() === start.getFullYear() + years) {
-    return `${years + 1}`;
-  }
 
-  return `${years}`;
-}
 
 const fixedDepositRegister = async (req, res) => {
   try {

@@ -129,7 +129,10 @@ router.get("/investments/:id", ensureAuthenticated, getInvestmentById);
 router.post('/bank-register',  ensureAuthenticated, ensureAdmin, createBank);
 router.put('/bank-update/:id', ensureAuthenticated, ensureAdmin, updateBank);
 router.delete('/bank-delete/:id',  ensureAuthenticated, ensureAdmin, deleteBank);
+router.put('/bank-update/:id', ensureAuthenticated, ensureAdmin, updateBank);
+router.delete('/bank-delete/:id',  ensureAuthenticated, ensureAdmin, deleteBank);
 router.get('/banks', ensureAuthenticated, ensureAdmin, getBanks);
+router.get('/banks-dropdown-user', ensureAuthenticated, getBanks);
 router.get('/banks-dropdown-user', ensureAuthenticated, getBanks);
 
 // Gold Master routes
