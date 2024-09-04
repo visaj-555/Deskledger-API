@@ -59,10 +59,10 @@ const getOverallAnalysis = async (req, res) => {
   
         // Format the amounts
         const overallAnalysis = {
-            totalInvestedAmountOfFds: formatAmount(totalInvestedAmount),
-            currentReturnAmountOfFds: formatAmount(currentReturnAmount),
-            totalReturnAmountofFds: formatAmount(totalReturnAmount),
-            totalProfitGainedOfFds: formatAmount(profitAmount),
+            totalInvestedAmount: formatAmount(totalInvestedAmount),
+            currentReturnAmount: formatAmount(currentReturnAmount),
+            totalReturnAmount: formatAmount(totalReturnAmount),
+            totalProfitGained: formatAmount(profitAmount),
             userId: userId,
         };
   
@@ -78,8 +78,9 @@ const getOverallAnalysis = async (req, res) => {
             error: error.message,
         });
     }
-  };
+};
 
+// 1ST PIE CHART
 const getCombinedNumAnalysis = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -235,6 +236,7 @@ const getCombinedNumAnalysis = async (req, res) => {
     }
 };
 
+// HIGHEST GROWTH PIE CHART
 const getHighestGrowthInSector = async (req, res) => {
     const { sector } = req.params;
 
@@ -278,6 +280,7 @@ const getHighestGrowthInSector = async (req, res) => {
     }
 };
 
+// TOP GAINERS
 const getTopGainers = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -336,6 +339,7 @@ const getTopGainers = async (req, res) => {
     }
 };
 
+// INVESTMENT IN SECTOR
 const getInvestmentsBySector = async (req, res) => {
     const { sector } = req.params;
     const userId = req.user.id;
@@ -388,6 +392,7 @@ const getInvestmentsBySector = async (req, res) => {
     }
 };
 
+// INVESTMENT IN SECTOR BY ID
 const getInvestmentById = async (req, res) => {
     try {
         const { id } = req.params;

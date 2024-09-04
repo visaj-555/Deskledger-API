@@ -13,7 +13,7 @@ dotenv.config();
 // Setting up express app 
 const app = express(); 
 const PORT = parseInt(process.env.PORT, 10) || 3500; // Parse the PORT value as an integer
-const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.0.122';
+const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.54.143';
 const DB_CONNECTION = process.env.CONNECTION;
 
 app.use(express.json());

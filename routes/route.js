@@ -47,7 +47,7 @@ const {
   getHighestGrowthInSector, 
   getOverallAnalysis, 
   getCombinedNumAnalysis
-} = require("../controllers/investmentController");
+} = require("../controllers/dashboardController");
 
 //BANK MASTER
 const {
@@ -73,6 +73,20 @@ const {
   getAreaPrices,
 } =  require('../controllers/areaPriceController');
 
+const {
+  stateRegister,
+  updateState,
+  getState,
+  deleteState
+} = require('../controllers/stateController');
+
+const {
+  cityRegister,
+  updateCity,
+  getCity,
+  deleteCity
+} = require('../controllers/cityController');
+
 // VALIDATORS
 const {
   userRegisterValidate,
@@ -81,6 +95,14 @@ const {
 const { ensureAuthenticated, ensureAdmin } = require("../validation/authValidator");
 const { validateFixedDeposit } = require("../validation/fdValidator");
 const { upload, multerErrorHandling  } = require("../validation/upload");
+
+const {
+  stateValidate
+} = require('../validation/stateValidation');
+
+const {
+  cityValidate
+} = require('../validation/cityValidation');
 
 // User routes
 router.post("/user/login", userLoginValidate, loginUser);
@@ -133,7 +155,6 @@ router.put('/bank-update/:id', ensureAuthenticated, ensureAdmin, updateBank);
 router.delete('/bank-delete/:id',  ensureAuthenticated, ensureAdmin, deleteBank);
 router.get('/banks', ensureAuthenticated, ensureAdmin, getBanks);
 router.get('/banks-dropdown-user', ensureAuthenticated, getBanks);
-router.get('/banks-dropdown-user', ensureAuthenticated, getBanks);
 
 // Gold Master routes
 router.post("/goldMaster/register", ensureAuthenticated, ensureAdmin,  goldMasterInfoRegister);
@@ -146,6 +167,22 @@ router.post("/area-price/register", ensureAuthenticated, ensureAdmin,  createAre
 router.put("/area-price/update/:id",  ensureAuthenticated, ensureAdmin, updateAreaPrice);
 router.delete("/area-price/delete/:id", ensureAuthenticated, ensureAdmin, deleteAreaPrice);
 router.get("/area-prices", ensureAuthenticated, ensureAdmin, getAreaPrices);
+
+
+// State routes
+router.post('/state', stateValidate, stateRegister);
+router.put('/state/update', stateValidate, updateState);
+router.get('/states', getState);
+router.get('/states/:id', getState);
+router.delete('/state/delete', deleteState);
+
+// City routes
+router.post('/city', cityValidate, cityRegister);
+router.put('/city/update', cityValidate, updateCity);
+router.get('/cities', getCity);
+router.get('/cities/:id', getCity);
+router.delete('/city/delete', deleteCity);
+
 
 
 

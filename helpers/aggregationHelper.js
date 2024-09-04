@@ -68,22 +68,13 @@ const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, i
     {
       $addFields: {
         totalYears: {
-          $concat: [
-            { $toString: { $trunc: "$tenureInYears" } }, // integer part for years
-            ".",
-            {
-              $toString: { 
-                $trunc: [
-                  { $multiply: [{ $subtract: ["$tenureInYears", { $trunc: "$tenureInYears" }] }, 12] }, 0 // fractional part converted to months
-                ]
-              }
-            }
-          ]
+          $ceil: "$tenureInYears" // Use $ceil to ensure totalYears is correctly rounded up
         }
       }
     }
   ];
 };
+
 
 // Aggregation pipeline for registering a new FD
 const registerFdAggregation = (fdId, startDate, maturityDate, totalInvestedAmount, interestRate) => [

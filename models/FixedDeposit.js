@@ -69,7 +69,7 @@ const FixedDepositSchema = new Schema({
         type: String,
         default: 'Banking' // Default value if all FixedDeposits are in the Banking sector
     }
-});
+}, { timestamps: true });
 
 const FixedDepositModel = mongoose.model('FixedDeposit', FixedDepositSchema);
 module.exports = FixedDepositModel;

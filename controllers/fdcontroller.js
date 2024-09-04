@@ -46,8 +46,6 @@ function calculateTotalYears(startDate, maturityDate) {
   }
 };
 
-
-
 const fixedDepositRegister = async (req, res) => {
   try {
     const {
@@ -62,6 +60,7 @@ const fixedDepositRegister = async (req, res) => {
       maturityDate,
       totalInvestedAmount,
     } = req.body;
+
     const userId = req.user.id;
 
     // Ensure the authenticated user is registering the FD for themselves
