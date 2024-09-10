@@ -2,6 +2,7 @@ const express = require('express');
 const { ensureAuthenticated } = require('../validation/authValidator');
 const router = express.Router();
 const dashboardController = require('../controllers/dashboardController');
+
 // Dashboard routes
 router.get("/overall-investment", ensureAuthenticated ,dashboardController.getOverallAnalysis);
 router.get("/combined-num-analysis", ensureAuthenticated, dashboardController.getCombinedNumAnalysis);

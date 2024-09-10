@@ -91,7 +91,7 @@ const deletePropertyType = async (req, res) => {
     
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorDeletingBank,
+      message: message.errorDeletingPropertyType,
       error: error.message,
     });
   }
@@ -122,9 +122,36 @@ const getPropertyType = async (req, res) => {
   }
 };
 
+const deleteMultiplePropertyTypes = async (req,res) => {
+  try {
+    const { ids } = req.body; // Pass an array of ids
+
+    const deletedPropertyTypes = await PropertyTypeModel.deleteMany({ _id: { $in: ids } });
+
+    if (deletedPropertyTypes.deletedCount === 0) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingPropertyType,
+      });
+    }
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.propertyTypesDeleted,
+      deletedCount: deletedPropertyTypes.deletedCount,
+    });
+  } catch (error) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorDeletingPropertyTypes,
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   propertyTypeRegister,
   updatePropertyType,
   deletePropertyType,
   getPropertyType,
+  deleteMultiplePropertyTypes
 };

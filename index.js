@@ -3,17 +3,16 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const routes = require('./routes/route');
 const fs = require('fs');
 const path = require('path');
-const MainRoutes= require('./routes/routeManager')
+const MainRoutes = require('./routes/routeManager'); // Import the routes
 
 // Load environment variables from .env file
 dotenv.config();
 
 // Setting up express app 
 const app = express(); 
-const PORT = parseInt(process.env.PORT, 10) || 3500; // Parse the PORT value as an integer
+const PORT = parseInt(process.env.PORT, 10) || 3500;
 const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.0.122';
 const DB_CONNECTION = process.env.CONNECTION;
 
@@ -31,22 +30,26 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-app.use('/', MainRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Dynamically apply all routes from MainRoutes array
+MainRoutes.forEach(route => {
+  app.use('/', route); // You can modify this to assign specific prefixes if needed
+});
 
 app.get('/image/:filename', (req, res) => {
   const filename = req.params.filename;
   const filepath = path.join(__dirname, 'uploads', filename);
 
   fs.access(filepath, fs.constants.F_OK, (err) => {
-      if (err) {
-          return res.status(404).send('File not found');
-      }
-
-      res.sendFile(filepath);
+    if (err) {
+      return res.status(404).send('File not found');
+    }
+    res.sendFile(filepath);
   });
 });
 
+// Database connection
 const databaseConnection = async () => {
   try {
     await mongoose.connect(DB_CONNECTION);

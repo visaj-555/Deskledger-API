@@ -1,5 +1,4 @@
 const CityModel = require("../models/city");
-const StateModel = require("../models/state");
 const { statusCode, message } = require("../utils/api.response");
 
 // Create a new city
@@ -60,7 +59,6 @@ const cityRegister = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorCreatingCity,
-      error: error.message,
     });
   }
 };
@@ -79,7 +77,7 @@ const updateCity = async (req, res) => {
     if (!updatedCity) {
       return res.status(statusCode.NOT_FOUND).json({
         statusCode: statusCode.NOT_FOUND,
-        message: message.errorFetchingCity,
+        message: message.cityNotFound,
       });
     }
 
@@ -117,11 +115,12 @@ const updateCity = async (req, res) => {
       message: message.cityUpdated,
       data: updatedCityWithState[0],
     });
-  } catch (error) {
+  } 
+  
+  catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorUpdatingCity,
-      error: error.message,
     });
   }
 };
@@ -130,15 +129,6 @@ const deleteCity = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // // Find city before deletion to return it later
-    // const cityToDelete = await CityModel.findById(id);
-
-    // if (!cityToDelete) {
-    //   return res.status(statusCode.NOT_FOUND).json({
-    //     statusCode: statusCode.NOT_FOUND,
-    //     message: message.errorFetchingCity,
-    //   });
-    // }
 
     const deletedCity = await CityModel.findByIdAndDelete(id);
     if (!deletedCity) {
@@ -186,7 +176,6 @@ const deleteCity = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorDeletingCity,
-      error: error.message,
     });
   }
 };
@@ -220,7 +209,7 @@ const getCity = async (req, res) => {
 
     const citiesWithSrNo = cities.map((city, index) => ({
       srNo: index + 1,
-      city, // Convert the Mongoose document to a plain JavaScript object
+      city, 
     }));
 
     res.status(statusCode.OK).json({
@@ -232,6 +221,34 @@ const getCity = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorFetchingCities,
+    });
+  }
+};
+
+// Delete multiple cities
+const deleteMultipleCities = async (req, res) => {
+  try {
+    const { ids } = req.body; // Pass an array of ids
+
+    const deletedCities = await CityModel.deleteMany({ _id: { $in: ids } });
+
+    if (deletedCities.deletedCount === 0) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.cityNotFound,
+      });
+    }
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.citiesDeleted,
+      deletedCount: deletedCities.deletedCount,
+    });
+    
+  } catch (error) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorDeletingCity,
       error: error.message,
     });
   }
@@ -242,4 +259,5 @@ module.exports = {
   getCity,
   updateCity,
   deleteCity,
+  deleteMultipleCities
 };

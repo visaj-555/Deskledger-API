@@ -18,28 +18,28 @@ const RealEstateSchema = new Schema({
         trim: true,
         required: true
     },
-    propertyType: {
-        type: String, // e.g., Residential, Commercial, Land
-        required: true
+    propertyTypeId: { // e.g., Residential, Commercial, Land
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PropertyType'
     },
-    subPropertyType: {
-        type: String, // e.g., Office, Showroom, Flat, Apartment, Villa
-        required: true
+    subPropertyTypeId: { // e.g., Office, Showroom, Flat, Apartment, Villa
+         type: mongoose.Schema.Types.ObjectId,
+        ref: 'SubPropertyType'
     },
-    propertyName: {
-        type: String, // e.g., Name of the building, society, etc.
+    propertyName: {     // e.g., Name of the building, society, etc.
+        type: String, 
     },
     propertyAddress: {
         type: String, // Full address of the property
         required: true
     },
-    city: {
-        type: String,
-        required: true
+    cityId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'City'
     },
-    state: {
-        type: String,
-        required: true
+    stateId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'State' 
     },
     areaInSquareFeet: {
         type: Number, // Area of the property in square feet

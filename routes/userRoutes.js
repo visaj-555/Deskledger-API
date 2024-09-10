@@ -1,5 +1,5 @@
 const userController= require('../controllers/userController');
-const { ensureAuthenticated } = require('../validation/authValidator');
+const { ensureAuthenticated, ensureAdmin } = require('../validation/authValidator');
 const { userLoginValidate , userRegisterValidate } = require('../validation/userValidator')
 const Router= require('express').Router()
 
@@ -12,6 +12,7 @@ Router.post("/user/changepassword",  ensureAuthenticated, userController.changeP
 Router.post('/forgot-password', userController.forgotPassword);
 Router.post('/reset-password', userController.resetPassword);
 Router.post('/newpassword', userController.newPassword);
+Router.post('/users', ensureAuthenticated, ensureAdmin, userController.getUsers);
 
 
 

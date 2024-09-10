@@ -13,4 +13,5 @@ router.put("/goldMaster/update/:id",  ensureAuthenticated, ensureAdmin, goldMast
 router.delete("/goldMaster/delete/:id", ensureAuthenticated, ensureAdmin, goldMasterController.deleteGoldMasterInfo);
 router.get("/goldMaster", ensureAuthenticated, ensureAdmin, goldMasterController.getGoldMasterInfo);
 
+// Multiple Delete Remaining 
 module.exports = router; 

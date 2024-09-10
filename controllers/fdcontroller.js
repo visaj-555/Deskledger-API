@@ -67,15 +67,15 @@ const fixedDepositRegister = async (req, res) => {
     if (String(req.user.id) !== String(userId)) {
       return res
         .status(statusCode.FORBIDDEN)
-        .json({ statusCode: statusCode.FORBIDDEN, message: message.errorCreatingFD });
+        .json({ statusCode: statusCode.FORBIDDEN, message: message.unAuthUser});
     }
 
     // Check if FD already exists
     const fdExists = await FixedDepositModel.findOne({ fdNo, userId });
     if (fdExists) {
       return res
-        .status(statusCode.BAD_REQUEST)
-        .json({ statusCode: statusCode.BAD_REQUEST, message: message.fdAlreadyExists });
+        .status(statusCode.CONFLICT)
+        .json({ statusCode: statusCode.CONFLICT, message: message.fdAlreadyExists });
     }
 
     const formattedStartDate = formatDate(startDate);
@@ -114,7 +114,7 @@ const fixedDepositRegister = async (req, res) => {
       console.error("Aggregation returned no documents");
       return res
         .status(statusCode.INTERNAL_SERVER_ERROR)
-        .json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingFD });
+        .json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorAddingFixedDeposit });
     }
 
     // Calculate totalYears correctly
@@ -134,7 +134,6 @@ const fixedDepositRegister = async (req, res) => {
     );
 
     if (!updatedFdResult) {
-      console.error("Failed to update FD details after aggregation");
       return res
         .status(statusCode.INTERNAL_SERVER_ERROR)
         .json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingFD });

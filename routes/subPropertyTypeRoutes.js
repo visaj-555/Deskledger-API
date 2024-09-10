@@ -10,6 +10,7 @@ router.post('/subpropertytype', ensureAuthenticated, ensureAdmin, subPropertyTyp
 router.put('/subpropertytype/update/:id', ensureAuthenticated, ensureAdmin, subPropertyTypeController.updateSubPropertyType);
 router.delete('/subpropertytype/delete/:id',ensureAuthenticated, ensureAdmin, subPropertyTypeController.deleteSubPropertyType);
 router.get('/subpropertytypes',ensureAuthenticated, ensureAdmin, subPropertyTypeController.getSubPropertyType);
+router.delete('/subpropertytype/multiple-delete',ensureAuthenticated, ensureAdmin, subPropertyTypeController.getSubPropertyType);
 
 
 module.exports = router;

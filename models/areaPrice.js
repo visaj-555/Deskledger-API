@@ -2,13 +2,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const AreaPriceSchema = new Schema({
-    city: {
-        type: String,
-        required: true
+    cityId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'City'
     },
-    state: {
-        type: String,
-        required: true  
+    stateId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'State' 
     },
     areaName: {
         type: String, // Name of the area, neighborhood, etc.

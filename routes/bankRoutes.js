@@ -9,9 +9,9 @@ router.post('/bank-register',  ensureAuthenticated, ensureAdmin, bankController.
 router.put('/bank-update/:id', ensureAuthenticated, ensureAdmin, bankController.updateBank);
 router.delete('/bank-delete/:id',  ensureAuthenticated, ensureAdmin, bankController.deleteBank);
 router.put('/bank-update/:id', ensureAuthenticated, ensureAdmin, bankController.updateBank);
-router.delete('/bank-delete/:id',  ensureAuthenticated, ensureAdmin, bankController.deleteBank);
 router.get('/banks', ensureAuthenticated, ensureAdmin, bankController.getBanks);
 router.get('/banks-dropdown-user', ensureAuthenticated, bankController.getBanks);
+router.delete('/banks/multiple-delete',  ensureAuthenticated, ensureAdmin, bankController.deleteBank);
 
 
 module.exports = router;

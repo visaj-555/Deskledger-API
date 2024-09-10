@@ -126,9 +126,39 @@ const getState = async (req, res) => {
   }
 };
 
+// Delete multiple states
+const deleteMultipleStates = async (req, res) => {
+  try {
+    const { ids } = req.body; // Pass an array of ids
+
+    const deletedStates = await StateModel.deleteMany({ _id: { $in: ids } });
+
+    if (deletedStates.deletedCount === 0) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingState,
+      });
+    }
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.statesDeleted,
+      deletedCount: deletedStates.deletedCount,
+    });
+  } catch (error) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorDeletingState,
+      error: error.message,
+    });
+  }
+};
+
+
 module.exports = {
   stateRegister,
   getState,
   updateState,
   deleteState,
+  deleteMultipleStates
 };

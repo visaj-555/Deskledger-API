@@ -1,22 +1,25 @@
 const SubPropertyTypeModel = require("../models/subPropertyType");
-
 const { statusCode, message } = require("../utils/api.response");
 
-// Create a new sub property type
+// Create a new sub-property type
 const subPropertyTypeRegister = async (req, res) => {
   try {
     const { subPropertyType, propertyTypeId } = req.body;
 
+    // Check if the sub-property type already exists
     const subPropertyTypeExists = await SubPropertyTypeModel.findOne({
       subPropertyType,
       propertyTypeId,
     });
+
     if (subPropertyTypeExists) {
-      return res
-        .status(400)
-        .json({ statusCode: 400, message: "Sub Property Type already exists" });
+      return res.status(statusCode.CONFLICT).json({
+        statusCode: statusCode.CONFLICT,
+        message: message.subPropertyTypeAlreadyExists,
+      });
     }
 
+    // Create a new sub-property type
     const newSubPropertyType = new SubPropertyTypeModel({
       subPropertyType,
       propertyTypeId,
@@ -24,10 +27,9 @@ const subPropertyTypeRegister = async (req, res) => {
 
     const savedSubPropertyType = await newSubPropertyType.save();
 
+    // Aggregate to join property types
     const registeredSubProperty = await SubPropertyTypeModel.aggregate([
-      {
-        $match: { _id: savedSubPropertyType._id }
-      },
+      { $match: { _id: savedSubPropertyType._id } },
       {
         $lookup: {
           from: "propertytypes",
@@ -36,12 +38,7 @@ const subPropertyTypeRegister = async (req, res) => {
           as: "propertyTypesData",
         },
       },
-      {
-        $unwind: {
-          path: "$propertyTypesData",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $unwind: { path: "$propertyTypesData", preserveNullAndEmptyArrays: true } },
       {
         $project: {
           _id: 1,
@@ -52,44 +49,43 @@ const subPropertyTypeRegister = async (req, res) => {
       },
     ]);
 
-
-    res.status(201).json({
-      statusCode: 201,
-      message: "Sub Property Type registered",
-      data: savedSubPropertyType,
+    res.status(statusCode.CREATED).json({
+      statusCode: statusCode.CREATED,
+      message: message.subPropertyTypeAdded,
+      data: registeredSubProperty[0],
     });
   } catch (error) {
     console.error("Error while registering Sub Property Type:", error);
-    res.status(500).json({
-      statusCode: 500,
-      message: "Error registering Sub Property Type",
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorAddingSubPropertyType,
       error: error.message,
     });
   }
 };
 
-// Update a sub property type
+// Update a sub-property type
 const updateSubPropertyType = async (req, res) => {
   try {
     const { id } = req.params;
-    const { subPropertyType, propertyTypeId } = req.body;
+    const { subPropertyType} = req.body;
 
     const updatedSubPropertyType = await SubPropertyTypeModel.findByIdAndUpdate(
       id,
-      { subPropertyType, propertyTypeId },
+      { subPropertyType },
       { new: true }
     );
 
     if (!updatedSubPropertyType) {
-      return res
-        .status(404)
-        .json({ statusCode: 404, message: "Sub Property Type not found" });
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.subPropertyTypeNotFound,
+      });
     }
 
+    // Fetch the updated sub-property type with joined property type
     const updatedSubPropertyTypeWithPropertyType = await SubPropertyTypeModel.aggregate([
-      {
-        $match: { _id: updatedSubPropertyType._id }
-      },
+      { $match: { _id: updatedSubPropertyType._id } },
       {
         $lookup: {
           from: "propertytypes",
@@ -98,12 +94,7 @@ const updateSubPropertyType = async (req, res) => {
           as: "propertyTypesData",
         },
       },
-      {
-        $unwind: {
-          path: "$propertyTypesData",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $unwind: { path: "$propertyTypesData", preserveNullAndEmptyArrays: true } },
       {
         $project: {
           _id: 1,
@@ -114,79 +105,51 @@ const updateSubPropertyType = async (req, res) => {
       },
     ]);
 
-    res.status(200).json({
-      statusCode: 200,
-      message: "Sub Property Type updated successfully!",
-      data: updatedSubPropertyType,
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.subPropertyTypeUpdated,
+      data: updatedSubPropertyTypeWithPropertyType[0],
     });
   } catch (error) {
     console.error("Error while updating Sub Property Type:", error);
-    res.status(500).json({
-      statusCode: 500,
-      message: "Error updating Sub Property Type",
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorUpdatingSubPropType,
       error: error.message,
     });
   }
 };
 
-// Delete a sub property type
+// Delete a sub-property type
 const deleteSubPropertyType = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedSubPropertyType = await SubPropertyTypeModel.findByIdAndDelete(
-      id
-    );
+    const deletedSubPropertyType = await SubPropertyTypeModel.findByIdAndDelete(id);
 
     if (!deletedSubPropertyType) {
-      return res
-        .status(404)
-        .json({ statusCode: 404, message: "Sub Property Type not found" });
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.subPropertyTypeNotFound,
+      });
     }
 
-    const deletedSubPropertyTypeWithProperty = await SubPropertyTypeModel.aggregate([
-      {
-        $match: { _id: deletedSubPropertyType._id }
-      },
-      {
-        $lookup: {
-          from: "propertytypes",
-          localField: "propertyTypeId",
-          foreignField: "_id",
-          as: "propertyTypesData",
-        },
-      },
-      {
-        $unwind: {
-          path: "$propertyTypesData",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          subPropertyType: 1,
-          propertyTypeId: 1,
-          propertyType: "$propertyTypesData.propertyType",
-        },
-      },
-    ]);
-
-    res.status(200).json({
-      statusCode: 200,
-      message: "Sub Property Type deleted successfully!",
-      data: deletedSubPropertyTypeWithProperty[0],
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.subPropertyTypeDeleted,
+      data: deletedSubPropertyType,
     });
   } catch (error) {
     console.error("Error while deleting Sub Property Type:", error);
-    res.status(500).json({
-      statusCode: 500,
-      message: "Error deleting Sub Property Type",
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorDeletingSubPropType,
       error: error.message,
     });
   }
 };
 
+// Get all sub-property types with their property types
 const getSubPropertyType = async (req, res) => {
   try {
     const subpropertytypes = await SubPropertyTypeModel.aggregate([
@@ -198,12 +161,7 @@ const getSubPropertyType = async (req, res) => {
           as: "propertyTypesData",
         },
       },
-      {
-        $unwind: {
-          path: "$propertyTypesData",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $unwind: { path: "$propertyTypesData", preserveNullAndEmptyArrays: true } },
       {
         $project: {
           _id: 1,
@@ -216,18 +174,51 @@ const getSubPropertyType = async (req, res) => {
 
     const subPropertyTypesWithSrNo = subpropertytypes.map((subPropertyType, index) => ({
       srNo: index + 1,
-      subPropertyType, // Convert the Mongoose document to a plain JavaScript object
+      subPropertyType: {
+        _id: subPropertyType._id,
+        subPropertyType: subPropertyType.subPropertyType,
+        propertyTypeId: subPropertyType.propertyTypeId,
+        propertyType: subPropertyType.propertyType,
+      },
     }));
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
-      message: message.subPropertyTypeView,
+      message: message.subPropertyTypeRetrieved,
       data: subPropertyTypesWithSrNo,
     });
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorFetchingSubPropertyType,
+      message: message.errorFetchingSubPropTypes,
+      error: error.message,
+    });
+  }
+};
+
+// Delete multiple sub-property types
+const deleteMultipleSubPropertyTypes = async (req, res) => {
+  try {
+    const { ids } = req.body; // Pass an array of IDs
+
+    const deletedMultipleSubPropertyTypes = await SubPropertyTypeModel.deleteMany({ _id: { $in: ids } });
+
+    if (deletedMultipleSubPropertyTypes.deletedCount === 0) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingSubPropTypes,
+      });
+    }
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.subPropertyTypesDeleted,
+      deletedCount: deletedMultipleSubPropertyTypes.deletedCount,
+    });
+  } catch (error) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorDeletingSubPropertyTypes,
       error: error.message,
     });
   }
@@ -238,4 +229,5 @@ module.exports = {
   getSubPropertyType,
   updateSubPropertyType,
   deleteSubPropertyType,
+  deleteMultipleSubPropertyTypes,
 };

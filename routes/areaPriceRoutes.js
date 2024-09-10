@@ -10,5 +10,9 @@ router.post("/area-price/register", ensureAuthenticated, ensureAdmin,  areaPrice
 router.put("/area-price/update/:id",  ensureAuthenticated, ensureAdmin, areaPriceController.updateAreaPrice);
 router.delete("/area-price/delete/:id", ensureAuthenticated, ensureAdmin, areaPriceController.deleteAreaPrice);
 router.get("/area-prices", ensureAuthenticated, ensureAdmin, areaPriceController.getAreaPrices);
+router.post("/area-price/test", areaPriceController.createAreaPrice);
+router.post("/area-price/register", areaPriceController.createAreaPrice); // Test without middlewares
+router.delete("/area-price/multiple-delete", ensureAuthenticated, ensureAdmin, areaPriceController.deleteMultipleAreaPrices);
+
 
 module.exports = router;

@@ -26,7 +26,6 @@ const createBank = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorCreatingBank,
-      error: error.message,
     });
   }
 };
@@ -35,7 +34,6 @@ const createBank = async (req, res) => {
 const updateBank = async (req, res) => {
   try {
     const { id } = req.params;
-
     const { bankName } = req.body;
 
     const updatedBank = await BankModel.findByIdAndUpdate(
@@ -56,11 +54,11 @@ const updateBank = async (req, res) => {
       message: message.bankUpdated,
       data: updatedBank,
     });
+
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorUpdatingBank,
-      error: error.message,
     });
   }
 };
@@ -68,7 +66,8 @@ const updateBank = async (req, res) => {
 // Delete a bank
 const deleteBank = async (req, res) => {
   try {
-    const { id } = req.params;
+
+    const {id} = req.params;
 
     const deletedBank = await BankModel.findByIdAndDelete(id);
 
@@ -82,11 +81,12 @@ const deleteBank = async (req, res) => {
     res
       .status(statusCode.OK)
       .json({ statusCode: statusCode.OK, message: message.bankDeleted });
-  } catch (error) {
+  } 
+  
+  catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorDeletingBank,
-      error: error.message,
     });
   }
 };
@@ -107,12 +107,40 @@ const getBanks = async (req, res) => {
       message: message.banksView,
       data: banksWithSrNo,
     });
-  } catch (error) {
+  } 
+  
+  catch (error) {
     console.error("Error while fetching banks:", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorFetchingBanks,
-      error: error.message,
+    });
+  }
+};
+// Delete multiple banks
+const deleteMultipleBanks = async (req, res) => {
+  try {
+    const { ids } = req.body; // Pass an array of ids
+
+    const deletedBanks = await BankModel.deleteMany({ _id: { $in: ids } });
+
+    if (deletedBanks.deletedCount === 0) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingBank,
+      });
+    }
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.banksDeleted,
+      deletedCount: deletedBanks.deletedCount,
+    });
+    
+  } catch (error) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorDeletingBanks,
     });
   }
 };
@@ -122,4 +150,5 @@ module.exports = {
   updateBank,
   deleteBank,
   getBanks,
+  deleteMultipleBanks
 };
