@@ -1,16 +1,12 @@
 const mongoose = require('mongoose');
 
 const CitySchema = new mongoose.Schema({
-    cityName: {
-        type: String,
-        required: true,
-        minlength: 3,
-        maxlength: 100
+    city: {
+        type: String
     },
-    state_id: {
+    stateId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'State',
-        required: true
+        ref: 'State'
     }
 });
 

@@ -1,61 +1,126 @@
 const CityModel = require("../models/city");
+const StateModel = require("../models/state");
+const { statusCode, message } = require("../utils/api.response");
 
 // Create a new city
 const cityRegister = async (req, res) => {
   try {
-    const { cityName, state_id } = req.body;
+    const { city, stateId } = req.body;
 
-    const cityExists = await CityModel.findOne({ cityName, state_id });
+    const cityExists = await CityModel.findOne({ city });
     if (cityExists) {
-      return res
-        .status(400)
-        .json({ statusCode: 400, message: "City already exists" });
+      return res.status(statusCode.CONFLICT).json({
+        statusCode: statusCode.CONFLICT,
+        message: message.cityAlreadyExists,
+      });
     }
 
     const newCity = new CityModel({
-      cityName,
-      state_id,
+      city,
+      stateId,
     });
 
     const savedCity = await newCity.save();
-    res
-      .status(201)
-      .json({ statusCode: 201, message: "City registered", data: savedCity });
+
+    // Use aggregation to fetch state details with the newly created city
+    const registeredCity = await CityModel.aggregate([
+      {
+        $match: { _id: savedCity._id },
+      },
+      {
+        $lookup: {
+          from: "states",
+          localField: "stateId",
+          foreignField: "_id",
+          as: "stateData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$stateData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          city: 1,
+          stateId: 1,
+          state: "$stateData.state",
+        },
+      },
+    ]);
+
+    res.status(statusCode.CREATED).json({
+      statusCode: statusCode.CREATED,
+      message: message.cityCreated,
+      data: registeredCity[0],
+    });
   } catch (error) {
-    console.log("Error while registering city:", error);
-    res
-      .status(500)
-      .json({
-        statusCode: 500,
-        message: "Error registering city",
-        error: error.message,
-      });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorCreatingCity,
+      error: error.message,
+    });
   }
 };
 
 const updateCity = async (req, res) => {
   try {
-    const { cityId, cityName, state_id } = req.body; // Destructure cityId from req.body
-
-    console.log(cityName);
+    const { id } = req.params;
+    const { city, stateId } = req.body;
 
     const updatedCity = await CityModel.findByIdAndUpdate(
-      cityId, 
-      { cityName, state_id },
-      { new: true } // Return the updated document
+      id,
+      { city, stateId },
+      { new: true }
     );
 
     if (!updatedCity) {
-      return res.status(404).json({ error: "City not found" });
-    } // if the city id is not found then throw an error
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingCity,
+      });
+    }
 
-    res.status(200).json({
-      statusCode: 200, // If the city is updated successfully
-      message: "City updated successfully!",
-      data: updatedCity,
+    // Use aggregation to fetch state details with the updated city
+    const updatedCityWithState = await CityModel.aggregate([
+      {
+        $match: { _id: updatedCity._id },
+      },
+      {
+        $lookup: {
+          from: "states",
+          localField: "stateId",
+          foreignField: "_id",
+          as: "stateData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$stateData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          city: 1,
+          stateId: 1,
+          state: "$stateData.state",
+        },
+      },
+    ]);
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.cityUpdated,
+      data: updatedCityWithState[0],
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorUpdatingCity,
       error: error.message,
     });
   }
@@ -63,45 +128,112 @@ const updateCity = async (req, res) => {
 
 const deleteCity = async (req, res) => {
   try {
-    const city_id = req.body.id;
+    const { id } = req.params;
 
-    const deletedCity = await CityModel.findByIdAndDelete(city_id); // Delete user data from database by its ID
+    // // Find city before deletion to return it later
+    // const cityToDelete = await CityModel.findById(id);
 
+    // if (!cityToDelete) {
+    //   return res.status(statusCode.NOT_FOUND).json({
+    //     statusCode: statusCode.NOT_FOUND,
+    //     message: message.errorFetchingCity,
+    //   });
+    // }
+
+    const deletedCity = await CityModel.findByIdAndDelete(id);
     if (!deletedCity) {
-      return res.status(404).json({ error: "City not found" });
-    } // If Id not found then throw the error
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.cityNotFound,
+      });
+    }
 
-    res.status(200).json({
-      statusCode: 200,
-      message: "City deleted successfully!",
+    // Perform the state lookup for the deleted city
+    const deletedCityWithState = await CityModel.aggregate([
+      {
+        $match: { _id: deletedCity._id },
+      },
+      {
+        $lookup: {
+          from: "states",
+          localField: "stateId",
+          foreignField: "_id",
+          as: "stateData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$stateData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          city: 1,
+          stateId: 1,
+          state: "$stateData.state",
+        },
+      },
+    ]);
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.cityDeleted,
+      data: deletedCityWithState[0],
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorDeletingCity,
       error: error.message,
     });
   }
 };
 
-
 const getCity = async (req, res) => {
   try {
-    const cityId = req.params.id;
+    const cities = await CityModel.aggregate([
+      {
+        $lookup: {
+          from: "states",
+          localField: "stateId",
+          foreignField: "_id",
+          as: "stateData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$stateData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          city: 1,
+          stateId: 1,
+          state: "$stateData.state",
+        },
+      },
+    ]);
 
-    if (cityId) {
-      const city = await CityModel.findById(cityId).populate("state_id");
+    const citiesWithSrNo = cities.map((city, index) => ({
+      srNo: index + 1,
+      city, // Convert the Mongoose document to a plain JavaScript object
+    }));
 
-      if (!city) {
-        return res.status(404).json({ statusCode: 404, message: "City not found" });
-      }
-
-      res.status(200).json({ statusCode: 200, data: city });
-    } else {
-      const cities = await CityModel.find().populate("state_id");
-      res.status(200).json({ statusCode: 200, data: cities });
-    }
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.citiesView,
+      data: citiesWithSrNo,
+    });
   } catch (error) {
-    console.log("Error while fetching cities:", error);
-    res.status(500).json({ statusCode: 500, message: "Error fetching states", error });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorFetchingCities,
+      error: error.message,
+    });
   }
 };
 

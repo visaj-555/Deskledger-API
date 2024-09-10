@@ -1,113 +1,128 @@
 const StateModel = require("../models/state");
+const { statusCode, message } = require("../utils/api.response");
 
 // Create a new state
 const stateRegister = async (req, res) => {
   try {
-    const { stateName} = req.body;
+    const { state } = req.body;
+    console.log("State: " + state);
 
-    const stateExists = await StateModel.findOne({ stateName});
+    const stateExists = await StateModel.findOne({ state });
+    console.log("StateExists: " + stateExists);
     if (stateExists) {
-      return res
-        .status(400)
-        .json({ statusCode: 400, message: "State already exists" });
-    }
-
-    const newState = new StateModel({ stateName });
-    const savedState = await newState.save();
-
-    res
-      .status(201)
-      .json({ statusCode: 201, message: "State registered", data: savedState });
-  } catch (error) {
-    console.error("Error while registering state:", error);
-    res
-      .status(500)
-      .json({
-        statusCode: 500,
-        message: "Error registering state",
-        error: error.message,
+      return res.status(statusCode.CONFLICT).json({
+        statusCode: statusCode.CONFLICT,
+        message: message.stateAlreadyExists,
       });
-  }
-};
-
-const updateState = async (req, res) => {
-  try {
-    const { stateId, stateName} = req.body;
-
-    console.log(stateName);
-
-    const updatedState = await StateModel.findByIdAndUpdate(
-      stateId,
-      { stateName},
-      { new: true }
-    );
-
-    if (!updatedState) {
-      return res.status(404).json({ statusCode: 404, message: 'State not found' });
     }
 
-    res.status(200).json({
-      statusCode: 200,
-      message: 'State updated successfully!',
-      data: updatedState,
+    const newState = new StateModel({ state });
+    console.log("New State: " + newState);
+
+    const savedState = await newState.save();
+    console.log("Saved State: " + savedState);
+
+    res.status(statusCode.CREATED).json({
+      statusCode: statusCode.CREATED,
+      message: message.stateCreated,
+      data: savedState,
     });
+
   } catch (error) {
-    console.error('Error while updating state:', error);
-    res.status(500).json({
-      statusCode: 500,
-      message: 'Error updating state',
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorCreatingState,
       error: error.message,
     });
   }
 };
 
+const updateState = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { state } = req.body;
+
+    console.log(id);
+    console.log(state);
+
+    const updatedState = await StateModel.findByIdAndUpdate(
+      id,
+      { state },
+      { new: true }
+    );
+
+    if (!updatedState) {
+      return res
+      .status(statusCode.NOT_FOUND)
+      .json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingState,
+      });
+  }
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.stateUpdated,
+      data: updatedState,
+    });
+  } catch (error) {
+    console.error("Error while updating state:", error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorUpdatingState,
+      error: error.message,
+    });
+  }
+};
 
 const deleteState = async (req, res) => {
   try {
-    const { id } = req.body;
+    const { id } = req.params;
 
     const deletedState = await StateModel.findByIdAndDelete(id);
 
     if (!deletedState) {
       return res
-        .status(404)
-        .json({ statusCode: 404, message: "State not found" });
-    }
-
-    res
-      .status(200)
-      .json({ statusCode: 200, message: "State deleted successfully!" });
-  } catch (error) {
-    console.error("Error while deleting state:", error);
-    res
-      .status(500)
+      .status(statusCode.NOT_FOUND)
       .json({
-        statusCode: 500,
-        message: "Error deleting state",
-        error: error.message,
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingState,
       });
   }
+  res
+  .status(statusCode.OK)
+  .json({ statusCode: statusCode.OK, message: message.stateDeleted });
+} catch (error) {
+res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+  statusCode: statusCode.INTERNAL_SERVER_ERROR,
+  message: message.errorDeletingState,
+  error: error.message,
+});
+}
 };
 
 const getState = async (req, res) => {
   try {
-    const stateId = req.params.id;
+    const states = await StateModel.find();
 
-    if (stateId) {
-      const state = await StateModel.findById(stateId).populate();
+    // Add srNo to each bank, starting from 1
+    const statesWithSrNo = states.map((bank, index) => ({
+      srNo: index + 1,
+      ...bank.toObject(), // Convert the Mongoose document to a plain JavaScript object
+    }));
 
-      if (!state) {
-        return res.status(404).json({ statusCode: 404, message: "State not found" });
-      }
-
-      res.status(200).json({ statusCode: 200, data: state });
-    } else {
-      const states = await StateModel.find().populate();
-      res.status(200).json({ statusCode: 200, data: states });
-    }
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.statesView,
+      data: statesWithSrNo,
+    });
   } catch (error) {
-    console.error("Error while fetching states:", error);
-    res.status(500).json({ statusCode: 500, message: "Error fetching states", error: error.message });
+    console.error("Error while fetching banks:", error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorFetchingStates,
+      error: error.message,
+    });
   }
 };
 
@@ -117,4 +132,3 @@ module.exports = {
   updateState,
   deleteState,
 };
-

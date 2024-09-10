@@ -17,7 +17,6 @@ const {
   newPassword
 } = require("../controllers/userController");
 
-
 // FIXED DEPOSIT
 const {
   fixedDepositRegister,
@@ -87,24 +86,30 @@ const {
   deleteCity
 } = require('../controllers/cityController');
 
-// VALIDATORS
 const {
-  userRegisterValidate,
-  userLoginValidate,
-} = require("../validation/userValidator");
+  propertyTypeRegister,
+  updatePropertyType,
+  deletePropertyType,
+  getPropertyType,
+} = require('../controllers/propertyTypeController');
+
+const {
+  subPropertyTypeRegister,
+  getSubPropertyType,
+  updateSubPropertyType,
+  deleteSubPropertyType,
+} = require('../controllers/subPropertyTypeController');
+
+// VALIDATORS
+const { userRegisterValidate, userLoginValidate} = require("../validation/userValidator");
 const { ensureAuthenticated, ensureAdmin } = require("../validation/authValidator");
 const { validateFixedDeposit } = require("../validation/fdValidator");
 const { upload, multerErrorHandling  } = require("../validation/upload");
 
-const {
-  stateValidate
-} = require('../validation/stateValidation');
+// ------------USER------------ //
 
-const {
-  cityValidate
-} = require('../validation/cityValidation');
 
-// User routes
+//User routes
 router.post("/user/login", userLoginValidate, loginUser);
 router.post("/user/register", userRegisterValidate, registerUser);
 router.get("/users", getUsers);
@@ -168,22 +173,28 @@ router.put("/area-price/update/:id",  ensureAuthenticated, ensureAdmin, updateAr
 router.delete("/area-price/delete/:id", ensureAuthenticated, ensureAdmin, deleteAreaPrice);
 router.get("/area-prices", ensureAuthenticated, ensureAdmin, getAreaPrices);
 
-
 // State routes
-router.post('/state', stateValidate, stateRegister);
-router.put('/state/update', stateValidate, updateState);
-router.get('/states', getState);
-router.get('/states/:id', getState);
-router.delete('/state/delete', deleteState);
+router.post('/state', ensureAuthenticated, ensureAdmin, stateRegister);
+router.put('/state/update/:id',ensureAuthenticated, ensureAdmin,  updateState);
+router.get('/states',ensureAuthenticated, ensureAdmin, getState);
+router.delete('/state/delete/:id',ensureAuthenticated, ensureAdmin, deleteState);
 
 // City routes
-router.post('/city', cityValidate, cityRegister);
-router.put('/city/update', cityValidate, updateCity);
-router.get('/cities', getCity);
-router.get('/cities/:id', getCity);
-router.delete('/city/delete', deleteCity);
+router.post('/city', ensureAuthenticated, ensureAdmin, cityRegister);
+router.put('/city/update/:id', ensureAuthenticated, ensureAdmin, updateCity);
+router.get('/cities',ensureAuthenticated, ensureAdmin, getCity);
+router.delete('/city/delete/:id', ensureAuthenticated, ensureAdmin, deleteCity);
 
+// Property type routes
+router.post('/propertytype', ensureAuthenticated, ensureAdmin,  propertyTypeRegister);
+router.put('/propertytype/update/:id', ensureAuthenticated, ensureAdmin, updatePropertyType);
+router.delete('/propertytype/delete/:id',ensureAuthenticated, ensureAdmin, deletePropertyType);
+router.get('/propertytypes',ensureAuthenticated, ensureAdmin, getPropertyType);
 
-
+// Sub property type routes
+router.post('/subpropertytype', ensureAuthenticated, ensureAdmin,  subPropertyTypeRegister);
+router.put('/subpropertytype/update/:id', ensureAuthenticated, ensureAdmin, updateSubPropertyType);
+router.delete('/subpropertytype/delete/:id',ensureAuthenticated, ensureAdmin, deleteSubPropertyType);
+router.get('/subpropertytypes',ensureAuthenticated, ensureAdmin, getSubPropertyType);
 
 module.exports = router;

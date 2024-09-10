@@ -409,8 +409,6 @@ const getInvestmentsBySector = async (req, res) => {
     }
 };
 
-
-
 // INVESTMENT IN SECTOR BY ID
 const getInvestmentById = async (req, res) => {
     const { id } = req.params;
@@ -443,6 +441,18 @@ const getInvestmentById = async (req, res) => {
         });
     }
 };
+
+//==================== COMMON DASHBOARD API ==========================
+const getDashboardData= async(req, res)=>{
+    try {
+    } catch (error) {
+        console.log("getting error while get dashboard data",  error);
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+            statusCode: statusCode.INTERNAL_SERVER_ERROR,
+            message: message.errorFetchingInvestment,
+        });
+    }
+}
 
 
 module.exports = {

@@ -13,18 +13,16 @@ const ensureAuthenticated = async (req, res, next) => {
         } // authorization header check 
 
         const token = bearheader.split(" ")[1]; // token extraction
-        console.log("Token received:", token);  
 
         const is_user = await TokenModel.findOne({ token });
         if (!is_user) { // token existence check in db 
-            console.log("Token not found in database");
             return res.status(statusCode.UNAUTHORIZED).json({ statusCode: statusCode.UNAUTHORIZED, message: message.tokenNotFound });
         } // token verification
 
         try {
             const decoded = jwt.verify(token, process.env.SECRET);
-            console.log("Decoded token:", decoded);
-            req.user = { id: decoded.id }; // Ensure req.user ias set with the correct property
+            req.user = { id: decoded.id }; 
+            // Ensure req.user ias set with the correct property
             next(); // Error handling
         } catch (err) { 
             console.error("Token verification failed:", err);
@@ -39,10 +37,7 @@ const ensureAuthenticated = async (req, res, next) => {
 const ensureAdmin = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        console.log("User ID:", userId);
-
         const user = await UserModel.findById(userId);
-        console.log("User found:", user);
 
         if (!user || !user.is_admin) {
             console.log("User is not an admin or does not exist");
