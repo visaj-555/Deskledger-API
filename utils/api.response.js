@@ -12,8 +12,31 @@ const statusCode = {
   INTERNAL_SERVER_ERROR: 500,
 };
 const message = {
+
+  //Real Estate 
+  PropertyAdded : "Property Added Successfully",
+  propertyNotFound : "Property Not Found",
+  propertyDeleted: "Property Deleted Successfully",
+  propertyView: "Property retrieved successfully",
+  propertyUpdated: "Property Updated Successfully",
+  propertiesDeleted: "Multiple Properties Deleted Successfully",
+  propertyAlreadyExists: "Property Already exists",
+  updatedRealEstateAnalysis : "Real Estate Analysis",
+  propertyNotFound : "Property Not Found",
+  propertiesDeleted : "Properties Deleted Successfully",
+  propertiesView: "Properties retrieved successfully",
+  errorCreatingProperty : "Error Adding Property",
+  errorDeletingProperty: "Error Deleting Property",
+  errorDeletingProperties: "Error Deleting Properties",
+  errorFetchingProperty: "Error Fetching Property",
+  errorFetchingPropertyAnalysis : "Error Fetching Analysis Data",
+  errorFetchingProperties: "Error Fetching Properties",
+  errorUpdatingProperty: "Error Updating Property",
+  errorFetchingRealEstateAnalytics : "Error Fetching Real Estate Analysis",
+
   // Area Price  
   areaPriceCreated: "Area Price Added Successfully",
+  areaPriceNotFound : "Area Price Not Found",
   areaPriceDeleted: "Area Price Deleted Successfully",
   areaPriceRetrieved: "Area price retrieved successfully",
   areaPriceUpdated: "Area Price Updated Successfully",
@@ -45,6 +68,7 @@ const message = {
   cityCreated: "City registered successfully",
   cityDeleted: "City deleted successfully",
   cityUpdated: "City updated successfully",
+  citiesDeleted : "Cities Deleted Successfully",
   cityAlreadyExists: "City already exists",
   cityNotFound: "City not found",
   errorCreatingCity: "Error creating city",
@@ -107,6 +131,8 @@ const message = {
   passwordIncorrect: "Invalid password",
   passwordNotMatch: "Passwords do not match",
   unAuthUser: "Unauthorized User",
+  resetPasswordSuccess : "Reset Password Successfully",
+  resetPasswordError : "Error Resetting Password",
 
   // Gold Management
   analysisReportofFd: "Analysis Report of all the fixed deposits",
@@ -125,12 +151,15 @@ const message = {
   goldNotFound: "Gold records not found",
   goldNotFetch: "Gold Master data is not available",
   goldRecords: "Gold records fetched successfully",
+  
 
   // Property
   propertyTypeCreated: "Property-Type registered successfully",
   propertyTypeDeleted: "Property-Type deleted successfully",
   propertyTypeUpdated: "Property-Type updated successfully",
   propertyTypeView: "Property-Types retrieved successfully",
+  propertyTypesDeleted : "Property Types Deleted Successfully",
+  errorDeletingPropertyTypes : "Error Deleting Multiple Property Types",
   propertyTypeAlreadyExists: "Property Type already exists",
   propertyTypeNotFound: "Property type not found",
   errorFetchingPropertyType: "Error fetching property type",
@@ -157,6 +186,7 @@ const message = {
   stateUpdated: "State updated successfully",
   stateView: "State retrieved successfully",
   statesView: "States retrieved successfully",
+  statesDeleted : "States Deleted Successfully",
   stateAlreadyExists: "State already exists",
   stateNotFound: "State not found",
   errorCreatingState: "Error creating state",

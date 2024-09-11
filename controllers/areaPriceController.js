@@ -31,11 +31,11 @@ const createAreaPrice = async (req, res) => {
 const updateAreaPrice = async (req, res) => {
   try {
     const {id} =  req.params;
-    const { areaName, pricePerSquareFoot } = req.body;
+    const {cityId, stateId, areaName, pricePerSquareFoot } = req.body;
 
     const updatedAreaPrice = await AreaPriceModel.findByIdAndUpdate(
       id,
-      { areaName, pricePerSquareFoot },
+      { cityId, stateId, areaName, pricePerSquareFoot },
       { new: true }
     );
 
@@ -100,18 +100,24 @@ const getAreaPrices = async (req, res) => {
         },
       },
       {
-        $unwind: "$cityData",
+        $unwind: {
+          path: "$cityData",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
-        $unwind: "$stateData",
+        $unwind: {
+          path: "$stateData",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
           _id: 1,
           areaName: 1,
           pricePerSquareFoot: 1,
-          city: "$cityData.city",
-          state: "$stateData.state",
+          city: "$cityData.city", 
+          state: "$stateData.state", 
         },
       },
     ]);
@@ -127,6 +133,7 @@ const getAreaPrices = async (req, res) => {
       data: areaPricesWithSrNo,
     });
   } catch (error) {
+    console.error("Error fetching area prices:", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorFetchingAreaPrice,

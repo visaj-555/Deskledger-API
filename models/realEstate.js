@@ -41,6 +41,10 @@ const RealEstateSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'State' 
     },
+    areaName: {
+        type: String, // Add the area name field
+        required: true
+    },
     areaInSquareFeet: {
         type: Number, // Area of the property in square feet
         required: true

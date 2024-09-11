@@ -77,7 +77,6 @@ const loginUser = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.SECRET, {
-      expiresIn: "1d",
     });
 
     // Save the token in the database with the userId
@@ -342,7 +341,6 @@ const forgotPassword = async (req, res) => {
 
   try {
     const { email } = req.body;
-    console.log("Email received:", email);
     const user = await UserModel.findOne({ email });
 
     if (!user) {

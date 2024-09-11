@@ -11,7 +11,7 @@ router.delete('/bank-delete/:id',  ensureAuthenticated, ensureAdmin, bankControl
 router.put('/bank-update/:id', ensureAuthenticated, ensureAdmin, bankController.updateBank);
 router.get('/banks', ensureAuthenticated, ensureAdmin, bankController.getBanks);
 router.get('/banks-dropdown-user', ensureAuthenticated, bankController.getBanks);
-router.delete('/banks/multiple-delete',  ensureAuthenticated, ensureAdmin, bankController.deleteBank);
+router.delete('/banks/multiple-delete',  ensureAuthenticated, ensureAdmin, bankController.deleteMultipleBanks);
 
 
 module.exports = router;

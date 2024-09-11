@@ -430,58 +430,7 @@ const getInvestmentsBySector = async (req, res) => {
   }
 };
 
-// INVESTMENT IN SECTOR BY ID
-const getInvestmentById = async (req, res) => {
-  const { id } = req.params;
-  const { startDate, endDate } = req.query;
-  const dateFilters = getDateFilters(startDate, endDate);
 
-  try {
-    const investmentFD = await FixedDeposit.findOne({
-      _id: id,
-      userId: req.user.id,
-      createdAt: dateFilters,
-    });
-    const investmentGold = await GoldModel.findOne({
-      _id: id,
-      userId: req.user.id,
-      createdAt: dateFilters,
-    });
-
-    const investment = investmentFD || investmentGold;
-
-    if (!investment) {
-      return res.status(statusCode.NOT_FOUND).json({
-        statusCode: statusCode.NOT_FOUND,
-        message: message.errorFetchingInvestment,
-      });
-    }
-
-    res.status(statusCode.OK).json({
-      statusCode: statusCode.OK,
-      message: message.investmentById,
-      data: investment,
-    });
-  } catch (error) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorFetchingInvestment,
-      error: error.message,
-    });
-  }
-};
-
-//==================== COMMON DASHBOARD API ==========================
-const getDashboardData = async (req, res) => {
-  try {
-  } catch (error) {
-    console.log("getting error while get dashboard data", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorFetchingInvestment,
-    });
-  }
-};
 
 module.exports = {
   getOverallAnalysis,
@@ -489,5 +438,4 @@ module.exports = {
   getHighestGrowthInSector,
   getTopGainers,
   getInvestmentsBySector,
-  getInvestmentById,
 };

@@ -121,6 +121,8 @@ const getBanks = async (req, res) => {
 const deleteMultipleBanks = async (req, res) => {
   try {
     const { ids } = req.body; // Pass an array of ids
+    console.log(ids);
+    console.log("Request Body : ", req.body)
 
     const deletedBanks = await BankModel.deleteMany({ _id: { $in: ids } });
 

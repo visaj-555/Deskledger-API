@@ -215,12 +215,12 @@ const deleteMultipleSubPropertyTypes = async (req, res) => {
       message: message.subPropertyTypesDeleted,
       deletedCount: deletedMultipleSubPropertyTypes.deletedCount,
     });
+
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorDeletingSubPropertyTypes,
-      error: error.message,
-    });
+      message: message.errorDeletingSubPropertyTypes
+  });
   }
 };
 

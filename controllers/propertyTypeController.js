@@ -5,7 +5,6 @@ const propertyTypeRegister = async (req, res) => {
   try {
     const { propertyType } = req.body;
 
-    console.log("Property Type :  ", propertyType);
 
     const PropertyTypeExists = await PropertyTypeModel.findOne({
       propertyType,
@@ -20,7 +19,6 @@ const propertyTypeRegister = async (req, res) => {
     const newPropertyType = new PropertyTypeModel({ propertyType });
     const savedPropertyType = await newPropertyType.save();
 
-    console.log(savedPropertyType);
 
     res.status(statusCode.CREATED).json({
       statusCode: statusCode.CREATED,

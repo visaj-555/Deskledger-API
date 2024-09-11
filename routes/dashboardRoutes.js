@@ -9,7 +9,6 @@ router.get("/combined-num-analysis", ensureAuthenticated, dashboardController.ge
 router.get("/investments/highest-growth/:sector", ensureAuthenticated, dashboardController.getHighestGrowthInSector);
 router.get("/top-gainers", ensureAuthenticated, dashboardController.getTopGainers);
 router.get("/investments-by-sector/:sector",ensureAuthenticated, dashboardController.getInvestmentsBySector);
-router.get("/investments/:id", ensureAuthenticated, dashboardController.getInvestmentById);
 
 
 module.exports = router;

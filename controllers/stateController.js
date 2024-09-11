@@ -5,10 +5,8 @@ const { statusCode, message } = require("../utils/api.response");
 const stateRegister = async (req, res) => {
   try {
     const { state } = req.body;
-    console.log("State: " + state);
 
     const stateExists = await StateModel.findOne({ state });
-    console.log("StateExists: " + stateExists);
     if (stateExists) {
       return res.status(statusCode.CONFLICT).json({
         statusCode: statusCode.CONFLICT,
@@ -17,10 +15,8 @@ const stateRegister = async (req, res) => {
     }
 
     const newState = new StateModel({ state });
-    console.log("New State: " + newState);
 
     const savedState = await newState.save();
-    console.log("Saved State: " + savedState);
 
     res.status(statusCode.CREATED).json({
       statusCode: statusCode.CREATED,
@@ -42,9 +38,7 @@ const updateState = async (req, res) => {
     const { id } = req.params;
     const { state } = req.body;
 
-    console.log(id);
-    console.log(state);
-
+   
     const updatedState = await StateModel.findByIdAndUpdate(
       id,
       { state },
@@ -129,7 +123,7 @@ const getState = async (req, res) => {
 // Delete multiple states
 const deleteMultipleStates = async (req, res) => {
   try {
-    const { ids } = req.body; // Pass an array of ids
+    const { ids } = req.body; 
 
     const deletedStates = await StateModel.deleteMany({ _id: { $in: ids } });
 

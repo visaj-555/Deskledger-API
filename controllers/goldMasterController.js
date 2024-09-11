@@ -119,6 +119,8 @@ const getGoldMasterInfo = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   goldMasterInfoRegister, 
   updateGoldMasterInfo, 
