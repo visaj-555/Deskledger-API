@@ -22,7 +22,7 @@ const ensureAuthenticated = async (req, res, next) => {
         try {
             const decoded = jwt.verify(token, process.env.SECRET);
             req.user = { id: decoded.id }; 
-            // Ensure req.user ias set with the correct property
+            // Ensure req.user is set with the correct property
             next(); // Error handling
         } catch (err) { 
             console.error("Token verification failed:", err);
@@ -50,7 +50,5 @@ const ensureAdmin = async (req, res, next) => {
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: message.errorCheckingAdminStatus, error: error.message });
     }
 };
-
-
 
 module.exports = { ensureAuthenticated, ensureAdmin };

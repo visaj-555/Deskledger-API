@@ -4,6 +4,7 @@ const { userLoginValidate , userRegisterValidate } = require('../validation/user
 const Router= require('express').Router()
 
 Router.post('/user/login', userLoginValidate, userController.loginUser)
+Router.post('/user/logout', ensureAuthenticated, userController.logoutUser)
 Router.post('/user/register', userRegisterValidate, userController.registerUser);
 Router.get("/user-profile/:id",  ensureAuthenticated, userController.getUser);
 Router.put("/user-profile/update/:id", ensureAuthenticated, userController.updateUser);

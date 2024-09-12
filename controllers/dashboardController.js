@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const FixedDepositModel = require("../models/fixedDeposit");
 const GoldModel = require("../models/goldModel");
-const GoldAnalysisModel = require("../models/goldAnalysis");
+const RealEstateModel = require("../models/realEstate");
 const { formatAmount } = require("../utils/formatAmount");
 const { statusCode, message } = require("../utils/api.response");
 
@@ -67,18 +67,43 @@ const getOverallAnalysis = async (req, res) => {
       },
     ]);
 
-    // Combine FD and Gold data and format the amounts
+    // Create the match object for Real Estate data
+    const realEstateMatch = { userId: new mongoose.Types.ObjectId(userId) };
+    if (startDate || endDate) {
+      realEstateMatch.createdAt = getDateFilters(startDate, endDate);
+    }
+
+    // Aggregate Real Estate data
+    const realEstateAnalysis = await RealEstateModel.aggregate([
+      { $match: realEstateMatch },
+      {
+        $group: {
+          _id: null,
+          totalInvestedAmount: { $sum: "$purchasePrice" },
+          currentReturnAmount: { $sum: "$currentValue" },
+          totalReturnAmount: { $sum: "$currentValue" },
+          profitAmount: { $sum: "$profit" },
+        },
+      },
+    ]);
+    
+    // Combine FD, Gold and Real Estate data and format the amounts
     const totalInvestedAmount =
       (fdAnalysis[0]?.totalInvestedAmount || 0) +
-      (goldAnalysis[0]?.totalInvestedAmount || 0);
+      (goldAnalysis[0]?.totalInvestedAmount || 0) +
+      (realEstateAnalysis[0]?.totalInvestedAmount || 0);
     const currentReturnAmount =
       (fdAnalysis[0]?.currentReturnAmount || 0) +
-      (goldAnalysis[0]?.currentReturnAmount || 0);
+      (goldAnalysis[0]?.currentReturnAmount || 0) +
+      (realEstateAnalysis[0]?.currentReturnAmount || 0);
     const totalReturnAmount =
       (fdAnalysis[0]?.totalReturnAmount || 0) +
-      (goldAnalysis[0]?.totalReturnAmount || 0);
+      (goldAnalysis[0]?.totalReturnAmount || 0) +
+      (realEstateAnalysis[0]?.currentReturnAmount || 0);
     const profitAmount =
-      (fdAnalysis[0]?.profitAmount || 0) + (goldAnalysis[0]?.profitAmount || 0);
+      (fdAnalysis[0]?.profitAmount || 0) +
+      (goldAnalysis[0]?.profitAmount || 0) +
+      (realEstateAnalysis[0]?.profitAmount || 0);
 
     const overallAnalysis = {
       totalInvestedAmount: formatAmount(totalInvestedAmount),
@@ -90,9 +115,10 @@ const getOverallAnalysis = async (req, res) => {
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
-      message: "Analysis Report of all the fixed deposits",
+      message: message.overAllAnalysis,
       data: overallAnalysis,
     });
+
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
@@ -136,15 +162,7 @@ const getCombinedNumAnalysis = async (req, res) => {
       totalProfitGainedOfGold: Math.round(
         goldAnalysis[0]?.totalProfitGainedOfGold || 0
       ),
-      userId: userId,
     };
-
-    // Save Gold Analysis to GoldAnalysisModel
-    await GoldAnalysisModel.findOneAndUpdate(
-      { userId },
-      { $set: goldAnalysisData },
-      { upsert: true, new: true }
-    );
 
     // Aggregate Fixed Deposit data
     const fdAnalysis = await FixedDepositModel.aggregate([
@@ -177,21 +195,46 @@ const getCombinedNumAnalysis = async (req, res) => {
       totalProfitGainedOfFds: Math.round(
         fdAnalysis[0]?.totalProfitGainedOfFds || 0
       ),
-      userId: userId,
+    };
+
+    // Aggregate Real Estate data
+    const realEstateAnalysis = await RealEstateModel.aggregate([
+  { $match: match },
+  {
+    $group: {
+      _id: null, // Add this to ensure aggregation returns a single result
+      totalInvestedAmountOfRealEstate: { $sum: "$purchasePrice" },
+      currentReturnAmountOfRealEstate: { $sum: "$currentValue" },
+      totalProfitGainedOfRealEstate: { $sum: "$profit" },
+    },
+  },
+    ]);
+
+    const realEstateAnalysisData = {
+  totalInvestedAmountOfRealEstate: Math.round(
+    realEstateAnalysis[0]?.totalInvestedAmountOfRealEstate || 0
+  ),
+  currentReturnAmountOfRealEstate: Math.round(
+    realEstateAnalysis[0]?.currentReturnAmountOfRealEstate || 0
+  ),
+  totalProfitGainedOfRealEstate: Math.round(
+    realEstateAnalysis[0]?.totalProfitGainedOfRealEstate || 0
+  ),
     };
 
     // Return Combined Analysis
-    res.status(statusCode.OK).json({
-      statusCode: statusCode.OK,
-      message: message.combinedNumAnalysis,
-      data: { goldAnalysisData, fdAnalysisData },
-    });
-  } catch (error) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorCombinedNumAnalysis,
-    });
-  }
+        res.status(statusCode.OK).json({
+          statusCode: statusCode.OK,
+          message: message.combinedNumAnalysis,
+          data: { goldAnalysisData, fdAnalysisData, realEstateAnalysisData},
+        });
+
+      } catch (error) {
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+          statusCode: statusCode.INTERNAL_SERVER_ERROR,
+          message: message.errorCombinedNumAnalysis,
+        });
+      }
 };
 
 // HIGHEST GROWTH PIE CHART
@@ -227,7 +270,6 @@ const getHighestGrowthInSector = async (req, res) => {
           )
           .lean();
         break;
-
       case "gold":
         highestGrowth = await GoldModel.findOne({
           sector: "Gold",
@@ -243,12 +285,30 @@ const getHighestGrowthInSector = async (req, res) => {
           .lean();
         break;
 
+        case "realestate":
+          highestGrowth = await RealEstateModel.findOne({
+            sector: "Real Estate",
+            userId: req.user.id,
+            ...(Object.keys(dateFilters).length
+              ? { createdAt: dateFilters }
+              : {}),
+          })
+            .sort({ currentValue: -1 })
+            .select(
+              "areaName areaInSquareFeet purchasePrice currentValue profit cityId"
+            )
+            .lean();
+          break;  
+
       default:
         return res.status(statusCode.BAD_REQUEST).json({
           statusCode: statusCode.BAD_REQUEST,
           message: message.errorFetchingSector,
         });
     }
+
+    console.log("FD : ", highestGrowth);
+
 
     if (!highestGrowth) {
       highestGrowth = {
@@ -263,6 +323,11 @@ const getHighestGrowthInSector = async (req, res) => {
         fdType: "",
         interestRate: 0,
         tenureInYears: 0,
+        areaName : "",
+        areaInSquareFeet : 0,
+        purchasePrice : 0,
+        currentValue : 0,
+        profit : 0,
       };
     }
 
@@ -340,8 +405,35 @@ const getTopGainers = async (req, res) => {
       },
     ]);
 
+    // Get top gainers from Real Estate
+    const topGainersRealEstate = await RealEstateModel.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          ...((startDate || endDate) && { createdAt: dateFilters }), // Apply date filters if dates are provided
+        },
+      },
+      {
+        $addFields: {
+          profit: { $subtract: ["$currentValue", "$purchasePrice"] },
+        },
+      },
+      { $sort: { profit: -1 } },
+      { $limit: 5 }, // Limit to top 5
+      {
+        $project: {
+          investmentType: { $literal: "Real Estate" },
+          sector: { $literal: "Real Estate" },
+          totalInvestedAmount: "$purchasePrice",
+          currentReturnAmount: "$currentValue",
+          profit: 1,
+          areaName: 1,  // Optionally include other real estate fields if needed
+        },
+      },
+    ]);
+
     // Combine and sort by profit
-    const topGainers = [...topGainersFD, ...topGainersGold]
+    const topGainers = [...topGainersFD, ...topGainersGold, ...topGainersRealEstate]
       .sort((a, b) => b.profit - a.profit) // Sort in descending order
       .slice(0, 10); // Limit to top 10
 
@@ -356,7 +448,6 @@ const getTopGainers = async (req, res) => {
       message: message.topGainers,
       data: topGainers,
     });
-
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
@@ -390,12 +481,13 @@ const getInvestmentsBySector = async (req, res) => {
 
     switch (sector.toLowerCase()) {
       case "banking":
-        console.log("Fetching Banking Investments for User ID:", userId);
         investments = await FixedDepositModel.find(query).lean();
         break;
       case "gold":
-        console.log("Fetching Gold Investments for User ID:", userId);
         investments = await GoldModel.find(query).lean();
+        break;
+      case "realestate":
+        investments = await RealEstateModel.find(query).lean();
         break;
       default:
         return res.status(statusCode.BAD_REQUEST).json({
@@ -404,17 +496,15 @@ const getInvestmentsBySector = async (req, res) => {
         });
     }
 
-    // Map investments and ensure srNo starts from 1
     investments = investments.map((item, index) => {
-      delete item.srNo; // Ensure there's no srNo in the original item
+      delete item.srNo; 
       const newItem = {
-        srNo: index + 1, // srNo starts from 1
+        srNo: index + 1, 
         sector: sector.charAt(0).toUpperCase() + sector.slice(1),
         ...item,
       };
       return newItem;
     });
-
 
     return res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
@@ -429,8 +519,6 @@ const getInvestmentsBySector = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   getOverallAnalysis,

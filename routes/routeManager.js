@@ -13,6 +13,7 @@ const propertyTypeRoutes = require("../routes/propertyTypeRoutes");
 const subPropertyTypeRoutes = require("../routes/subPropertyTypeRoutes");
 const realEstateRoutes =  require("../routes/realEstateRoutes");
 
+
 module.exports = [
   userRoutes,
   fdRoutes,

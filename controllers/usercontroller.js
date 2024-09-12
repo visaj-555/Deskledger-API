@@ -58,28 +58,24 @@ const loginUser = async (req, res) => {
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          statusCode: statusCode.INTERNAL_SERVER_ERROR,
-          message: message.userNotFound,
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        statusCode: statusCode.BAD_REQUEST,
+        message: message.userNotFound,
+      });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          statusCode: statusCode.BAD_REQUEST,
-          message: message.passwordIncorrect,
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        statusCode: statusCode.BAD_REQUEST,
+        message: message.passwordIncorrect,
+      });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.SECRET, {
-    });
+    await TokenModel.findOneAndDelete({ userId: user._id });
 
-    // Save the token in the database with the userId
+    const token = jwt.sign({ id: user._id }, process.env.SECRET);
+
     const tokenDoc = new TokenModel({ token, userId: user._id });
     await tokenDoc.save();
 
@@ -97,12 +93,10 @@ const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error logging in user:", error);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({
-        statusCode: statusCode.INTERNAL_SERVER_ERROR,
-        message: message.errorLogin,
-      });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorLogin,
+    });
   }
 };
 
@@ -223,7 +217,6 @@ const updateUser = async (req, res) => {
 };
 
 // Delete User
-// Delete User
 const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -324,7 +317,6 @@ const changePassword = async (req, res) => {
 };
 
 // Generate OTP function
-
 const generateOtp = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
@@ -484,6 +476,48 @@ const newPassword = async (req, res) => {
   }
 };
 
+// Logout API
+const logoutUser = async (req, res) => {
+
+  try {
+    const authorizationHeader = req.headers["authorization"];
+    if (!authorizationHeader) {
+      return res.status(statusCode.UNAUTHORIZED).json({
+        statusCode: statusCode.UNAUTHORIZED,
+        message: message.authHeaderError,
+      });
+    }
+
+    const token = authorizationHeader.split(" ")[1];
+    if (!token) {
+      return res.status(statusCode.UNAUTHORIZED).json({
+        statusCode: statusCode.UNAUTHORIZED,
+        message: message.tokenMissing,
+      });
+    }
+
+
+    const tokenExists = await TokenModel.findOneAndDelete({ token });
+    if (!tokenExists) {
+      return res.status(statusCode.UNAUTHORIZED).json({
+        statusCode: statusCode.UNAUTHORIZED,
+        message: message.tokenNotFound,
+      });
+    }
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.userLoggedOut,
+    });
+  } catch (error) {
+    console.error("Error logging out user:", error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorLogout,
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -495,4 +529,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   newPassword,
+  logoutUser
 };

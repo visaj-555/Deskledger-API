@@ -133,6 +133,9 @@ const message = {
   unAuthUser: "Unauthorized User",
   resetPasswordSuccess : "Reset Password Successfully",
   resetPasswordError : "Error Resetting Password",
+  authHeaderError : "Authorization header is missing",
+  tokenMissing : "Token is missing",
+  tokenNotFound : "Token Not Found in the database",
 
   // Gold Management
   analysisReportofFd: "Analysis Report of all the fixed deposits",
