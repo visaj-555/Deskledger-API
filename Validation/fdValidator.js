@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const {statusCode} =  require('../utils/api.response');
 
 const validateFixedDeposit = (req, res, next) => {
     const isUpdating = req.method === 'PUT';
@@ -34,11 +35,11 @@ const validateFixedDeposit = (req, res, next) => {
                 'string.empty': 'FD type is required',
                 'any.required': 'FD type is required'
             }),
-        bankName: Joi.string()
+        bankId: Joi.string()
             .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
             .messages({
-                'string.empty': 'Bank name is required',
-                'any.required': 'Bank name is required'
+                'string.empty': 'Bank Id is required',
+                'any.required': 'Bank Id is required'
             }),
         branchName: Joi.string()
             .when('$isUpdating', { is: true, then: Joi.optional(), otherwise: Joi.required() })
@@ -84,7 +85,7 @@ const validateFixedDeposit = (req, res, next) => {
     const { error } = schema.validate(req.body, { context: { isUpdating } });
 
     if (error) {
-        return res.status(400).json({ error: error.details[0].message });
+        return res.status(statusCode.BAD_REQUEST).json({ error: error.details[0].message });
     }
 
     next();

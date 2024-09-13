@@ -25,8 +25,9 @@ const FixedDepositSchema = new Schema({
     fdType: {
         type: String,
     },
-    bankName: {
-        type: String,
+    bankId: {
+        type: Schema.Types.ObjectId,
+        ref: 'bank',    
     },
     branchName: {
         type: String,

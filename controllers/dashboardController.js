@@ -307,9 +307,6 @@ const getHighestGrowthInSector = async (req, res) => {
         });
     }
 
-    console.log("FD : ", highestGrowth);
-
-
     if (!highestGrowth) {
       highestGrowth = {
         totalInvestedAmount: 0,
@@ -336,6 +333,7 @@ const getHighestGrowthInSector = async (req, res) => {
       message: message.highestGrowthinSector,
       data: highestGrowth,
     });
+    
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
