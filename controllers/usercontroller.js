@@ -405,7 +405,7 @@ const resetPassword = async (req, res) => {
     if (!user) {
       return res
         .status(statusCode.NOT_FOUND)
-        .json({ statusCode: statusCode.NOT_FOUND, message: "User not found" });
+        .json({ statusCode: statusCode.NOT_FOUND, message: message.userNotFound });
     }
 
     // OTP verified successfully
@@ -413,16 +413,16 @@ const resetPassword = async (req, res) => {
       .status(statusCode.OK)
       .json({
         statusCode: statusCode.OK,
-        message: "OTP verified successfully",
+        message: message.otpSuccess,
         userId: user._id,
       });
   } catch (error) {
     console.error("Error validating OTP:", error);
-    return res
+    return res7ua
       .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({
         statusCode: statusCode.INTERNAL_SERVER_ERROR,
-        message: "Error resetting password",
+        message: message.resetPasswordError,
       });
   }
 };
@@ -454,27 +454,26 @@ const newPassword = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
+
     user.password = hashedPassword;
-
     await user.save();
-    await PasswordResetTokenModel.deleteOne({ userId: user._id });
 
-    res
-      .status(statusCode.OK)
-      .json({
-        statusCode: statusCode.OK,
-        message: message.resetPasswordSuccess,
-      });
+    // Delete the reset token after successful password reset
+    await PasswordResetTokenModel.findOneAndDelete({ userId });
+
+    res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.passwordChanged,
+    });
   } catch (error) {
-    console.error("Error resetting password:", error);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({
-        statusCode: statusCode.INTERNAL_SERVER_ERROR,
-        message: message.resetPasswordError,
-      });
+    console.error(error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.passwordChangeError,
+    });
   }
 };
+
 
 // Logout API
 const logoutUser = async (req, res) => {

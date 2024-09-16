@@ -10,6 +10,7 @@ router.post('/subpropertytype', ensureAuthenticated, ensureAdmin, subPropertyTyp
 router.put('/subpropertytype/update/:id', ensureAuthenticated, ensureAdmin, subPropertyTypeController.updateSubPropertyType);
 router.delete('/subpropertytype/delete/:id',ensureAuthenticated, ensureAdmin, subPropertyTypeController.deleteSubPropertyType);
 router.get('/subpropertytypes',ensureAuthenticated, ensureAdmin, subPropertyTypeController.getSubPropertyType);
+router.get('/subpropertytypes-for-user',ensureAuthenticated, subPropertyTypeController.getSubPropertyType);
 router.delete('/subpropertytypes/multiple-delete',ensureAuthenticated, ensureAdmin, subPropertyTypeController.deleteMultipleSubPropertyTypes);
 
 

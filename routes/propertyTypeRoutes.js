@@ -8,6 +8,7 @@ router.post('/propertytype', ensureAuthenticated, ensureAdmin,  propertyTypeCont
 router.put('/propertytype/update/:id', ensureAuthenticated, ensureAdmin, propertyTypeController.updatePropertyType);
 router.delete('/propertytype/delete/:id',ensureAuthenticated, ensureAdmin, propertyTypeController.deletePropertyType);
 router.get('/propertytypes',ensureAuthenticated, ensureAdmin, propertyTypeController.getPropertyType);
+router.get('/propertytypes-for-user',ensureAuthenticated, propertyTypeController.getPropertyType);
 router.delete('/propertytypes/multiple-delete',ensureAuthenticated, ensureAdmin, propertyTypeController.deleteMultiplePropertyTypes);
 
 module.exports = router;

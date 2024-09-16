@@ -102,6 +102,7 @@ const message = {
   errorFetchingFDs: "Error fetching FDs",
   errorFdAnalytics: "Error calculating FD Analytics",
   errorUpdatingFD: "Error updating FD",
+  passwordChangeError : "Error Changing Password",
 
   // User
   loginAdmin: "Admin Logged In Successfully",
