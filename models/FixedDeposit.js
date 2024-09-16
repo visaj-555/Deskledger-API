@@ -45,22 +45,22 @@ const FixedDepositSchema = new Schema({
         type: Number,
     },
     tenureInYears: {
-        type: Number,
+        type: Number, // to be calculated in backend
     },
     tenureInMonths: {
-        type: Number,
+        type: Number, // to be calculated in backend
     },
     currentReturnAmount: {
-        type: Number,
+        type: Number, // to be calculated in backend
     },
     totalReturnedAmount: {
-        type: Number,
+        type: Number, // to be calculated in backend
     },
     currentProfitAmount: {
-        type: Number,
+        type: Number, // to be calculated in backend
     },
     totalYears: {
-        type: String,
+        type: String, // to be calculated in backend
     },
     userId: {
         type: Schema.Types.ObjectId,
