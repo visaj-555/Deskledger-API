@@ -46,6 +46,37 @@ function calculateTotalYears(startDate, maturityDate) {
   }
 };
 
+const updateFdData = async () => {
+  try {
+    const fixedDeposits = await FixedDepositModel.find();
+
+
+    for (const fd of fixedDeposits) {
+      const { _id: fdId, startDate, maturityDate, totalInvestedAmount, interestRate } = fd;
+
+      // Get the aggregation pipeline
+      const aggregationPipeline = updateFdAggregation(fdId, startDate, maturityDate, totalInvestedAmount, interestRate);
+
+      // Execute the aggregation pipeline
+      const result = await FixedDepositModel.aggregate(aggregationPipeline);
+
+      // Assuming the result contains calculated fields
+      if (result && result.length > 0) {
+        const { currentReturnAmount, currentProfitAmount } = result[0];
+
+
+        // Optionally, update the database with the new values if needed
+        await FixedDepositModel.updateOne({ _id: fdId }, {
+          currentReturnAmount,
+          currentProfitAmount,
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error while updating FD data:", error);
+  }
+};
+
 const fixedDepositRegister = async (req, res) => {
   try {
     const {
@@ -319,11 +350,9 @@ const getFdDetails = async (req, res) => {
       }
     }
 
-    console.log("FD Details before formatting:", fdDetails);
 
     const formattedFdDetails = fdDetails.map((fd, index) => {
       const srNo = index + 1;
-      console.log(`Index: ${index}, Assigned srNo: ${srNo}, FD ID: ${fd._id}`);
 
       fd.srNo = srNo;
       fd.createdAt = moment(fd.createdAt).format("YYYY-MM-DD");
@@ -334,7 +363,6 @@ const getFdDetails = async (req, res) => {
       return fd;
     });
 
-    console.log("FD Details after formatting:", formattedFdDetails);
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
@@ -489,6 +517,7 @@ const getFdAnalysisbyNumber = async (req, res) => {
 
       res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.analysisReportofFd, data: rawData });
   } catch (error) {
+      console.error("Error while fetching investment analysis by number");
       res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFdAnalytics, error: error.message });
   }
 };
@@ -499,5 +528,6 @@ module.exports = {
   fixedDepositDelete,
   getFdDetails,
   deleteMultipleFDs,
-  getFdAnalysisbyNumber
+  getFdAnalysisbyNumber, 
+  updateFdData
 };

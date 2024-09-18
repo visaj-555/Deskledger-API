@@ -23,6 +23,7 @@ const createBank = async (req, res) => {
       data: savedBank,
     });
   } catch (error) {
+    console.error("Error while adding bank", error)
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorCreatingBank,
@@ -56,6 +57,7 @@ const updateBank = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Error while updating bank", error)
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorUpdatingBank,
@@ -84,6 +86,7 @@ const deleteBank = async (req, res) => {
   } 
   
   catch (error) {
+    console.error("Error while deleting bank");
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorDeletingBank,
@@ -120,10 +123,7 @@ const getBanks = async (req, res) => {
 // Delete multiple banks
 const deleteMultipleBanks = async (req, res) => {
   try {
-    const { ids } = req.body; // Pass an array of ids
-    console.log(ids);
-    console.log("Request Body : ", req.body)
-
+    const { ids } = req.body; 
     const deletedBanks = await BankModel.deleteMany({ _id: { $in: ids } });
 
     if (deletedBanks.deletedCount === 0) {
@@ -140,6 +140,7 @@ const deleteMultipleBanks = async (req, res) => {
     });
     
   } catch (error) {
+    console.error("Error while deleting multiple banks", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorDeletingBanks,

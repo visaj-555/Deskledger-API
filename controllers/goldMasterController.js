@@ -43,7 +43,6 @@ const updateGoldMasterInfo = async (req, res) => {
     const { id } = req.params; // Using 'id' from req.params
     const { goldRate22KPerGram, goldRate24KPerGram } = req.body;
 
-    console.log("Received id:", id); // Debug log
 
     const updateGoldInfo = await GoldMasterModel.findByIdAndUpdate(
       id, // Using 'id' here
@@ -52,7 +51,7 @@ const updateGoldMasterInfo = async (req, res) => {
     );
 
     if (!updateGoldInfo) {
-      console.log("No record found with id:", id); // Debug log
+      console.error("No record found with id:", id); // Debug log
       return res
         .status(statusCode.NOT_FOUND)
         .json({ statusCode: statusCode.NOT_FOUND, message: message.errorFetchingGoldInfo });

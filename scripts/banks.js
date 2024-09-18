@@ -1,11 +1,8 @@
 const mongoose = require('mongoose');
 const BankModel = require('../models/bank'); // Adjust the path to your Bank model
 
-// Load environment variables from .env file
 require('dotenv').config();
 
-// Debugging log to check if the environment variable is loaded correctly
-console.log('DB_CONNECTION:', process.env.CONNECTION);
 
 // List of Indian banks
 const indianBanks = [
@@ -57,7 +54,6 @@ async function insertIndianBanks() {
 
     try {
         const result = await BankModel.insertMany(bankDataArray);
-        console.log('All Indian banks inserted successfully:', result);
     } catch (err) {
         console.error('Error inserting bank data:', err.message);
     }
@@ -71,7 +67,6 @@ mongoose.connect(process.env.CONNECTION, {
     socketTimeoutMS: 45000
 })
 .then(() => {
-    console.log('Connected to MongoDB');
     insertIndianBanks();
 })
 .catch(err => {

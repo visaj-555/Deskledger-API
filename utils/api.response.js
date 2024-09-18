@@ -33,7 +33,9 @@ const message = {
   errorFetchingProperties: "Error Fetching Properties",
   errorUpdatingProperty: "Error Updating Property",
   errorFetchingRealEstateAnalytics : "Error Fetching Real Estate Analysis",
-
+  invalidRealEstateid : "Invalid Real Estate Id Provided",
+  
+  
   // Area Price  
   areaPriceCreated: "Area Price Added Successfully",
   areaPriceNotFound : "Area Price Not Found",

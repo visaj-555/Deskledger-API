@@ -6,6 +6,10 @@ const cookieParser = require('cookie-parser');
 const fs = require('fs');
 const path = require('path');
 const MainRoutes = require('./routes/routeManager'); // Import the routes
+const cron = require('node-cron');
+const {updateFdData} = require('./controllers/fdcontroller')
+const {updateGoldData} = require('./controllers/goldController');
+const { updateRealEstateData } = require('./controllers/realEstateController');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -13,7 +17,7 @@ dotenv.config();
 // Setting up express app 
 const app = express(); 
 const PORT = parseInt(process.env.PORT, 10) || 3500;
-const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.29.26';
+const HOST = process.env.HOST ? process.env.HOST.trim() : '192.168.29.16';
 const DB_CONNECTION = process.env.CONNECTION;
 
 app.use(express.json());
@@ -30,11 +34,24 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
+cron.schedule("0 0 * * *", async () => {
+  try {
+    console.log("Cron job running at 12 AM");
+
+    await updateFdData();
+    await updateGoldData();
+    await updateRealEstateData();
+
+    console.log("Cron job completed successfully.");
+  } catch (error) {
+    console.error("Error in cron job:", error);
+  }
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Dynamically apply all routes from MainRoutes array
 MainRoutes.forEach(route => {
-  app.use('/', route); // You can modify this to assign specific prefixes if needed
+  app.use('/', route);
 });
 
 app.get('/image/:filename', (req, res) => {

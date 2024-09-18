@@ -120,6 +120,7 @@ const getOverallAnalysis = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Error while fetching overall analysis");
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorOverAllAnalysis,
@@ -230,6 +231,7 @@ const getCombinedNumAnalysis = async (req, res) => {
         });
 
       } catch (error) {
+        console.error("Error while fetching combined analysis");
         res.status(statusCode.INTERNAL_SERVER_ERROR).json({
           statusCode: statusCode.INTERNAL_SERVER_ERROR,
           message: message.errorCombinedNumAnalysis,
@@ -335,6 +337,7 @@ const getHighestGrowthInSector = async (req, res) => {
     });
     
   } catch (error) {
+    console.error("Error while fetching highest growth sector wise");
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorFetchingHighestGrowth,
@@ -365,14 +368,18 @@ const getTopGainers = async (req, res) => {
         },
       },
       { $sort: { profit: -1 } },
-      { $limit: 5 }, // Limit to top 5
+      { $limit: 5 }, 
       {
         $project: {
           investmentType: { $literal: "Fixed Deposit" },
           sector: { $literal: "Banking" },
+          firstName : 1,
+          lastName : 1,
           totalInvestedAmount: 1,
           currentReturnAmount: 1,
           profit: 1,
+          fdType : 1,
+          interestRate,
         },
       },
     ]);
@@ -396,6 +403,11 @@ const getTopGainers = async (req, res) => {
         $project: {
           investmentType: { $literal: "Gold" },
           sector: { $literal: "Gold" },
+          firstName : 1,
+          lastName : 1,
+          formOfGold : 1,
+          purityOfGold : 1,
+          goldWeight : 1,
           totalInvestedAmount: "$goldPurchasePrice",
           currentReturnAmount: "$totalReturnAmount",
           profit: 1,
@@ -426,6 +438,14 @@ const getTopGainers = async (req, res) => {
           currentReturnAmount: "$currentValue",
           profit: 1,
           areaName: 1,  // Optionally include other real estate fields if needed
+          firstName : 1, 
+          lastName : 1, 
+          state : 1,
+          city : 1,
+          propertyType : 1,
+          subPropertyType : 1,
+          areaInSquareFeet : 1,
+          purchasePrice : 1,
         },
       },
     ]);
@@ -447,6 +467,7 @@ const getTopGainers = async (req, res) => {
       data: topGainers,
     });
   } catch (error) {
+    console.error("Error while fetching Top Gainers", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorTopGainers,
@@ -510,7 +531,7 @@ const getInvestmentsBySector = async (req, res) => {
       data: investments,
     });
   } catch (error) {
-    console.error("Error fetching investments:", error.message);
+    console.error("Error fetching investments by sector:", error.message);
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorFetchingInvBySector,

@@ -56,6 +56,7 @@ const cityRegister = async (req, res) => {
       data: registeredCity[0],
     });
   } catch (error) {
+    console.error("Error while adding city", error)
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorCreatingCity,
@@ -118,6 +119,7 @@ const updateCity = async (req, res) => {
   } 
   
   catch (error) {
+    console.error("Error while updating bank", error)
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorUpdatingCity,
@@ -128,8 +130,6 @@ const updateCity = async (req, res) => {
 const deleteCity = async (req, res) => {
   try {
     const { id } = req.params;
-
-
     const deletedCity = await CityModel.findByIdAndDelete(id);
     if (!deletedCity) {
       return res.status(statusCode.NOT_FOUND).json({
@@ -173,6 +173,7 @@ const deleteCity = async (req, res) => {
       data: deletedCityWithState[0],
     });
   } catch (error) {
+    console.error("Error while deleting bank", error)
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorDeletingCity,
@@ -218,6 +219,7 @@ const getCity = async (req, res) => {
       data: citiesWithSrNo,
     });
   } catch (error) {
+    console.error("Error while fetching city");
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorFetchingCities,
@@ -246,6 +248,7 @@ const deleteMultipleCities = async (req, res) => {
     });
     
   } catch (error) {
+    console.error("Error while deleting multiple cities", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorDeletingCity,

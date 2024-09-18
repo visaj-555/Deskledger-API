@@ -2,8 +2,51 @@ const AreaPriceModel = require("../models/areaPrice");
 const RealEstateModel = require("../models/realEstate");
 const RealEstateAnalysisModel = require("../models/realEstateAnalysis");
 const { statusCode, message } = require("../utils/api.response");
-const mongoose = require ("mongoose");
+const mongoose = require("mongoose");
 
+exports.updateRealEstateData = async () => {
+  try {
+    // Fetch all real estate records
+    const realEstates = await RealEstateModel.find({});
+
+    if (!realEstates || realEstates.length === 0) {
+      console.error("No real estate data found.");
+      return;
+    }
+
+    for (const realEstate of realEstates) {
+      const { areaName, cityId, stateId, areaInSquareFeet, purchasePrice } = realEstate;
+
+      // Fetch the area price based on the city, state, and area name
+      const areaPrice = await AreaPriceModel.findOne({
+        areaName,
+        cityId,
+        stateId,
+      });
+
+      if (!areaPrice) {
+        console.error(`Area price not found for ${areaName}, ${cityId}, ${stateId}`);
+        continue;
+      }
+
+      // Calculate the new current value and profit
+      const newCurrentValue = Math.round(
+        areaPrice.pricePerSquareFoot * areaInSquareFeet
+      );
+
+      const newProfit = Math.round(newCurrentValue - purchasePrice);
+
+      // Update the real estate record with new values
+      realEstate.currentValue = newCurrentValue;
+      realEstate.profit = newProfit;
+
+      await realEstate.save();
+    }
+
+  } catch (error) {
+    console.error("Error updating real estate data:", error);
+  }
+};
 // Create a real estate record
 exports.createRealEstate = async (req, res) => {
   try {
@@ -98,7 +141,7 @@ exports.createRealEstate = async (req, res) => {
 // Update real estate record
 exports.updateRealEstate = async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const {
       firstName,
       lastName,
@@ -111,8 +154,15 @@ exports.updateRealEstate = async (req, res) => {
       areaInSquareFeet,
       purchasePrice,
     } = req.body;
+    const userId = req.user.id;
 
-    const existingRealEstate = await RealEstateModel.findById(id);
+    let newCurrentValue, newProfit;
+
+    // Fetch the existing real estate record, ensuring it belongs to the authenticated user
+    const existingRealEstate = await RealEstateModel.findOne({
+      _id: id,
+      userId,
+    });
     if (!existingRealEstate) {
       return res.status(statusCode.NOT_FOUND).json({
         statusCode: statusCode.NOT_FOUND,
@@ -120,14 +170,17 @@ exports.updateRealEstate = async (req, res) => {
       });
     }
 
-    let newCurrentValue, newProfit;
-
-    // Use existing cityId, stateId, and areaName if not provided in the request body
+    // Use existing values if not provided in the request body
     const resolvedCityId = cityId || existingRealEstate.cityId;
     const resolvedStateId = stateId || existingRealEstate.stateId;
     const resolvedAreaName = areaName || existingRealEstate.areaName;
+    const updatedAreaInSquareFeet =
+      areaInSquareFeet || existingRealEstate.areaInSquareFeet;
+    const updatedPurchasePrice =
+      purchasePrice || existingRealEstate.purchasePrice;
 
-    if (areaInSquareFeet || purchasePrice || areaName) {
+    // Fetch area price and calculate current value and profit if necessary values are updated
+    if (updatedAreaInSquareFeet || updatedPurchasePrice || areaName) {
       const areaPrice = await AreaPriceModel.findOne({
         areaName: resolvedAreaName,
         cityId: resolvedCityId,
@@ -142,35 +195,36 @@ exports.updateRealEstate = async (req, res) => {
       }
 
       // Calculate new current value and profit
-      newCurrentValue =
-        areaPrice.pricePerSquareFoot *
-        (areaInSquareFeet || existingRealEstate.areaInSquareFeet);
-      newProfit =
-        newCurrentValue - (purchasePrice || existingRealEstate.purchasePrice);
+      newCurrentValue = areaPrice.pricePerSquareFoot * updatedAreaInSquareFeet;
+      newProfit = newCurrentValue - updatedPurchasePrice;
     }
 
     // Update the fields if provided
-    existingRealEstate.set({
-      firstName: firstName || existingRealEstate.firstName,
-      lastName: lastName || existingRealEstate.lastName,
-      propertyTypeId: propertyTypeId || existingRealEstate.propertyTypeId,
-      subPropertyTypeId:
-        subPropertyTypeId || existingRealEstate.subPropertyTypeId,
-      propertyAddress: propertyAddress || existingRealEstate.propertyAddress,
-      cityId: resolvedCityId,
-      stateId: resolvedStateId,
-      areaName: resolvedAreaName,
-      areaInSquareFeet: areaInSquareFeet || existingRealEstate.areaInSquareFeet,
-      purchasePrice: purchasePrice || existingRealEstate.purchasePrice,
-      currentValue:
-        newCurrentValue !== undefined
-          ? newCurrentValue
-          : existingRealEstate.currentValue,
-      profit: newProfit !== undefined ? newProfit : existingRealEstate.profit,
-    });
+    const updatedRealEstate = await RealEstateModel.findOneAndUpdate(
+      { _id: id, userId },
+      {
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(propertyTypeId && { propertyTypeId }),
+        ...(subPropertyTypeId && { subPropertyTypeId }),
+        ...(propertyAddress && { propertyAddress }),
+        ...(cityId && { cityId: resolvedCityId }),
+        ...(stateId && { stateId: resolvedStateId }),
+        ...(areaName && { areaName: resolvedAreaName }),
+        ...(areaInSquareFeet && { areaInSquareFeet: updatedAreaInSquareFeet }),
+        ...(purchasePrice && { purchasePrice: updatedPurchasePrice }),
+        ...(newCurrentValue !== undefined && { currentValue: newCurrentValue }),
+        ...(newProfit !== undefined && { profit: newProfit }),
+      },
+      { new: true }
+    );
 
-    // Save the updated real estate entry
-    const updatedRealEstate = await existingRealEstate.save();
+    if (!updatedRealEstate) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.propertyNotFound,
+      });
+    }
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
@@ -178,7 +232,7 @@ exports.updateRealEstate = async (req, res) => {
       data: updatedRealEstate,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error updating real estate record:", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorUpdatingProperty,
@@ -189,18 +243,28 @@ exports.updateRealEstate = async (req, res) => {
 // Delete real estate record
 exports.deleteRealEstate = async (req, res) => {
   try {
-    const id = req.params.id;
-    const realEstate = await RealEstateModel.findByIdAndDelete(id);
-    if (!realEstate) {
+    const { id } = req.params;
+    const userId = req.user.id; // Get the user ID from the authenticated request
+
+    // Ensure the real estate record belongs to the authenticated user
+    const deletedRealEstate = await RealEstateModel.findOneAndDelete({
+      _id: id,
+      userId,
+    });
+
+    if (!deletedRealEstate) {
       return res.status(statusCode.NOT_FOUND).json({
         statusCode: statusCode.NOT_FOUND,
         message: message.propertyNotFound,
       });
     }
-    return res
-      .status(statusCode.OK)
-      .json({ statusCode: statusCode.OK, message: message.propertyDeleted });
+
+    return res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.propertyDeleted,
+    });
   } catch (error) {
+    console.error(error);
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorDeletingProperty,
@@ -211,7 +275,12 @@ exports.deleteRealEstate = async (req, res) => {
 // Get all real estate records
 exports.getAllRealEstate = async (req, res) => {
   try {
+    const userId = req.user.id;
     const realestates = await RealEstateModel.aggregate([
+      {
+        // Cast userId to ObjectId correctly
+        $match: { userId: new mongoose.Types.ObjectId(userId) }
+      },
       {
         $lookup: {
           from: "propertytypes",
@@ -289,11 +358,10 @@ exports.getAllRealEstate = async (req, res) => {
         },
       },
     ]);
-  
 
     const realEstatesWithSrNo = realestates.map((realEstate, index) => ({
       srNo: index + 1,
-      ...realEstate
+      ...realEstate,
     }));
 
     res.status(statusCode.OK).json({
@@ -302,41 +370,57 @@ exports.getAllRealEstate = async (req, res) => {
       data: realEstatesWithSrNo,
     });
   } catch (error) {
+    console.error("Error fetching real estate records:", error); // More detailed error logging
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorFetchingProperties,
+      error: error.message, // Include the error message in the response for debugging
     });
   }
 };
 
-// Delete Multiple Real Estates
+// Delete multiple real estate records
 exports.deleteMultipleRealEstates = async (req, res) => {
   try {
-    const { ids } = req.body; // Pass an array of IDs
+    const { ids } = req.body; // Expecting an array of IDs to delete
+    const userId = req.user.id; // Get the user ID from the authenticated request
 
-    const deletedMultipleRealEstates = await RealEstateModel.deleteMany({
-      _id: { $in: ids },
-    });
-
-    if (deletedMultipleRealEstates.deletedCount === 0) {
-      return res.status(statusCode.NOT_FOUND).json({
-        statusCode: statusCode.NOT_FOUND,
-        message: message.errorFetchingProperties,
+    // Validate if ids are provided and they are an array
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(statusCode.BAD_REQUEST).json({
+        statusCode: statusCode.BAD_REQUEST,
+        message: message.invalidRealEstateid, // You can use your 'message.invalidIds'
       });
     }
 
-    res.status(statusCode.OK).json({
+    // Ensure that the real estate records belong to the authenticated user
+    const result = await RealEstateModel.deleteMany({
+      _id: { $in: ids },
+      userId, // Ensure that only real estate records of the authenticated user are deleted
+    });
+
+    // Check if any documents were deleted
+    if (result.deletedCount === 0) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.propertyNotFound,
+      });
+    }
+
+    // Return success response
+    return res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
-      message: message.propertiesDeleted,
-      deletedCount: deletedMultipleSubPropertyTypes.deletedCount,
+      message: `${result.deletedCount} real estate property have been successfully deleted.`,
     });
   } catch (error) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+    console.error("Error deleting multiple real estate records:", error); // Log the actual error
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorDeletingProperties,
+      message: "Error occurred while deleting real estate records",
     });
   }
 };
+
 
 // Analytics of Real Estates
 exports.getRealEstateAnalysis = async (req, res) => {
@@ -351,15 +435,15 @@ exports.getRealEstateAnalysis = async (req, res) => {
         $addFields: {
           totalInvestedAmount: "$purchasePrice",
           currentReturnAmount: "$currentValue",
-          totalProfit: { $subtract: ["$currentValue", "$purchasePrice"] }, 
+          totalProfit: { $subtract: ["$currentValue", "$purchasePrice"] },
         },
       },
       {
         $group: {
-          _id: null, 
+          _id: null,
           totalInvestedAmountOfRealEstate: { $sum: "$totalInvestedAmount" },
           currentReturnAmountOfRealEstate: { $sum: "$currentReturnAmount" },
-          totalProfitGainedOfRealEstate: { $sum: "$totalProfit" }, 
+          totalProfitGainedOfRealEstate: { $sum: "$totalProfit" },
         },
       },
     ]);
@@ -371,7 +455,6 @@ exports.getRealEstateAnalysis = async (req, res) => {
       });
     }
 
-
     const analysisData = {
       totalInvestedAmountOfRealEstate: Math.round(
         realEstateAnalysis[0].totalInvestedAmountOfRealEstate
@@ -380,26 +463,22 @@ exports.getRealEstateAnalysis = async (req, res) => {
         realEstateAnalysis[0].currentReturnAmountOfRealEstate
       ),
       totalProfitGainedOfRealEstate: Math.round(
-        realEstateAnalysis[0].totalProfitGainedOfRealEstate 
+        realEstateAnalysis[0].totalProfitGainedOfRealEstate
       ),
       userId: new mongoose.Types.ObjectId(userId),
     };
-    
+
     const filter = { userId: new mongoose.Types.ObjectId(userId) };
-    const update = { $set: analysisData }; 
+    const update = { $set: analysisData };
     const options = { upsert: true, new: true };
-    
-    const updatedRealEstateAnalysis = await RealEstateAnalysisModel.findOneAndUpdate(
-      filter,
-      update,
-      options
-    );
-    
+
+    const updatedRealEstateAnalysis =
+      await RealEstateAnalysisModel.findOneAndUpdate(filter, update, options);
 
     return res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
       message: message.analysisReportOfRealEstate,
-      data: updatedRealEstateAnalysis, 
+      data: updatedRealEstateAnalysis,
     });
   } catch (error) {
     console.error("Error calculating Real Estate analytics:", error);
@@ -409,4 +488,3 @@ exports.getRealEstateAnalysis = async (req, res) => {
     });
   }
 };
-

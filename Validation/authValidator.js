@@ -29,7 +29,7 @@ const ensureAuthenticated = async (req, res, next) => {
             return res.status(statusCode.UNAUTHORIZED).json({ statusCode: statusCode.UNAUTHORIZED, message: message.tokenVerifyFail });
         }
     } catch (error) {
-        console.log("Error in ensureAuthenticated:", error);
+        console.error("Error in ensureAuthenticated:", error);
         return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorFetchingUser });
     }
 };
@@ -40,7 +40,7 @@ const ensureAdmin = async (req, res, next) => {
         const user = await UserModel.findById(userId);
 
         if (!user || !user.is_admin) {
-            console.log("User is not an admin or does not exist");
+            console.error("User is not an admin or does not exist");
             return res.status(statusCode.FORBIDDEN).json({ message: message.adminAccessRequired });
         }
 

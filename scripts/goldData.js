@@ -248,7 +248,6 @@ async function insertDataInBatches(data, batchSize) {
         const batch = data.slice(i, i + batchSize);
         try {
             await GoldModel.insertMany(batch);
-            console.log(`Inserted batch ${i / batchSize + 1}`);
         } catch (err) {
             console.error('Error inserting batch:', err);
         }

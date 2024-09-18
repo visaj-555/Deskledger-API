@@ -162,14 +162,13 @@ const deleteMultipleAreaPrices = async (req, res) => {
     });
   } 
   catch (error) {
+    console.error("Error while deleting multiple data", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorDeletingAreaPrice,
     });
   }
 };
-
-
 
 module.exports = {
   createAreaPrice,

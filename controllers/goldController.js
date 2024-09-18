@@ -4,7 +4,62 @@ const GoldAnalysisModel = require("../models/goldAnalysis");
 const { message, statusCode } = require("../utils/api.response");
 const mongoose = require("mongoose");
 
+exports.updateGoldData = async () => {
+  try {
+    // Fetch the latest GoldMaster data
+    const goldMaster = await GoldMasterModel.findOne();
+    if (!goldMaster) {
+      console.error("GoldMaster data not found");
+      return;
+    }
+
+    // Extract the current gold prices (22K, 24K)
+    const goldRate22KPerGram = goldMaster.goldRate22KPerGram;
+    const goldRate24KPerGram = goldMaster.goldRate24KPerGram;
+
+    // Validate if the required fields from GoldMaster are available and are numbers
+    if (isNaN(goldRate22KPerGram) || isNaN(goldRate24KPerGram)) {
+      console.error("Invalid GoldMaster data. Exiting...");
+      return;
+    }
+
+    // Fetch all gold entries from GoldModel
+    const goldinfo = await GoldModel.find();
+
+    for (const gold of goldinfo) {
+      const { goldWeight, goldPurchasePrice, purityOfGold } = gold;
+
+      // Validate if the necessary fields from each gold record are numbers
+      if (isNaN(goldWeight) || isNaN(goldPurchasePrice) || isNaN(purityOfGold)) {
+        console.error(`Invalid data for gold record ID ${gold._id}. Skipping...`);
+        continue;
+      }
+
+      // Determine the correct rate per gram based on the purity of gold
+      const currentGoldPricePerGram = purityOfGold === 24 ? goldRate24KPerGram : goldRate22KPerGram;
+
+      // Calculate the current return amount (finalGoldPrice) based on the gold weight and rate
+      const totalReturnAmount = Math.round(currentGoldPricePerGram * goldWeight);
+
+      // Calculate the profit (difference between current gold price and purchase price)
+      const profit = Math.round(totalReturnAmount - goldPurchasePrice);
+
+      // Update the gold record with the calculated values
+      gold.totalReturnAmount = totalReturnAmount;
+      gold.profit = profit;
+
+      // Save the updated record
+      await gold.save();
+
+    }
+
+  } catch (error) {
+    console.error("Error while updating gold data:", error);
+  }
+};
+
 // Create a new gold record
+
 exports.createGoldRecord = async (req, res) => {
   try {
     const userId = req.user.id; // Get the user ID from the authenticated request
@@ -366,7 +421,6 @@ exports.getGoldAnalysis = async (req, res) => {
       options
     );
 
-    console.log("Updated Gold Analysis:", updatedGoldAnalysis);
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
