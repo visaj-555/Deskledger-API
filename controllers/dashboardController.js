@@ -379,7 +379,7 @@ const getTopGainers = async (req, res) => {
           currentReturnAmount: 1,
           profit: 1,
           fdType : 1,
-          interestRate,
+          interestRate : 1,
         },
       },
     ]);
@@ -450,10 +450,9 @@ const getTopGainers = async (req, res) => {
       },
     ]);
 
-    // Combine and sort by profit
     const topGainers = [...topGainersFD, ...topGainersGold, ...topGainersRealEstate]
-      .sort((a, b) => b.profit - a.profit) // Sort in descending order
-      .slice(0, 10); // Limit to top 10
+      .sort((a, b) => b.profit - a.profit) 
+      .slice(0, 10); 
 
     // Assign srNo starting from 1
     topGainers.forEach((item, index) => {
@@ -493,7 +492,7 @@ const getInvestmentsBySector = async (req, res) => {
     let investments = [];
     const query = { userId };
 
-    // Only add date filters if they exist
+    //Optional
     if (Object.keys(dateFilters).length > 0) {
       query.createdAt = dateFilters;
     }

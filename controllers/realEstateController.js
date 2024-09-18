@@ -50,7 +50,7 @@ exports.updateRealEstateData = async () => {
 // Create a real estate record
 exports.createRealEstate = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user ? req.user.id : null;
 
     const {
       firstName,
@@ -64,6 +64,22 @@ exports.createRealEstate = async (req, res) => {
       areaInSquareFeet,
       purchasePrice,
     } = req.body;
+
+    // Ensure all required fields are provided
+    if (!userId || !propertyTypeId || !subPropertyTypeId || !cityId || !stateId) {
+      console.log('Missing required fields:', { userId, propertyTypeId, subPropertyTypeId, cityId, stateId });
+      return res.status(400).json({
+        message: "Missing required fields",
+      });
+    }
+
+    // Ensure valid ObjectId format for cityId and stateId
+    if (!mongoose.Types.ObjectId.isValid(cityId) || !mongoose.Types.ObjectId.isValid(stateId)) {
+      console.log('Invalid ObjectId:', { cityId, stateId });
+      return res.status(400).json({
+        message: "Invalid city or state ID format",
+      });
+    }
 
     // Check if a real estate entry with the same fields already exists
     const existingRealEstate = await RealEstateModel.findOne({
@@ -81,32 +97,32 @@ exports.createRealEstate = async (req, res) => {
     });
 
     if (existingRealEstate) {
-      return res.status(statusCode.CONFLICT).json({
-        statusCode: statusCode.CONFLICT,
-        message: message.propertyAlreadyExists, // You can customize the message here
+      console.log('Property already exists:', existingRealEstate);
+      return res.status(409).json({
+        message: "Property already exists",
       });
     }
 
+    // Search for area price using areaName, cityId, and stateId
     const areaPrice = await AreaPriceModel.findOne({
       areaName,
       cityId,
       stateId,
     });
 
+    // Log the area price search to troubleshoot issues
     if (!areaPrice) {
-      return res.status(statusCode.NOT_FOUND).json({
-        statusCode: statusCode.NOT_FOUND,
-        message: message.areaPriceNotFound,
+      console.log('Area price not found:', { areaName, cityId, stateId });
+      return res.status(404).json({
+        message: "Area price not found",
       });
     }
 
-    // Calculate current value and profit
     const currentValue = Math.round(
       areaPrice.pricePerSquareFoot * areaInSquareFeet
     );
     const profit = Math.round(currentValue - purchasePrice);
 
-    // Create and save the real estate entry
     const newRealEstate = new RealEstateModel({
       firstName,
       lastName,
@@ -123,21 +139,21 @@ exports.createRealEstate = async (req, res) => {
       userId,
     });
 
-    const saveRealEstate = await newRealEstate.save();
+    const savedRealEstate = await newRealEstate.save();
 
-    return res.status(statusCode.CREATED).json({
-      statusCode: statusCode.CREATED,
-      message: message.PropertyAdded,
-      data: saveRealEstate,
+    return res.status(201).json({
+      message: "Property added successfully",
+      data: savedRealEstate,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorCreatingProperty,
+    console.error("Error creating real estate record:", error);
+    return res.status(500).json({
+      message: "Error creating real estate record",
     });
   }
 };
+
+
 // Update real estate record
 exports.updateRealEstate = async (req, res) => {
   try {

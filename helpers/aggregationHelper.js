@@ -68,20 +68,18 @@ const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, i
     {
       $addFields: {
         totalYears: {
-          $ceil: "$tenureInYears" // Use $ceil to ensure totalYears is correctly rounded up
+          $ceil: "$tenureInYears" 
         }
       }
     }
   ];
 };
 
-// Aggregation pipeline for registering a new FD
 const registerFdAggregation = (fdId, startDate, maturityDate, totalInvestedAmount, interestRate) => [
   { $match: { _id: fdId } },
   ...commonAggregationStages(startDate, maturityDate, totalInvestedAmount, interestRate)
 ];
 
-// Aggregation pipeline for updating an FD
 const updateFdAggregation = (fdId, startDate, maturityDate, totalInvestedAmount, interestRate) => [
   { $match: { _id: fdId } },
   ...commonAggregationStages(startDate, maturityDate, totalInvestedAmount, interestRate)

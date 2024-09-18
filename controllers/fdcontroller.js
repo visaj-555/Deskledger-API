@@ -327,42 +327,66 @@ const getFdDetails = async (req, res) => {
     const userId = req.user.id;
     const { id } = req.params;
 
-    let fdDetails;
+    // Base aggregation pipeline
+    const pipeline = [
+      {
+        $match: { userId: new mongoose.Types.ObjectId(userId) }
+      },
+      {
+        $lookup: {
+          from: "banks", // The collection name for BankModel
+          localField: "bankId", // The field in FixedDepositModel that references BankModel
+          foreignField: "_id", // The field in BankModel that corresponds to the bankId
+          as: "bankDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$bankDetails",
+          preserveNullAndEmptyArrays: true // In case some FDs do not have a linked bank
+        }
+      },
+      {
+        $addFields: {
+          bankName: "$bankDetails.bankName" // Add bankName to the result
+        }
+      },
+      {
+        $project: {
+          bankDetails: 0 // Exclude the bankDetails array from the result
+        }
+      },
+      {
+        $sort: { createdAt: 1 } // Sort by creation date
+      }
+    ];
+
     if (id) {
-      fdDetails = await FixedDepositModel.findOne({ _id: id, userId }).lean();
-      if (!fdDetails) {
-        return res.status(statusCode.NOT_FOUND).json({
-          statusCode: statusCode.NOT_FOUND,
-          message: message.errorFetchingFD,
-        });
-      }
-      fdDetails = [fdDetails];
-    } else {
-      fdDetails = await FixedDepositModel.find({ userId })
-        .sort({ createdAt: 1 })
-        .lean();
-      if (!fdDetails.length) {
-        return res.status(statusCode.OK).json({
-          statusCode: statusCode.OK,
-          message: message.errorFetchingFDs,
-          data: fdDetails,
-        });
-      }
+      pipeline.unshift({
+        $match: {
+          _id: new mongoose.Types.ObjectId(id), // Match specific FD by ID
+          userId: new mongoose.Types.ObjectId(userId)
+        }
+      });
     }
 
+    const fdDetails = await FixedDepositModel.aggregate(pipeline);
 
-    const formattedFdDetails = fdDetails.map((fd, index) => {
-      const srNo = index + 1;
+    if (!fdDetails.length) {
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: id ? message.errorFetchingFD : message.errorFetchingFDs,
+      });
+    }
 
-      fd.srNo = srNo;
-      fd.createdAt = moment(fd.createdAt).format("YYYY-MM-DD");
-      fd.updatedAt = moment(fd.updatedAt).format("YYYY-MM-DD");
-      fd.maturityDate = moment(fd.maturityDate).format("YYYY-MM-DD");
-      fd.startDate = moment(fd.startDate).format("YYYY-MM-DD");
-
-      return fd;
-    });
-
+    const formattedFdDetails = fdDetails.map((fd, index) => ({
+      srNo: index + 1, // Add serial number
+      ...fd,
+      createdAt: moment(fd.createdAt).format("YYYY-MM-DD"),
+      updatedAt: moment(fd.updatedAt).format("YYYY-MM-DD"),
+      maturityDate: moment(fd.maturityDate).format("YYYY-MM-DD"),
+      startDate: moment(fd.startDate).format("YYYY-MM-DD")
+    }));
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
@@ -370,7 +394,7 @@ const getFdDetails = async (req, res) => {
       data: formattedFdDetails,
     });
   } catch (error) {
-    console.error("Error while getting FD details:", error.message || error);
+    console.error("Error while fetching FD details:", error.message || error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorFetchingFDs,
@@ -378,6 +402,9 @@ const getFdDetails = async (req, res) => {
     });
   }
 };
+
+
+
 
 const deleteMultipleFDs = async (req, res) => {
   try {
