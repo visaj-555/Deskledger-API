@@ -98,6 +98,7 @@ const message = {
   fdUpdated: "Fixed Deposit Updated Successfully",
   fdView: "FD retrieved successfully",
   fdsView: "All Fixed Deposits Retrieved Successfully",
+  noFDsFound : "No FD's Found",
   fdAlreadyExists: "FD already exists",
   errorCreatingFD: "Error creating FD",
   errorDeletingFD: "Error deleting FD",

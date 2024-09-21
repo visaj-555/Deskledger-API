@@ -1,19 +1,21 @@
-//validation/upload.js
-
-const express = require('express');
-const multer = require('multer'); // middleware for form data / uploading values
+const multer = require('multer');
 const path = require('path');
 const { statusCode, message } = require('../utils/api.response');
-
-const app = express();
 
 // Configure multer storage options
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/profile_images');
-    }, // store image path 
+        cb(null, 'uploads/profile_images'); // Set the upload path
+    },
     filename: function (req, file, cb) {
-        cb(null, `${Date.now()}_${file.originalname}`);
+        const firstName = req.body.firstName; // Access firstName from the request body
+        if (firstName) {
+            // Store image with firstName and current timestamp to ensure uniqueness
+            cb(null, `${firstName}_${Date.now()}${path.extname(file.originalname)}`);
+        } else {
+            // Default to timestamp if firstName is not provided
+            cb(null, `${Date.now()}_${file.originalname}`);
+        }
     }
 });
 
@@ -39,10 +41,9 @@ const upload = multer({
 function multerErrorHandling(err, req, res, next) {
     if (err.code === 'LIMIT_FILE_SIZE') {
         req.fileSizeLimitError = true;
-        return res.status(statusCode.BAD_REQUEST).json({ message : message.validImageError });
+        return res.status(statusCode.BAD_REQUEST).json({ message: message.validImageError });
     }
     next(err);
 }
 
-// Export middleware and upload instance
 module.exports = { upload, multerErrorHandling };
