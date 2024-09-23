@@ -96,7 +96,6 @@ const deleteGoldMasterInfo = async (req, res) => {
   }
 };
 
-
 // Get gold master information
 const getGoldMasterInfo = async (req, res) => {
   try {
@@ -117,8 +116,6 @@ const getGoldMasterInfo = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   goldMasterInfoRegister, 

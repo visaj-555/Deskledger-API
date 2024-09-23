@@ -84,6 +84,7 @@ const message = {
   investmentBySector: "Investment By Sector Retrieved Successfully",
   overAllAnalysis: "Overall Analysis of All Sectors",
   topGainers: "Top 5 Gainers of all the Sectors",
+  noInvestmentFound : "No investments found for this sector",
   errorCombinedNumAnalysis: "Error Fetching Combined Analysis in Numbers",
   errorFetchingHighestGrowth: "Error fetching Highest Growth in Sector",
   errorFetchingInvBySector: "Error Fetching Investment by Sector",

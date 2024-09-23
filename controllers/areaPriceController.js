@@ -2,7 +2,7 @@ const AreaPriceModel = require("../models/areaPrice");
 const { statusCode, message } = require('../utils/api.response');
 
 // Create a new area price
-const createAreaPrice = async (req, res) => {
+const createAreaPrice = async (req, res) => { 
   try {
     const { cityId, stateId, areaName, pricePerSquareFoot } = req.body;
 

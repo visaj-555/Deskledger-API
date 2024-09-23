@@ -1,3 +1,4 @@
+// city.js
 const mongoose = require('mongoose');
 
 const CitySchema = new mongoose.Schema({

@@ -153,8 +153,6 @@ exports.createRealEstate = async (req, res) => {
     });
   }
 };
-3
-
 // Update real estate record
 exports.updateRealEstate = async (req, res) => {
   try {
@@ -256,7 +254,6 @@ exports.updateRealEstate = async (req, res) => {
     });
   }
 };
-
 // Delete real estate record
 exports.deleteRealEstate = async (req, res) => {
   try {
@@ -288,7 +285,6 @@ exports.deleteRealEstate = async (req, res) => {
     });
   }
 };
-
 // Get all real estate records
 exports.getAllRealEstate = async (req, res) => {
   try {
@@ -395,7 +391,6 @@ exports.getAllRealEstate = async (req, res) => {
     });
   }
 };
-
 // Delete multiple real estate records
 exports.deleteMultipleRealEstates = async (req, res) => {
   try {
@@ -437,8 +432,6 @@ exports.deleteMultipleRealEstates = async (req, res) => {
     });
   }
 };
-
-
 // Analytics of Real Estates
 exports.getRealEstateAnalysis = async (req, res) => {
   try {

@@ -22,7 +22,6 @@ const formatDate = (date) => {
 
   return [year, month, day].join("-");
 };
-
 function calculateTotalYears(startDate, maturityDate) {
   const start = new Date(startDate);
   const maturity = new Date(maturityDate);
@@ -45,7 +44,6 @@ function calculateTotalYears(startDate, maturityDate) {
     return "0M";
   }
 };
-
 const updateFdData = async () => {
   try {
     const fixedDeposits = await FixedDepositModel.find();
@@ -76,7 +74,6 @@ const updateFdData = async () => {
     console.error("Error while updating FD data:", error);
   }
 };
-
 const fixedDepositRegister = async (req, res) => {
   try {
     const {
@@ -94,14 +91,12 @@ const fixedDepositRegister = async (req, res) => {
 
     const userId = req.user.id;
 
-    // Ensure the authenticated user is registering the FD for themselves
     if (String(req.user.id) !== String(userId)) {
       return res
         .status(statusCode.FORBIDDEN)
         .json({ statusCode: statusCode.FORBIDDEN, message: message.unAuthUser});
     }
 
-    // Check if FD already exists
     const fdExists = await FixedDepositModel.findOne({ fdNo, userId });
     if (fdExists) {
       return res
@@ -130,7 +125,6 @@ const fixedDepositRegister = async (req, res) => {
     // Save new FD
     await newFixedDeposit.save();
 
-    // Aggregation pipeline for updating the FD with calculated fields
     const [updatedFd] = await FixedDepositModel.aggregate(
       registerFdAggregation(
         newFixedDeposit._id,
@@ -190,7 +184,6 @@ const fixedDepositRegister = async (req, res) => {
       .json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorCreatingFD });
   }
 };
-
 const updateFixedDeposit = async (req, res) => {
   try {
     const { id } = req.params;
@@ -285,7 +278,6 @@ const updateFixedDeposit = async (req, res) => {
       .json({ statusCode: statusCode.INTERNAL_SERVER_ERROR, message: message.errorUpdatingFD });
   }
 };
-
 const fixedDepositDelete = async (req, res) => {
   try {
     const { id } = req.params;
@@ -321,7 +313,6 @@ const fixedDepositDelete = async (req, res) => {
     });
   }
 };
-
 const getFdDetails = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -372,13 +363,7 @@ const getFdDetails = async (req, res) => {
 
     const fdDetails = await FixedDepositModel.aggregate(pipeline);
 
-    if (!fdDetails.length) {
-      return res.status(statusCode.NOT_FOUND).json({
-        statusCode: statusCode.NOT_FOUND,
-        message: id ? message.errorFetchingFD : message.errorFetchingFDs,
-      });
-    }
-
+    // Format FD details, even if empty
     const formattedFdDetails = fdDetails.map((fd, index) => ({
       srNo: index + 1, // Add serial number
       ...fd,
@@ -388,10 +373,11 @@ const getFdDetails = async (req, res) => {
       startDate: moment(fd.startDate).format("YYYY-MM-DD")
     }));
 
+    // Return successful response with formatted FD details, or empty array
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
-      message: message.fdsView,
-      data: formattedFdDetails,
+      message: fdDetails.length ? message.fdsView : message.noFdsFound,
+      data: formattedFdDetails, // Will return an empty array if no data is found
     });
   } catch (error) {
     console.error("Error while fetching FD details:", error.message || error);
@@ -402,10 +388,6 @@ const getFdDetails = async (req, res) => {
     });
   }
 };
-
-
-
-
 const deleteMultipleFDs = async (req, res) => {
   try {
     const { ids } = req.body; // Array of FD IDs to delete
@@ -449,7 +431,6 @@ const deleteMultipleFDs = async (req, res) => {
     });
   }
 };
-
 const getFdAnalysisbyNumber = async (req, res) => {
   try {
       const userId = req.user.id;

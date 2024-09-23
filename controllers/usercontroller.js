@@ -72,13 +72,17 @@ const loginUser = async (req, res) => {
       });
     }
 
+    // Delete previous token for the user if exists
     await TokenModel.findOneAndDelete({ userId: user._id });
 
+    // Generate a token without expiration
     const token = jwt.sign({ id: user._id }, process.env.SECRET);
 
+    // Save token in the database
     const tokenDoc = new TokenModel({ token, userId: user._id });
     await tokenDoc.save();
 
+    // Send response with token and user details
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
       message: message.userLoggedIn,
@@ -213,8 +217,6 @@ const updateUser = async (req, res) => {
     });
   }
 };
-
-
 
 // Delete User
 const deleteUser = async (req, res) => {
@@ -473,7 +475,6 @@ const newPassword = async (req, res) => {
     });
   }
 };
-
 
 // Logout API
 const logoutUser = async (req, res) => {

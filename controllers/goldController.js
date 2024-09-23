@@ -55,7 +55,6 @@ exports.updateGoldData = async () => {
 };
 
 // Create a new gold record
-
 exports.createGoldRecord = async (req, res) => {
   try {
     const userId = req.user.id; // Get the user ID from the authenticated request
@@ -240,63 +239,6 @@ exports.updateGoldRecord = async (req, res) => {
   }
 };
 
-// Get all gold records for the authenticated user
-exports.getAllGoldRecords = async (req, res) => {
-  try {
-    const userId = req.user.id; // Get the user ID from the authenticated request
-    const goldRecords = await GoldModel.find({ userId }); // Fetch records for this user
-
-    // Add srNo to each record
-    const goldRecordsWithSrNo = goldRecords.map((record, index) => {
-      const recordObj = record.toObject(); // Convert Mongoose document to plain object
-      return {
-        ...recordObj,
-        srNo: index + 1, // Add srNo starting from 1
-      };
-    });
-
-    return res.status(statusCode.OK).json({
-      statusCode: statusCode.OK,
-      message: message.goldRecords,
-      data: goldRecordsWithSrNo,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorGoldRecords,
-    });
-  }
-};
-
-// Get a single gold record by ID
-exports.getGoldRecordById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id; // Get the user ID from the authenticated request
-    const goldRecord = await GoldModel.findOne({ _id: id, userId }); // Ensure the record belongs to the user
-
-    if (!goldRecord) {
-      return res.status(statusCode.NOT_FOUND).json({
-        statusCode: statusCode.NOT_FOUND,
-        message: message.goldNotFound,
-      });
-    }
-
-    return res.status(statusCode.OK).json({
-      statusCode: statusCode.OK,
-      message: message.goldRecords,
-      data: goldRecord,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorFetchingGoldInfo,
-    });
-  }
-};
-
 // Delete a gold record
 exports.deleteGoldRecord = async (req, res) => {
   try {
@@ -429,6 +371,56 @@ exports.getGoldAnalysis = async (req, res) => {
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorGoldAnalytics,
       error: error.message,
+    });
+  }
+};
+
+// Get all gold records or a single gold record by ID for the authenticated user
+exports.getAllGoldRecords = async (req, res) => {
+  try {
+    const userId = req.user.id; // Get the user ID from the authenticated request
+    const { id } = req.params;  // Get the ID from the request params if it exists
+
+    // If an ID is provided, fetch the specific record by ID
+    if (id) {
+      const goldRecord = await GoldModel.findOne({ _id: id, userId }); // Ensure the record belongs to the user
+
+      if (!goldRecord) {
+        return res.status(statusCode.NOT_FOUND).json({
+          statusCode: statusCode.NOT_FOUND,
+          message: message.goldNotFound,
+        });
+      }
+
+      return res.status(statusCode.OK).json({
+        statusCode: statusCode.OK,
+        message: message.goldRecordFetched, // Message for fetching a single record
+        data: goldRecord,
+      });
+    }
+
+    // If no ID is provided, fetch all records for the authenticated user
+    const goldRecords = await GoldModel.find({ userId }); // Fetch all records for this user
+
+    // Add srNo to each record
+    const goldRecordsWithSrNo = goldRecords.map((record, index) => {
+      const recordObj = record.toObject(); // Convert Mongoose document to plain object
+      return {
+        ...recordObj,
+        srNo: index + 1, // Add srNo starting from 1
+      };
+    });
+
+    return res.status(statusCode.OK).json({
+      statusCode: statusCode.OK,
+      message: message.goldRecordsFetched, // Message for fetching all records
+      data: goldRecordsWithSrNo,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      statusCode: statusCode.INTERNAL_SERVER_ERROR,
+      message: message.errorFetchingGoldRecords,
     });
   }
 };

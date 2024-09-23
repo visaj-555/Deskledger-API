@@ -1,3 +1,5 @@
+//goldModel.js
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema; // Corrected this line to use 'Schema' with an uppercase 'S'
 

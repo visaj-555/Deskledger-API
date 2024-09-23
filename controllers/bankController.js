@@ -30,7 +30,6 @@ const createBank = async (req, res) => {
     });
   }
 };
-
 // Update a bank
 const updateBank = async (req, res) => {
   try {
@@ -64,7 +63,6 @@ const updateBank = async (req, res) => {
     });
   }
 };
-
 // Delete a bank
 const deleteBank = async (req, res) => {
   try {
@@ -93,7 +91,6 @@ const deleteBank = async (req, res) => {
     });
   }
 };
-
 // Get banks
 const getBanks = async (req, res) => {
   try {
