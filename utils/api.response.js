@@ -22,8 +22,6 @@ const message = {
   propertiesDeleted: "Multiple Properties Deleted Successfully",
   propertyAlreadyExists: "Property Already exists",
   updatedRealEstateAnalysis : "Real Estate Analysis",
-  propertyNotFound : "Property Not Found",
-  propertiesDeleted : "Properties Deleted Successfully",
   propertiesView: "Properties retrieved successfully",
   errorCreatingProperty : "Error Adding Property",
   errorDeletingProperty: "Error Deleting Property",
@@ -31,7 +29,6 @@ const message = {
   errorFetchingProperty: "Error Fetching Property",
   errorFetchingPropertyAnalysis : "Error Fetching Analysis Data",
   errorFetchingProperties: "Error Fetching Properties",
-  errorUpdatingProperty: "Error Updating Property",
   errorFetchingRealEstateAnalytics : "Error Fetching Real Estate Analysis",
   invalidRealEstateid : "Invalid Real Estate Id Provided",
   
@@ -206,7 +203,6 @@ const message = {
   // Miscellaneous Errors
   deleteAuth: "You are unauthorized to delete this account",
   expiredToken: "Invalid or expired token",
-  tokenNotFound: "Token not found in the database",
   tokenNotMatch: "Unauthorized. Token does not match user",
   tokenVerifyFail: "Token verification failed",
   updateUserError: "An error occurred while updating the profile",

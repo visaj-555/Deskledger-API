@@ -99,23 +99,22 @@ const getState = async (req, res) => {
   try {
     const states = await StateModel.find();
 
-    // Add srNo to each bank, starting from 1
-    const statesWithSrNo = states.map((bank, index) => ({
+    const statesWithSrNo = states.map((state, index) => ({
       srNo: index + 1,
-      ...bank.toObject(), // Convert the Mongoose document to a plain JavaScript object
+      ...state.toObject(), 
     }));
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
-      message: message.statesView,
+      message: message.statesView, 
       data: statesWithSrNo,
     });
   } catch (error) {
-    console.error("Error while fetching banks:", error);
+    console.error("Error while fetching states:", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
-      message: message.errorFetchingStates,
-      error: error.message,
+      message: message.errorFetchingStates || "Error fetching states", 
+      error: error.message || error, 
     });
   }
 };

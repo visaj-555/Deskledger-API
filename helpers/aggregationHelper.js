@@ -1,5 +1,3 @@
-// aggregationHelper.js
-
 const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, interestRate) => {
   return [
     {
@@ -35,13 +33,14 @@ const commonAggregationStages = (startDate, maturityDate, totalInvestedAmount, i
           }
         },
         totalReturnedAmount: {
+          // Updated to match the frontend calculation
           $trunc: {
             $add: [
-          totalInvestedAmount,
+              totalInvestedAmount,
               { 
                 $multiply: [
                   totalInvestedAmount, 
-                  { $divide: [{ $multiply: [interestRate, "$tenureInYears"] }, 100] }
+                  { $divide: [{ $multiply: [interestRate, "$tenureInYears"] }, 100] }  // Same as frontend formula
                 ]
               }
             ]
