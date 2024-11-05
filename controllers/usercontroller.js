@@ -142,12 +142,8 @@ const updateUser = async (req, res) => {
       });
     }
 
-    // Debugging logs
-    console.log("Request Body:", req.body); // Should contain firstName, lastName, etc.
-    console.log("Uploaded File:", req.file); // Should contain profileImage file details
-
     const { firstName, lastName, phoneNo, email } = req.body;
-    const profileImage = req.file ? req.file.path : null; // Only set profileImage if file is present
+    const profileImage = req.file ? req.file.path : null;
 
     const user = await UserModel.findById(req.params.id);
     if (!user) {
@@ -344,12 +340,10 @@ const resetPassword = async (req, res) => {
 
     if (!resetToken) {
       console.error("Invalid OTP");
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          statusCode: statusCode.BAD_REQUEST,
-          message: message.otpInvalid,
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        statusCode: statusCode.BAD_REQUEST,
+        message: message.otpInvalid,
+      });
     }
 
     if (resetToken.expires < Date.now()) {
@@ -362,12 +356,10 @@ const resetPassword = async (req, res) => {
     const user = await UserModel.findById(resetToken.userId);
 
     if (!user) {
-      return res
-        .status(statusCode.NOT_FOUND)
-        .json({
-          statusCode: statusCode.NOT_FOUND,
-          message: message.userNotFound,
-        });
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.userNotFound,
+      });
     }
 
     // OTP verified successfully
@@ -477,23 +469,23 @@ const getUsers = async (req, res) => {
     let offset = (page - 1) * limit;
 
     const users = await UserModel.find({}, { password: 0 })
-    .sort({
-      createdAt: 1,
-    })
-    .skip(offset)
-    .limit(limit)
-    .exec();  
-    
+      .sort({
+        createdAt: 1,
+      })
+      .skip(offset)
+      .limit(limit)
+      .exec();
+
     const usersWithSrNo = users.map((user, index) => ({
       srNo: index + 1,
-      user, 
+      user,
     }));
 
     res.status(statusCode.OK).json({
       statusCode: statusCode.OK,
       message: message.usersView,
       data: usersWithSrNo,
-      total : await UserModel.countDocuments(),
+      total: await UserModel.countDocuments(),
     });
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
