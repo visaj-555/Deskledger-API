@@ -14,8 +14,8 @@ Router.get('/user-profile/:id', ensureAuthenticated, userController.getUser);
 Router.put(
   '/user-profile/update/:id',
   ensureAuthenticated, 
-  upload.single('profileImage'), // multer middleware to handle profile image upload
-  multerErrorHandling, // Error handling for file uploads
+  upload.single('profileImage'), 
+  multerErrorHandling, 
   userController.updateUser
 );
 
@@ -29,6 +29,6 @@ Router.post('/reset-password', userController.resetPassword);
 Router.post('/newpassword', userController.newPassword);
 
 // Admin Routes
-Router.post('/users', ensureAuthenticated, ensureAdmin, userController.getUsers);
+Router.get('/users', ensureAuthenticated, ensureAdmin, userController.getUsers);
 
 module.exports = Router;

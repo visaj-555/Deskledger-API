@@ -8,7 +8,7 @@ const realEstateAnalysisSchema = new Schema({
     currentReturnAmountOfRealEstate: {
         type: Number,
     },
-    totalProfitGainedOfRealEstate: {  // Corrected field name
+    totalProfitGainedOfRealEstate: {  
         type: Number,
     },
     userId: {

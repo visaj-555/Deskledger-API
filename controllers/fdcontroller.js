@@ -52,18 +52,13 @@ const updateFdData = async () => {
     for (const fd of fixedDeposits) {
       const { _id: fdId, startDate, maturityDate, totalInvestedAmount, interestRate } = fd;
 
-      // Get the aggregation pipeline
       const aggregationPipeline = updateFdAggregation(fdId, startDate, maturityDate, totalInvestedAmount, interestRate);
 
-      // Execute the aggregation pipeline
       const result = await FixedDepositModel.aggregate(aggregationPipeline);
 
-      // Assuming the result contains calculated fields
       if (result && result.length > 0) {
         const { currentReturnAmount, currentProfitAmount } = result[0];
 
-
-        // Optionally, update the database with the new values if needed
         await FixedDepositModel.updateOne({ _id: fdId }, {
           currentReturnAmount,
           currentProfitAmount,
