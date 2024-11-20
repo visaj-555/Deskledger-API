@@ -1,23 +1,39 @@
 const AreaPriceModel = require("../models/areaPrice");
-const { statusCode, message } = require('../utils/api.response');
+const { statusCode, message } = require("../utils/api.response");
 
 // Create a new area price
-const createAreaPrice = async (req, res) => { 
+const createAreaPrice = async (req, res) => {
   try {
     const { cityId, stateId, areaName, pricePerSquareFoot } = req.body;
 
-    const areaPriceExists = await AreaPriceModel.findOne({ cityId, stateId, areaName, pricePerSquareFoot });
+    const areaPriceExists = await AreaPriceModel.findOne({
+      cityId,
+      stateId,
+      areaName,
+      pricePerSquareFoot,
+    });
 
     if (areaPriceExists) {
-      return res.status(statusCode.CONFLICT).json({ statusCode: statusCode.CONFLICT, message: message.areaPriceAlreadyExists });
+      return res.status(statusCode.CONFLICT).json({
+        statusCode: statusCode.CONFLICT,
+        message: message.areaPriceAlreadyExists,
+      });
     }
 
-    const newAreaPrice = new AreaPriceModel({ cityId, stateId, areaName, pricePerSquareFoot });
+    const newAreaPrice = new AreaPriceModel({
+      cityId,
+      stateId,
+      areaName,
+      pricePerSquareFoot,
+    });
 
     const savedAreaPrice = await newAreaPrice.save();
 
-    res.status(statusCode.CREATED).json({ statusCode: statusCode.CREATED, message: message.areaPriceCreated, data: savedAreaPrice });
-
+    res.status(statusCode.CREATED).json({
+      statusCode: statusCode.CREATED,
+      message: message.areaPriceCreated,
+      data: savedAreaPrice,
+    });
   } catch (error) {
     console.error("Error while adding area price:", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -30,8 +46,8 @@ const createAreaPrice = async (req, res) => {
 // Update an area price
 const updateAreaPrice = async (req, res) => {
   try {
-    const {id} =  req.params;
-    const {cityId, stateId, areaName, pricePerSquareFoot } = req.body;
+    const { id } = req.params;
+    const { cityId, stateId, areaName, pricePerSquareFoot } = req.body;
 
     const updatedAreaPrice = await AreaPriceModel.findByIdAndUpdate(
       id,
@@ -40,7 +56,10 @@ const updateAreaPrice = async (req, res) => {
     );
 
     if (!updatedAreaPrice) {
-      return res.status(statusCode.NOT_FOUND).json({ statusCode: statusCode.NOT_FOUND, message: message.errorFetchingAreaPrice });
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingAreaPrice,
+      });
     }
 
     res.status(statusCode.OK).json({
@@ -49,7 +68,7 @@ const updateAreaPrice = async (req, res) => {
       data: updatedAreaPrice,
     });
   } catch (error) {
-    console.error('Error while updating area price:', error);
+    console.error("Error while updating area price:", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
       message: message.errorUpdatingAreaPrice,
@@ -65,11 +84,15 @@ const deleteAreaPrice = async (req, res) => {
     const deletedAreaPrice = await AreaPriceModel.findByIdAndDelete(id);
 
     if (!deletedAreaPrice) {
-      return res.status(statusCode.NOT_FOUND).json({ statusCode: statusCode.NOT_FOUND, message: message.errorFetchingAreaPrice });
+      return res.status(statusCode.NOT_FOUND).json({
+        statusCode: statusCode.NOT_FOUND,
+        message: message.errorFetchingAreaPrice,
+      });
     }
 
-    res.status(statusCode.OK).json({ statusCode: statusCode.OK, message: message.areaPriceDeleted });
-
+    res
+      .status(statusCode.OK)
+      .json({ statusCode: statusCode.OK, message: message.areaPriceDeleted });
   } catch (error) {
     console.error("Error while deleting area price:", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -116,8 +139,8 @@ const getAreaPrices = async (req, res) => {
           _id: 1,
           areaName: 1,
           pricePerSquareFoot: 1,
-          city: "$cityData.city", 
-          state: "$stateData.state", 
+          city: "$cityData.city",
+          state: "$stateData.state",
         },
       },
     ]);
@@ -144,9 +167,11 @@ const getAreaPrices = async (req, res) => {
 // Delete multiple area prices
 const deleteMultipleAreaPrices = async (req, res) => {
   try {
-    const {ids} = req.body; 
+    const { ids } = req.body;
 
-    const deletedAreaPrices = await AreaPriceModel.deleteMany({ _id: { $in: ids } });
+    const deletedAreaPrices = await AreaPriceModel.deleteMany({
+      _id: { $in: ids },
+    });
 
     if (deletedAreaPrices.deletedCount === 0) {
       return res.status(statusCode.NOT_FOUND).json({
@@ -160,8 +185,7 @@ const deleteMultipleAreaPrices = async (req, res) => {
       message: message.areaPricesDeleted,
       deletedCount: deletedAreaPrices.deletedCount,
     });
-  } 
-  catch (error) {
+  } catch (error) {
     console.error("Error while deleting multiple data", error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       statusCode: statusCode.INTERNAL_SERVER_ERROR,
@@ -175,5 +199,5 @@ module.exports = {
   updateAreaPrice,
   deleteAreaPrice,
   getAreaPrices,
-  deleteMultipleAreaPrices
+  deleteMultipleAreaPrices,
 };
