@@ -1,11 +1,11 @@
 const UserModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const TokenModel = require("../models/tokenModel");
+const TokenModel = require("../../../../models/tokenModel");
 const nodemailer = require("nodemailer");
-const PasswordResetTokenModel = require("../models/passwordResetTokenModel");
-const { statusCode, message } = require("../utils/api.response");
-const FixedDepositModel = require("../models/fixedDeposit");
+const PasswordResetTokenModel = require("../../../../models/passwordResetTokenModel");
+const { statusCode, message } = require("../../../../utils/api.response");
+const FixedDepositModel = require("../../../../models/fixedDeposit");
 
 // Registering User
 const registerUser = async (req, res) => {

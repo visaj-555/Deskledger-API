@@ -1,5 +1,5 @@
-const SubPropertyTypeModel = require("../models/subPropertyType");
-const { statusCode, message } = require("../utils/api.response");
+const SubPropertyTypeModel = require("../../../../models/subPropertyType");
+const { statusCode, message } = require("../../../../utils/api.response");
 
 // Create a new sub-property type
 const subPropertyTypeRegister = async (req, res) => {
