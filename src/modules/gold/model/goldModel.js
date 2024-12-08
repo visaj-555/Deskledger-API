@@ -1,54 +1,57 @@
 //goldModel.js
 
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema; // Corrected this line to use 'Schema' with an uppercase 'S'
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const goldSchema = new Schema({
+const goldSchema = new Schema(
+  {
     goldId: {
-        type: String,
+      type: String,
     },
-    srNo :{
-        type: Number
+    srNo: {
+      type: Number,
     },
     firstName: {
-        type: String,   // input from user
-        required: true,
+      type: String,
+      required: true,
     },
     lastName: {
-        type: String,      // input from user
-        required: true,
+      type: String,
+      required: true,
     },
     goldWeight: {
-        type: Number,
-        required: true, // input from user (in grams)
+      type: Number,
+      required: true,
     },
     goldPurchasePrice: {
-        type: Number,   // input from user 
-        required: true,
+      type: Number,
+      required: true,
     },
     formOfGold: {
-        type: String, // Biscuit, chain, locket, etc...
-        required: true,
+      type: String,
+      required: true,
     },
     purityOfGold: {
-        type: Number, // input from user
-        required: true, // 22k, 24k, etc...
+      type: Number,
+      required: true,
     },
     totalReturnAmount: {
-        type: Number, // Current Calculated Gold Price
+      type: Number,
     },
     profit: {
-        type: Number,
-    }, 
+      type: Number,
+    },
     sector: {
-        type: String,
-        default: 'Gold' 
-    }, 
+      type: String,
+      default: "Gold",
+    },
     userId: {
-        type: Schema.Types.ObjectId, // Corrected this line to use 'Schema' with an uppercase 'S'
-        ref: 'userModel',
-    }, 
-}, { timestamps: true });
+      type: Schema.Types.ObjectId,
+      ref: "userModel",
+    },
+  },
+  { timestamps: true }
+);
 
 const GoldModel = mongoose.model("Gold", goldSchema);
 module.exports = GoldModel;

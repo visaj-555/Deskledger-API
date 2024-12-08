@@ -1,17 +1,44 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const fdcontroller = require('../controllers/fdcontroller');
-const { ensureAuthenticated } = require('../validation/authValidator');
-const { validateFixedDeposit } = require('../validation/fdValidator');
+const fdcontroller = require("../controller/fdcontroller");
+const { ensureAuthenticated } = require("../../../middlewares/authValidator");
+const { validateFixedDeposit } = require("../validation/fdValidator");
 
 // Fixed Deposit routes
-router.post("/fd/register", ensureAuthenticated, validateFixedDeposit, fdcontroller.fixedDepositRegister);
-router.post("/fd/create", ensureAuthenticated, validateFixedDeposit, fdcontroller.fixedDepositRegister);
-router.delete("/fd/delete/:id", ensureAuthenticated, fdcontroller.fixedDepositDelete);
+router.post(
+  "/fd/register",
+  ensureAuthenticated,
+  validateFixedDeposit,
+  fdcontroller.fixedDepositRegister
+);
+router.post(
+  "/fd/create",
+  ensureAuthenticated,
+  validateFixedDeposit,
+  fdcontroller.fixedDepositRegister
+);
+router.delete(
+  "/fd/delete/:id",
+  ensureAuthenticated,
+  fdcontroller.fixedDepositDelete
+);
 router.get("/fds", ensureAuthenticated, fdcontroller.getFdDetails);
-router.put( "/fd/update/:id", ensureAuthenticated,validateFixedDeposit, fdcontroller.updateFixedDeposit);
+router.put(
+  "/fd/update/:id",
+  ensureAuthenticated,
+  validateFixedDeposit,
+  fdcontroller.updateFixedDeposit
+);
 router.get("/fd/:id", ensureAuthenticated, fdcontroller.getFdDetails);
-router.get("/fd-analysis-number", ensureAuthenticated, fdcontroller.getFdAnalysisbyNumber);
-router.delete('/fd/delete-multiple', ensureAuthenticated,fdcontroller.deleteMultipleFDs);
+router.get(
+  "/fd-analysis-number",
+  ensureAuthenticated,
+  fdcontroller.getFdAnalysisbyNumber
+);
+router.delete(
+  "/fd/delete-multiple",
+  ensureAuthenticated,
+  fdcontroller.deleteMultipleFDs
+);
 
 module.exports = router;

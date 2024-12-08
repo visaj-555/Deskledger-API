@@ -1,3 +1,5 @@
+require("module-alias/register");
+
 const express = require("express");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
@@ -5,19 +7,23 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const fs = require("fs");
 const path = require("path");
-const MainRoutes = require("./routes/routeManager"); // Import the routes
+const MainRoutes = require("./routes/routeManager");
 const cron = require("node-cron");
-const { updateFdData } = require("./controllers/fdcontroller");
-const { updateGoldData } = require("./controllers/goldController");
-const { updateRealEstateData } = require("./controllers/realEstateController");
+const {
+  updateFdData,
+} = require("./src/modules/fixed-deposit/controller/fdcontroller");
+const {
+  updateGoldData,
+} = require("./src/modules/gold/controller/goldController");
+const {
+  updateRealEstateData,
+} = require("./src/modules/real-estate/controller/realEstateController");
 
-// Load environment variables from .env file
 dotenv.config();
 
-// Setting up express app
 const app = express();
 const PORT = parseInt(process.env.PORT, 10) || 3500;
-const HOST = process.env.HOST ? process.env.HOST.trim() : "192.168.29.23";
+const HOST = process.env.HOST ? process.env.HOST.trim() : "192.168.1.87";
 const DB_CONNECTION = process.env.CONNECTION;
 
 app.use(express.json());

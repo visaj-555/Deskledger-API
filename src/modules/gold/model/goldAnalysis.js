@@ -1,21 +1,24 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema; // Correctly imported Schema from mongoose
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const goldAnalysisSchema = new Schema({ // Use 'Schema' instead of 'schema'
+const goldAnalysisSchema = new Schema(
+  {
     totalInvestedAmountOfGold: {
-        type: Number,
+      type: Number,
     },
     currentReturnAmountOfGold: {
-        type: Number,
+      type: Number,
     },
     totalProfitGainedOfGold: {
-        type: Number,
+      type: Number,
     },
     userId: {
-        type: Schema.Types.ObjectId,
-        ref: 'userModel',
+      type: Schema.Types.ObjectId,
+      ref: "userModel",
     },
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 
 const GoldAnalysisModel = mongoose.model("GoldAnalysis", goldAnalysisSchema);
 module.exports = GoldAnalysisModel;

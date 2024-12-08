@@ -1,78 +1,79 @@
 //fixedDeposit.js
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const FixedDepositSchema = new Schema({
+const FixedDepositSchema = new Schema(
+  {
     fdId: {
-        type: String,
+      type: String,
     },
     srNo: {
-        type: Number
+      type: Number,
     },
     firstName: {
-        type: String,
-        trim: true
+      type: String,
+      trim: true,
     },
     lastName: {
-        type: String,
-        trim: true
+      type: String,
+      trim: true,
     },
     fdNo: {
-        type: Number,
-        unique: true,
+      type: Number,
+      unique: true,
     },
     fdType: {
-        type: String,
+      type: String,
     },
     bankId: {
-        type: Schema.Types.ObjectId,
-        ref: 'bank',    
+      type: Schema.Types.ObjectId,
+      ref: "bank",
     },
     branchName: {
-        type: String,
+      type: String,
     },
     interestRate: {
-        type: Number,
+      type: Number,
     },
     startDate: {
-        type: Date,
+      type: Date,
     },
     maturityDate: {
-        type: Date,
+      type: Date,
     },
     totalInvestedAmount: {
-        type: Number,
+      type: Number,
     },
     tenureInYears: {
-        type: Number, // to be calculated in backend
+      type: Number,
     },
     tenureInMonths: {
-        type: Number, // to be calculated in backend
+      type: Number,
     },
     currentReturnAmount: {
-        type: Number, // to be calculated in backend
+      type: Number,
     },
     totalReturnedAmount: {
-        type: Number, // to be calculated in backend
+      type: Number,
     },
     currentProfitAmount: {
-        type: Number, // to be calculated in backend
+      type: Number,
     },
     totalYears: {
-        type: String, // to be calculated in backend
+      type: String,
     },
     userId: {
-        type: Schema.Types.ObjectId,
-        ref: 'UserModel',
-    }, 
+      type: Schema.Types.ObjectId,
+      ref: "UserModel",
+    },
     sector: {
-        type: String,
-        default: 'Banking' // Default value if all FixedDeposits are in the Banking sector
-    }
-}, { timestamps: true });
+      type: String,
+      default: "Banking", // Default value if all FixedDeposits are in the Banking sector
+    },
+  },
+  { timestamps: true }
+);
 
-const FixedDepositModel = mongoose.model('FixedDeposit', FixedDepositSchema);
+const FixedDepositModel = mongoose.model("FixedDeposit", FixedDepositSchema);
 module.exports = FixedDepositModel;
-
-

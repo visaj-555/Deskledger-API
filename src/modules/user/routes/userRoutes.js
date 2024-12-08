@@ -1,16 +1,13 @@
-const userController = require("../controllers/userController");
+const userController = require("../controller/usercontroller");
 const {
   ensureAuthenticated,
   ensureAdmin,
-} = require("../../../../validation/authValidator");
+} = require("../../../middlewares/authValidator");
 const {
   userLoginValidate,
   userRegisterValidate,
 } = require("../validation/userValidator");
-const {
-  upload,
-  multerErrorHandling,
-} = require("../../../../validation/upload"); // For file uploads
+const { upload, multerErrorHandling } = require("../../../middlewares/upload");
 const Router = require("express").Router();
 
 // User Authentication Routes

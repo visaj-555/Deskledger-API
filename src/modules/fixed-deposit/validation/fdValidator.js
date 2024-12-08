@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const { statusCode } = require("../../../../utils/api.response");
+const { statusCode } = require("../../../utils/api.response");
 
 const validateFixedDeposit = (req, res, next) => {
   const isUpdating = req.method === "PUT";
